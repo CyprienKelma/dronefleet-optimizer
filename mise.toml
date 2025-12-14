@@ -1,0 +1,55 @@
+[tools]
+# --- Python Backend (Ingestion & Optimizer) ---
+python = "3.11"
+uv = "0.5.11"
+
+# --- Java Backend (State Manager) ---
+java = "temurin-21"  # Java 21 LTS (Eclipse Temurin Distribution)
+# gradle = "8.5"       # Use ./gradlew in the state-manager folder
+
+# --- Infrastructure & Cloud ---
+terraform = "1.9.0"
+gcloud = "latest"
+
+# --- Utility Tools ---
+jq = "1.7.1"
+
+[env]
+# Auto-loaded when you entering the folder
+
+# PROJECT_STRATEGY: on_cloud or on_premise
+PROJECT_STRATEGY = "on_cloud"
+
+# ENVIRONMENT: dev, preprod, prod
+ENVIRONMENT = "dev"
+
+# PROJECT_ID: Google Cloud project ID
+PROJECT_ID = "drone-fleet-optimizer"
+
+# Instructs Python to use virtual environments in the .venv folder
+UV_PROJECT_ENVIRONMENT = ".venv"
+
+[tasks]
+# Initialize project dependencies
+"project:init" = "uv venv"
+"project:activate-env" = "uv sync"
+
+# Start docker containers
+"docker:up" = "docker compose up -d"
+"docker:down" = "docker compose down"
+
+# Run ingestion and optimizer
+"run:ingestion" = "cd src/ingestion-api && uv run python app/main.py"
+"run:optimizer" = "cd src/optimizer-engine && uv run python solver/main.py"
+
+# Run linting
+"lint:python" = "uv lint"
+"lint:java" = "cd src/state-manager && ./gradlew checkstyleMain"
+"lint:terraform" = "terraform fmt -recursive"
+"lint:docker" = "docker compose lint"
+"lint:all" = "lint:python && lint:java && lint:terraform && lint:docker"
+
+# Run tests
+"test:unit" = "uv run pytest"
+"test:integration" = "uv run pytest --integration"
+"test:e2e" = "uv run pytest --e2e"
