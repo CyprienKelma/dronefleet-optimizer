@@ -21,7 +21,7 @@ class PublisherFactory:
                     raise ValueError("GCP_PROJECT_ID must be set in production")
                 return PubSubPublisher(project_id=project_id)
                 
-            elif env == 'local_kafka':
+            elif env == 'dev':
                 bootstrap_servers = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
                 return KafkaPublisher(bootstrap_servers=bootstrap_servers)
                 
@@ -39,7 +39,7 @@ class PublisherFactory:
                     raise ValueError("KAFKA_BOOTSTRAP_SERVERS must be set for on-premise production")
                 return KafkaPublisher(bootstrap_servers=bootstrap_servers)
 
-            elif env == 'local_kafka':
+            elif env == 'dev':
                 bootstrap_servers = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
                 return KafkaPublisher(bootstrap_servers=bootstrap_servers)
 
