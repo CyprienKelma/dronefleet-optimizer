@@ -1,6 +1,6 @@
 import json
 from typing import Any, Dict
-from ..base import MessagePublisher
+from ..base_publisher import MessagePublisher
 
 # Note: Requires 'kafka-python' or 'confluent-kafka' installed
 try:

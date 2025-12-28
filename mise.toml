@@ -24,7 +24,11 @@ PROJECT_STRATEGY = "on_cloud"
 ENVIRONMENT = "dev"
 
 # PROJECT_ID: Google Cloud project ID
-PROJECT_ID = "drone-fleet-optimizer"
+PROJECT_ID = "drone-project-dev"
+PUBSUB_EMULATOR_HOST = "localhost:8085"
+
+# Add src to PYTHONPATH so python can find 'shared' modules
+PYTHONPATH = "src"
 
 # Instructs Python to use virtual environments in the .venv folder
 UV_PROJECT_ENVIRONMENT = ".venv"
@@ -35,12 +39,13 @@ UV_PROJECT_ENVIRONMENT = ".venv"
 "project:activate-env" = "uv sync"
 
 # Start docker containers
-"docker:up" = "docker compose up -d"
-"docker:down" = "docker compose down"
+"docker:up" = "docker compose -f infrastructure/on_premise/docker-compose.yml up -d"
+"docker:down" = "docker compose -f infrastructure/on_premise/docker-compose.yml down"
 
 # Run ingestion and optimizer
-"run:ingestion" = "cd src/ingestion-api && uv run python app/main.py"
-"run:optimizer" = "cd src/optimizer-engine && uv run python solver/main.py"
+"run:ingestion" = "uv run fastapi dev src/ingestion-api/main.py"
+"run:optimizer" = "uv run python src/optimizer-engine/solver/main.py"
+"run:simulator" = "uv run python src/simulator/main.py"
 
 # Run linting
 "lint:python" = "uv lint"

@@ -8,34 +8,53 @@ services:
     networks:
       - drone-network
 
+  # Service éphémère qui configure les topics au démarrage
+  pubsub-init:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes:
+      - ./create_topics.py:/app/create_topics.py
+    environment:
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      PROJECT_ID: drone-project-dev
+    command: >
+      bash -c "pip install google-cloud-pubsub && python create_topics.py"
+    depends_on:
+      - pubsub-emulator
+    networks:
+      - drone-network
+
   ingestion-api:
     build:
-      context: ./src/ingestion-api
-      dockerfile: Dockerfile
+      context: ../../
+      dockerfile: src/ingestion-api/Dockerfile
     environment:
       # LA VARIABLE MAGIQUE :
       # Le SDK Google vérifie cette variable. Si elle existe, il ignore la vraie auth GCP
       # et parle à l'émulateur. Pas besoin de changer ton code !
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
       PUBSUB_PROJECT_ID: drone-project-dev
+      PROJECT_STRATEGY: on_cloud # Use the PubSub strategy
+      ENVIRONMENT: dev
     depends_on:
       - pubsub-emulator
+      - pubsub-init
     ports:
       - "8000:8000"
     networks:
       - drone-network
 
-  state-manager:
-    build:
-      context: ./src/state-manager
-      dockerfile: Dockerfile
-    environment:
-      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
-      SPRING_CLOUD_GCP_PROJECT_ID: drone-project-dev
-    depends_on:
-      - pubsub-emulator
-    networks:
-      - drone-network
+  # state-manager:
+  #   build:
+  #     context: ../../src/state-manager
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+  #     SPRING_CLOUD_GCP_PROJECT_ID: drone-project-dev
+  #   depends_on:
+  #     - pubsub-emulator
+  #   networks:
+  #     - drone-network
 
 networks:
   drone-network:
