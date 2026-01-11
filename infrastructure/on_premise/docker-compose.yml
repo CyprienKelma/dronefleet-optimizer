@@ -29,13 +29,16 @@ services:
       context: ../../
       dockerfile: src/ingestion-api/Dockerfile
     environment:
-      # LA VARIABLE MAGIQUE :
-      # Le SDK Google vérifie cette variable. Si elle existe, il ignore la vraie auth GCP
-      # et parle à l'émulateur. Pas besoin de changer ton code !
-      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
-      PUBSUB_PROJECT_ID: drone-project-dev
-      PROJECT_STRATEGY: on_cloud # Use the PubSub strategy
+      # env variable that determines which .env file to load
+      # global_config.py will read this and load config/dev.env
       ENVIRONMENT: dev
+      
+      # pub/sub emulator config
+      # the Google SDK ignores real GCP auth with this variable
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      
+      # DEPLOYMENT_STRATEGY and other config values are loaded from config/dev.env
+      # via pydantic_settings in global_config.py
     depends_on:
       - pubsub-emulator
       - pubsub-init

@@ -1,60 +1,61 @@
 [tools]
-# --- Python Backend (Ingestion & Optimizer) ---
 python = "3.11"
 uv = "0.5.11"
-
-# --- Java Backend (State Manager) ---
-java = "temurin-21"  # Java 21 LTS (Eclipse Temurin Distribution)
-# gradle = "8.5"       # Use ./gradlew in the state-manager folder
-
-# --- Infrastructure & Cloud ---
+java = "temurin-21"
 terraform = "1.9.0"
 gcloud = "latest"
-
-# --- Utility Tools ---
 jq = "1.7.1"
 
 [env]
-# Auto-loaded when you entering the folder
-
-# PROJECT_STRATEGY: on_cloud or on_premise
-PROJECT_STRATEGY = "on_cloud"
-
-# ENVIRONMENT: dev, preprod, prod
-ENVIRONMENT = "dev"
-
-# PROJECT_ID: Google Cloud project ID
-PROJECT_ID = "drone-project-dev"
-PUBSUB_EMULATOR_HOST = "localhost:8085"
-
-# Add src to PYTHONPATH so python can find 'shared' modules
+# Default to local development
+ENVIRONMENT = "local"
+DEPLOYMENT_STRATEGY = "on_cloud"
+PROJECT_ID = "drone-fleet-dev"
 PYTHONPATH = "src"
-
-# Instructs Python to use virtual environments in the .venv folder
 UV_PROJECT_ENVIRONMENT = ".venv"
 
+# Local emulators
+PUBSUB_EMULATOR_HOST = "localhost:8085"
+FIRESTORE_EMULATOR_HOST = "localhost:8080"
+
 [tasks]
-# Initialize project dependencies
-"project:init" = "uv venv"
-"project:activate-env" = "uv sync"
+# --- Project Setup ---
+"project:init" = "uv venv && uv sync"
+"project:clean" = "rm -rf .venv __pycache__ **/__pycache__ **/*.pyc"
 
-# Start docker containers
-"docker:up" = "docker compose -f infrastructure/on_premise/docker-compose.yml up -d"
-"docker:down" = "docker compose -f infrastructure/on_premise/docker-compose.yml down"
+# --- Local Development ---
+"local:emulators" = "docker compose -f infrastructure/on_premise/docker-compose.yml up -d"
+"local:stop" = "docker compose -f infrastructure/on_premise/docker-compose.yml down"
 
-# Run ingestion and optimizer
-"run:ingestion" = "uv run fastapi dev src/ingestion-api/main.py"
-"run:optimizer" = "uv run python src/optimizer-engine/solver/main.py"
-"run:simulator" = "uv run python src/simulator/main.py"
+"local:ingestion" = "ENVIRONMENT=local uv run fastapi dev src/ingestion-api/main.py"
+"local:simulator" = "ENVIRONMENT=local uv run python src/simulator/main.py"
+"local:state-manager" = "cd src/state-manager && ENVIRONMENT=local ./gradlew bootRun"
 
-# Run linting
-"lint:python" = "uv lint"
+# --- Testing ---
+"test:unit" = "uv run pytest tests/unit -v"
+"test:integration" = "uv run pytest tests/integration -v"
+"test:e2e" = "uv run pytest tests/e2e -v"
+"test:coverage" = "uv run pytest --cov=src --cov-report=html"
+
+# --- Linting ---
+"lint:python" = "uv run ruff check src && uv run mypy src"
 "lint:java" = "cd src/state-manager && ./gradlew checkstyleMain"
-"lint:terraform" = "terraform fmt -recursive"
-"lint:docker" = "docker compose lint"
-"lint:all" = "lint:python && lint:java && lint:terraform && lint:docker"
+"lint:terraform" = "terraform fmt -recursive infrastructure/terraform"
+"lint:all" = "mise run lint:python && mise run lint:java && mise run lint:terraform"
 
-# Run tests
-"test:unit" = "uv run pytest"
-"test:integration" = "uv run pytest --integration"
-"test:e2e" = "uv run pytest --e2e"
+# --- Infrastructure (Terraform) ---
+"infra:init-dev" = "cd infrastructure/terraform/environments/dev && terraform init"
+"infra:plan-dev" = "cd infrastructure/terraform/environments/dev && terraform plan"
+"infra:apply-dev" = "cd infrastructure/terraform/environments/dev && terraform apply"
+
+"infra:init-prod" = "cd infrastructure/terraform/environments/prod && terraform init"
+"infra:plan-prod" = "cd infrastructure/terraform/environments/prod && terraform plan"
+"infra:apply-prod" = "cd infrastructure/terraform/environments/prod && terraform apply"
+
+# --- Deployment Helpers ---
+"deploy:build-ingestion" = "docker build -t ingestion-api:local -f src/ingestion-api/Dockerfile ."
+"deploy:build-state-manager" = "cd src/state-manager && ./gradlew build && docker build -t state-manager:local ."
+
+# --- Utilities ---
+"logs:ingestion-dev" = "gcloud run services logs tail ingestion-api --project=drone-fleet-dev"
+"logs:state-manager-dev" = "gcloud run services logs tail state-manager --project=drone-fleet-dev"

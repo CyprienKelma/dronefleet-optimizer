@@ -1,4 +1,3 @@
-from email import message
 import logging
 from ..messaging.factory import PublisherFactory
 from shared.schemas.request import DeliveryRequest

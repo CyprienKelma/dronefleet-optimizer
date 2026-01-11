@@ -8,4 +8,5 @@ dependencies = [
     "fastapi[standard]>=0.126.0",
     "google-cloud-pubsub>=2.33.0",
     "kafka-python>=2.3.0",
+    "pydantic-settings>=2.0.0",
 ]
