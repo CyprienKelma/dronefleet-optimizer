@@ -64,17 +64,47 @@ Le code doit être agnostique de l'infrastructure via des interfaces.
 
 ```text
 drone-fleet-optimizer/
+.
+├── config
+│   ├── dev.env
+│   ├── local.env
+│   └── prod.env
 ├── docs
-│   └── images
-│       ├── global_architecture_png.png
-│       └── global_architecture.svg
+│   ├── images
+│   │   ├── global_architecture_png.png
+│   │   └── global_architecture.svg
+│   └── roadmap_technique.md
 ├── hello.py
 ├── infrastructure
-│   ├── on_premise
-│   │   └── docker-compose.yml
-│   └── terraform
+│   ├── on_cloud
+│   │   └── terraform
+│   │       ├── environments
+│   │       │   ├── dev
+│   │       │   │   ├── backend.tf
+│   │       │   │   ├── main.tf
+│   │       │   │   ├── terraform.tfvars
+│   │       │   │   └── variables.tf
+│   │       │   └── prod
+│   │       │       ├── backend.tf
+│   │       │       ├── main.tf
+│   │       │       ├── terraform.tfvars
+│   │       │       └── variables.tf
+│   │       └── modules
+│   │           ├── cloud-run
+│   │           │   └── main.tf
+│   │           ├── firestore
+│   │           ├── iam
+│   │           │   └── main.tf
+│   │           └── pubsub
+│   │               ├── main.tf
+│   │               ├── outputs.tf
+│   │               └── variables.tf
+│   └── on_premise
+│       ├── create_topics.py
+│       ├── debug_pubsub.py
+│       └── docker-compose.yml
 ├── LICENSE
-├── mise.toml # Gestionnaire de versions (Java, Python, Terraform)
+├── mise.toml
 ├── pubsub_tool.py
 ├── pyproject.toml
 ├── README.md
@@ -98,26 +128,103 @@ drone-fleet-optimizer/
 │   │   │           ├── __pycache__
 │   │   │           │   ├── __init__.cpython-311.pyc
 │   │   │           │   ├── orders.cpython-311.pyc
-│   │   │           │   └── position.cpython-311.pyc
+│   │   │           │   ├── position.cpython-311.pyc
+│   │   │           │   ├── states.cpython-311.pyc
+│   │   │           │   └── telemetry.cpython-311.pyc
 │   │   │           ├── orders.py
-│   │   │           └── position.py
+│   │   │           ├── states.py
+│   │   │           └── telemetry.py
+│   │   ├── Dockerfile
 │   │   ├── main.py
 │   │   ├── messaging
 │   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── __init__.cpython-311.pyc
+│   │   │   │   ├── base_publisher.cpython-311.pyc
+│   │   │   │   └── factory.cpython-311.pyc
 │   │   │   ├── base_publisher.py
 │   │   │   ├── factory.py
 │   │   │   └── publisher
+│   │   │       ├── __pycache__
+│   │   │       │   ├── kafka_publisher.cpython-311.pyc
+│   │   │       │   └── pubsub_publisher.cpython-311.pyc
 │   │   │       ├── kafka_publisher.py
 │   │   │       └── pubsub_publisher.py
 │   │   ├── README.md
 │   │   └── services
-│   ├── optimizer-engine
+│   │       ├── __init__.py
+│   │       ├── __pycache__
+│   │       │   ├── __init__.cpython-311.pyc
+│   │       │   ├── request.cpython-311.pyc
+│   │       │   └── telemetry.cpython-311.pyc
+│   │       ├── archives.py
+│   │       ├── request.py
+│   │       ├── states.py
+│   │       └── telemetry.py
 │   ├── shared
+│   │   ├── configs
+│   │   │   └── global_config.py
 │   │   └── schemas
-│   │       ├── orders.py
+│   │       ├── __init__.py
+│   │       ├── __pycache__
+│   │       │   ├── __init__.cpython-311.pyc
+│   │       │   ├── product.cpython-311.pyc
+│   │       │   ├── protocol.cpython-311.pyc
+│   │       │   ├── request.cpython-311.pyc
+│   │       │   └── telemetry.cpython-311.pyc
+│   │       ├── drones.py
+│   │       ├── mission.py
+│   │       ├── product.py
 │   │       ├── protocol.py
 │   │       ├── request.py
-│   │       └── telemetry.py
-│   ├── simulator
-│   └── state-manager
+│   │       ├── telemetry.py
+│   │       └── warehouses.py
+│   └── simulator
+│       └── main.py
 └── uv.lock
+```
+
+## 6. Environnements isolés
+
+```
+┌──────────────────────────────────────────────────────────┐
+│           STRATÉGIE MULTI-ENVIRONNEMENTS                 │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│  Chaque environnement = Projet GCP isolé                 │
+│                                                          │
+│  ┌─────────────────────────────────────────────────┐     │
+│  │ LOCAL (Dev Machine)                             │     │
+│  │ - Émulateurs (Pub/Sub, Firestore)               │     │
+│  │ - Docker Compose                                │     │
+│  │ - Pas de coût GCP                               │     │
+│  └─────────────────────────────────────────────────┘     │
+│                         │                                │
+│                         ▼                                │
+│  ┌─────────────────────────────────────────────────┐     │
+│  │ DEV (GCP Project: drone-fleet-optimizer-dev)    │     │
+│  │ - Services GCP réels (Pub/Sub, Firestore)       │     │
+│  │ - Deploy automatique sur push 'develop'         │     │
+│  │ - Données de test                               │     │
+│  └─────────────────────────────────────────────────┘     │
+│                         │                                │
+│                         ▼                                │
+│  ┌─────────────────────────────────────────────────┐     │
+│  │ PROD (GCP Project: drone-fleet-optimizer-prod)  │     │
+│  │ - Environnement de production                   │     │
+│  │ - Deploy seulement via release tags             │     │
+│  │ - Monitoring strict                             │     │
+│  └─────────────────────────────────────────────────┘     │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+
+main (prod, deploy manuel)
+  │
+  ├── develop (dev, deploy auto lors d'un merge)
+  │     │
+  │     ├── feature/add-battery-optimization (local)
+  │     ├── feature/new-optimizer-algorithm
+  │     └── bugfix/fix-firestore-batch
+  │
+  └── hotfix/critical-pubsub-fix (merge direct dans main)
+```

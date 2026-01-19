@@ -26,6 +26,7 @@ COPY pyproject.toml uv.lock /app/
 # uv sync : reads pyproject.toml and uv.lock automatically
 # --system : installs into the system Python (no virtual env needed in Docker)
 # --frozen : ensures we use exact versions from uv.lock (reproducible builds)
+# --no-cache : force rebuild uv.lock (removee it to save build time)
 RUN uv sync --system --frozen --no-cache
 
 # Copy the source code
@@ -44,4 +45,3 @@ EXPOSE 8000
 
 # Run the application
 CMD ["uvicorn", "src.ingestion-api.main:app", "--host", "0.0.0.0", "--port", "8000"]
-

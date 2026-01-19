@@ -16,7 +16,7 @@ class PubSubPublisher(MessagePublisher):
     def __init__(self, project_id: str):
         if pubsub_v1 is None:
             raise ImportError("google-cloud-pubsub library is not installed.")
-        
+
         self.publisher = pubsub_v1.PublisherClient()
         self.project_id = project_id
 
@@ -28,21 +28,22 @@ class PubSubPublisher(MessagePublisher):
         try:
             # Construct full topic path
             topic_path = self.publisher.topic_path(self.project_id, topic)
-            
+
             data_str = json.dumps(message)
             data = data_str.encode("utf-8")
 
             # Pub/Sub specific args (like attributes or ordering keys)
             future = self.publisher.publish(topic_path, data, **kwargs)
-            
+
             # Block to ensure message ID is returned (confirms publish)
             message_id = future.result()
+            print(f"Message published to Pub/Sub: {message_id}")
             return True
         except Exception as e:
             print(f"Error publishing to Pub/Sub: {e}")
             return False
 
     def close(self):
-        # Pub/Sub client handles connections automatically, 
+        # Pub/Sub client handles connections automatically,
         # but explicit cleanup can be done if needed.
         pass

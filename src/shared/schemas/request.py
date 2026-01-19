@@ -15,19 +15,19 @@ class DeliveryRequest(BaseModel):
     request_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = Field(default_factory=datetime.utcnow)
     priority: UrgencyLevel
-    
+
     # Locations
     pickup_location: GeoPoint   # Where to pick up the package (e.g., Central warehouse)
     dropoff_location: GeoPoint  # Where to deliver (e.g., South Hospital)
-    
+
     # Package Details
     product_type: ProductType
     package_weight_kg: float = Field(..., gt=0, description="Total weight including packaging")
     content_description: str    # "Covid Vaccines", "O+ Blood"
-    
+
     # Constraints
     requires_cold_chain: bool = False
-    
+
     # Metadata
     requester_id: Optional[str] = None # Who asked for this (Doctor ID, Hospital ID)
 

@@ -6,8 +6,8 @@ router = APIRouter()
 
 @router.get("/states/{drone_id}")
 async def get_order(drone_id: int) -> dict[str, Any]:
-    
-    return { 
+
+    return {
         "drone_id": drone_id,
-        "position": "24°45°187°"    
+        "position": "24°45°187°"
     }

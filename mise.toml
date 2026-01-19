@@ -40,18 +40,19 @@ FIRESTORE_EMULATOR_HOST = "localhost:8080"
 # --- Linting ---
 "lint:python" = "uv run ruff check src && uv run mypy src"
 "lint:java" = "cd src/state-manager && ./gradlew checkstyleMain"
-"lint:terraform" = "terraform fmt -recursive infrastructure/terraform"
+"lint:terraform" = "terraform fmt -recursive infrastructure/on_cloud/terraform"
 "lint:all" = "mise run lint:python && mise run lint:java && mise run lint:terraform"
 
 # --- Infrastructure (Terraform) ---
-"infra:init-dev" = "cd infrastructure/terraform/environments/dev && terraform init"
-"infra:plan-dev" = "cd infrastructure/terraform/environments/dev && terraform plan"
-"infra:apply-dev" = "cd infrastructure/terraform/environments/dev && terraform apply"
+"infra:init-dev" = "cd infrastructure/on_cloud/terraform/environments/dev && terraform init"
+"infra:plan-dev" = "cd infrastructure/on_cloud/terraform/environments/dev && terraform plan"
+"infra:apply-dev" = "cd infrastructure/on_cloud/terraform/environments/dev && terraform apply"
+"infra:destroy-dev" = "cd infrastructure/on_cloud/terraform/environments/dev && terraform destroy"
 
-"infra:init-prod" = "cd infrastructure/terraform/environments/prod && terraform init"
-"infra:plan-prod" = "cd infrastructure/terraform/environments/prod && terraform plan"
-"infra:apply-prod" = "cd infrastructure/terraform/environments/prod && terraform apply"
-
+"infra:init-prod" = "cd infrastructure/on_cloud/terraform/environments/prod && terraform init"
+"infra:plan-prod" = "cd infrastructure/on_cloud/terraform/environments/prod && terraform plan"
+"infra:apply-prod" = "cd infrastructure/on_cloud/terraform/environments/prod && terraform apply"
+"infra:destroy-prod" = "cd infrastructure/on_cloud/terraform/environments/prod && terraform destroy"
 # --- Deployment Helpers ---
 "deploy:build-ingestion" = "docker build -t ingestion-api:local -f src/ingestion-api/Dockerfile ."
 "deploy:build-state-manager" = "cd src/state-manager && ./gradlew build && docker build -t state-manager:local ."
@@ -59,3 +60,24 @@ FIRESTORE_EMULATOR_HOST = "localhost:8080"
 # --- Utilities ---
 "logs:ingestion-dev" = "gcloud run services logs tail ingestion-api --project=drone-fleet-dev"
 "logs:state-manager-dev" = "gcloud run services logs tail state-manager --project=drone-fleet-dev"
+
+# --- Force Delete All Resources ---
+"gcp:delete-all-dev" = """
+  echo "DANGER: This will DELETE all Cloud Run services in dev."
+  echo "Type 'delete' to confirm:"
+  read -r response
+  if [[ "$response" == "delete" ]]; then
+    terraform -chdir=infrastructure/on_cloud/terraform/environments/dev destroy -auto-approve
+    gcloud run services delete ingestion-api --project=drone-fleet-dev --region=europe-west1 --quiet
+    gcloud run services delete state-manager --project=drone-fleet-dev --region=europe-west1 --quiet
+    gcloud run services delete optimizer --project=drone-fleet-dev --region=europe-west1 --quiet
+    echo "All services deleted."
+  else
+    echo "Aborted."
+  fi
+"""
+# --- Cost Estimation ---
+"gcp:cost-estimate-dev" = """
+  gcloud run services describe ingestion-api --project=drone-fleet-dev --region=europe-west1 \
+  --format='value(spec.template.metadata.annotations[autoscaling.knative.dev/minScale])'
+"""

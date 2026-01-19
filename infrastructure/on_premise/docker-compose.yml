@@ -1,5 +1,12 @@
 services:
 
+  # To run emulator only :
+  # docker compose up -d pubsub-emulator firestore-emulator pubsub-init
+  # To run all docker-compose :
+  # docker compose --profile full up --build
+  # TODO : Need to add profiles: full to proper component
+
+
   pubsub-emulator:
     image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
     command: gcloud beta emulators pubsub start --project=drone-project-dev --host-port=0.0.0.0:8085
@@ -8,7 +15,8 @@ services:
     networks:
       - drone-network
 
-  # Service éphémère qui configure les topics au démarrage
+  # Ephemeral service to configure topics on emulator start because GCP
+  # emulators don't save topics and content when container is turned off
   pubsub-init:
     image: python:3.11-slim
     working_dir: /app
@@ -31,14 +39,14 @@ services:
     environment:
       # env variable that determines which .env file to load
       # global_config.py will read this and load config/dev.env
-      ENVIRONMENT: dev
-      
+      ENVIRONMENT: local
+
       # pub/sub emulator config
       # the Google SDK ignores real GCP auth with this variable
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
-      
-      # DEPLOYMENT_STRATEGY and other config values are loaded from config/dev.env
-      # via pydantic_settings in global_config.py
+
+      # DEPLOYMENT_STRATEGY and other config values are loaded from
+      # config/dev.env via pydantic_settings in global_config.py
     depends_on:
       - pubsub-emulator
       - pubsub-init
@@ -46,6 +54,8 @@ services:
       - "8000:8000"
     networks:
       - drone-network
+    profiles:
+    - full
 
   # state-manager:
   #   build:
@@ -56,6 +66,19 @@ services:
   #     SPRING_CLOUD_GCP_PROJECT_ID: drone-project-dev
   #   depends_on:
   #     - pubsub-emulator
+  #   networks:
+  #     - drone-network
+
+  # firestore-emulator:
+  #   image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+  #   command: gcloud beta emulators firestore start --host-port=0.0.0.0:8080
+  #   ports:
+  #     - "8080:8080"
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8080"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
   #   networks:
   #     - drone-network
 

@@ -1,41 +1,87 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, ValidationError, field_validator
 
+
 class Settings(BaseSettings):
+    """
+    Application settings with environment-based configuration.
+    Automatically loads the appropriate .env file based on ENVIRONMENT variable.
+    """
 
     # Environment
-    environment: str = 'local'
+    environment: Literal['local', 'dev', 'prod'] = 'local'
+    deployment_strategy: Literal['on_cloud', 'on_premise'] = 'on_cloud'
 
     # GCP
-    project_id: str = Field(..., description="GCP Project ID")
-    region: str = Field(default='europe-west1', description="GCP Region")
-    
+    project_id:  Literal['drone-fleet-dev', 'drone-fleet-prod'] = 'on_cloud'
+    gcp_region: str = Field(default='europe-west1', description="GCP Region")
+
     # Cloud Run
-    min_instances: int = Field(default=0, ge=0, le=100)
-    
+    min_instances: int = Field(default=0, ge=0, le=100, description="Minimum Cloud Run instances")
+
+    # Pub/Sub
+    pubsub_emulator_host: str | None = Field(default=None, description="Pub/Sub emulator host (for local dev)")
+    pubsub_topic_telemetry: str = Field(default='telemetry', description="Pub/Sub topic for telemetry")
+    pubsub_topic_orders: str = Field(default='orders', description="Pub/Sub topic for orders")
+    pubsub_topic_commands: str = Field(default='commands', description="Pub/Sub topic for commands")
+
+    # Kafka (for on_premise)
+    kafka_bootstrap_servers: str = Field(default='localhost:9092', description="Kafka bootstrap servers")
+
+    # Cloud Run URLs
+    state_manager_url: str | None = Field(default=None, description="State Manager Cloud Run URL")
+    optimizer_url: str | None = Field(default=None, description="Optimizer Cloud Run URL")
+
+    # API Settings (for local)
+    ingestion_api_host: str = Field(default='0.0.0.0', description="Ingestion API host")
+    ingestion_api_port: int = Field(default=8000, description="Ingestion API port")
+
+    # Firestore Emulator (for local)
+    firestore_emulator_host: str | None = Field(default=None, description="Firestore emulator host")
+
     # Feature Flags
-    feature_battery_optimization: bool = False  # convert string "true" to boolean True
-    
+    feature_battery_optimization: bool = Field(default=False, description="Enable battery optimization feature")
+    feature_advanced_vrp: bool = Field(default=False, description="Enable advanced VRP feature")
+
     # Logging
-    log_level: str = Field(default='INFO', pattern='^(DEBUG|INFO|WARNING|ERROR)$')
-    
-    model_config = SettingsConfigDict(
-        env_file='config/dev.env',
-        env_file_encoding='utf-8',
-        case_sensitive=False,  # to have PROJECT_ID = project_id
-        extra='ignore'          # to skip indefined vars
-    )
-    
+    log_level: str = Field(default='INFO', pattern='^(DEBUG|INFO|WARNING|ERROR)$', description="Log level")
+
+    # Monitoring (for prod)
+    enable_profiling: bool = Field(default=False, description="Enable profiling")
+    metrics_export_interval: int = Field(default=60, description="Metrics export interval in seconds")
+
     @field_validator('project_id')
-    def validate_project_id(cls, v):
+    def validate_project_id(self, v):
         if not v.startswith('drone-fleet-'):
             raise ValueError("PROJECT_ID must start with 'drone-fleet-'")
         return v
 
-# Instantiation (validation automatique)
+    @property
+    def is_local(self) -> bool:
+        """Check if running in local environment."""
+        return self.environment == 'local'
+
+    @property
+    def is_production(self) -> bool:
+        """Check if running in production environment."""
+        return self.environment == 'prod'
+
+    model_config = SettingsConfigDict(
+        env_file=f'config/{environment}.env',  # Autoloaded based on ENVIRONMENT
+        env_file_encoding='utf-8',
+        case_sensitive=False,  # to have PROJECT_ID = project_id
+        extra='ignore'  # to skip undefined vars
+    )
+
+
+# Instantiation with dynamic env file loading
 try:
-    settings = Settings()
-    print(f"Config loaded: {settings.project_id}")
+    settings = Settings() # get correct env from model_config
+    print(f"Config loaded for environment: {settings.environment}")
+    print(f"Project ID: {settings.project_id}")
+    print(f"Deployment strategy: {settings.deployment_strategy}")
 except ValidationError as e:
     print(f"Config error: {e}")
     exit(1)

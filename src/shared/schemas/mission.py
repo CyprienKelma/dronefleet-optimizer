@@ -20,10 +20,10 @@ class MissionOrder(BaseModel):
     mission_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     drone_id: str
     assigned_at: datetime
-    
+
     # Ordered list of things to do
     # Example: [FLY_TO(Warehouse), PICKUP, FLY_TO(Hospital), DROPOFF]
     sequence: List[MissionAction]
-    
+
     # For tracking
     request_ids_covered: List[str] # Which packages does this mission handle

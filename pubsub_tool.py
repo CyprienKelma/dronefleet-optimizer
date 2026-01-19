@@ -1,6 +1,4 @@
 import os
-import sys
-import base64
 from google.cloud import pubsub_v1
 from google.api_core.exceptions import AlreadyExists, NotFound
 
@@ -65,7 +63,7 @@ def read_messages(sub_id):
             request={"subscription": sub_path, "max_messages": 5},
             timeout=5.0
         )
-        
+
         if not response.received_messages:
             print("📭 Aucun message en attente.")
             return
@@ -93,9 +91,9 @@ def main():
         print("4. Publier un message")
         print("5. Lire les messages (Pull)")
         print("0. Quitter")
-        
+
         choice = input("\nVotre choix : ")
-        
+
         if choice == "1":
             list_topics()
         elif choice == "2":
@@ -119,4 +117,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

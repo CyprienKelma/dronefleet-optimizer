@@ -18,7 +18,7 @@ async def create_order(
 ) -> Dict[str, Any]:
     """
     Ingest a new delivery order.
-    
+
     - Validates the payload (Pydantic)
     - Publishes to the event bus
     - Returns the request ID
@@ -46,7 +46,7 @@ async def create_order(
 @router.get("/orders/{order_id}")
 async def get_order(order_id: str) -> Dict[str, Any]:
     # Placeholder for status check - would likely query Firestore or State Manager
-    return { 
+    return {
         "order_id": order_id,
         "state": "UNKNOWN", # Implementation pending State Manager integration
         "note": "Status lookup not yet connected to persistence layer."
