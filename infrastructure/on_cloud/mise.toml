@@ -1,0 +1,78 @@
+# on_cloud infrastructure tasks (Terraform, GCP)
+
+# --- Linting ---
+[tasks.lint]
+description = "Format Terraform files"
+run = "terraform fmt -recursive terraform"
+
+# --- Dev Environment ---
+[tasks."infra:init:dev"]
+description = "Initialize Terraform for dev environment"
+dir = "terraform/environments/dev"
+run = "terraform init"
+
+[tasks."infra:plan:dev"]
+description = "Plan Terraform changes for dev environment"
+dir = "terraform/environments/dev"
+run = "terraform plan"
+
+[tasks."infra:apply:dev"]
+description = "Apply Terraform changes to dev environment"
+dir = "terraform/environments/dev"
+run = "terraform apply"
+
+[tasks."infra:destroy:dev"]
+description = "Destroy dev environment infrastructure"
+dir = "terraform/environments/dev"
+run = "terraform destroy"
+
+# --- Prod Environment ---
+[tasks."infra:init:prod"]
+description = "Initialize Terraform for prod environment"
+dir = "terraform/environments/prod"
+run = "terraform init"
+
+[tasks."infra:plan:prod"]
+description = "Plan Terraform changes for prod environment"
+dir = "terraform/environments/prod"
+run = "terraform plan"
+
+[tasks."infra:apply:prod"]
+description = "Apply Terraform changes to prod environment"
+dir = "terraform/environments/prod"
+run = "terraform apply"
+
+[tasks."infra:destroy:prod"]
+description = "Destroy prod environment infrastructure"
+dir = "terraform/environments/prod"
+run = "terraform destroy"
+
+# --- Logs ---
+[tasks."logs:ingestion:dev"]
+description = "Tail ingestion-api logs in dev"
+run = "gcloud run services logs tail ingestion-api --project=drone-fleet-dev"
+
+[tasks."logs:state-manager:dev"]
+description = "Tail state-manager logs in dev"
+run = "gcloud run services logs tail state-manager --project=drone-fleet-dev"
+
+# --- Cost Estimation ---
+[tasks."gcp:cost-estimate:dev"]
+description = "Show autoscaling config for ingestion-api"
+run = """
+gcloud run services describe ingestion-api --project=drone-fleet-dev --region=europe-west1 \
+  --format='value(spec.template.metadata.annotations[autoscaling.knative.dev/minScale])'
+"""
+
+# --- Danger Zone ---
+[tasks."danger:delete-all:dev"]
+description = "DANGER: Delete all Cloud Run services in dev"
+shell = "bash"
+confirm = "This will DELETE all Cloud Run services in dev. Are you sure?"
+run = """
+terraform -chdir=terraform/environments/dev destroy -auto-approve
+gcloud run services delete ingestion-api --project=drone-fleet-dev --region=europe-west1 --quiet
+gcloud run services delete state-manager --project=drone-fleet-dev --region=europe-west1 --quiet
+gcloud run services delete optimizer --project=drone-fleet-dev --region=europe-west1 --quiet
+echo "All services deleted."
+"""

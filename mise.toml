@@ -1,10 +1,22 @@
+experimental_monorepo_root = true
+
+[monorepo]
+config_roots = [
+    "infrastructure/*/",
+    "src/*/",
+]
+
+[settings]
+python.uv_venv_auto = true
+
 [tools]
-python = "3.11"
 uv = "0.5.11"
+python = "3.11"
 java = "temurin-21"
+## infra
 terraform = "1.9.0"
+## cli
 gcloud = "latest"
-jq = "1.7.1"
 
 [env]
 # Default to local development
@@ -14,70 +26,48 @@ PROJECT_ID = "drone-fleet-dev"
 PYTHONPATH = "src"
 UV_PROJECT_ENVIRONMENT = ".venv"
 
+# Automatic virtualenv activation
+_.python.venv = { path = ".venv", create = true }
+
 # Local emulators
 PUBSUB_EMULATOR_HOST = "localhost:8085"
 FIRESTORE_EMULATOR_HOST = "localhost:8080"
 
-[tasks]
 # --- Project Setup ---
-"project:init" = "uv venv && uv sync"
-"project:clean" = "rm -rf .venv __pycache__ **/__pycache__ **/*.pyc"
+[tasks.init]
+description = "Initialize project: create venv and sync dependencies"
+run = ["uv venv", "uv sync"]
 
-# --- Local Development ---
-"local:emulators" = "docker compose -f infrastructure/on_premise/docker-compose.yml up -d"
-"local:stop" = "docker compose -f infrastructure/on_premise/docker-compose.yml down"
+[tasks.clean]
+description = "Clean project: remove venv and cache files"
+run = "rm -rf .venv __pycache__ **/__pycache__ **/*.pyc"
 
-"local:ingestion" = "ENVIRONMENT=local uv run fastapi dev src/ingestion-api/main.py"
-"local:simulator" = "ENVIRONMENT=local uv run python src/simulator/main.py"
-"local:state-manager" = "cd src/state-manager && ENVIRONMENT=local ./gradlew bootRun"
+# --- Testing (repo-level) ---
+[tasks."test:unit"]
+description = "Run unit tests"
+run = "uv run pytest tests/unit -v"
 
-# --- Testing ---
-"test:unit" = "uv run pytest tests/unit -v"
-"test:integration" = "uv run pytest tests/integration -v"
-"test:e2e" = "uv run pytest tests/e2e -v"
-"test:coverage" = "uv run pytest --cov=src --cov-report=html"
+[tasks."test:integration"]
+description = "Run integration tests"
+run = "uv run pytest tests/integration -v"
 
-# --- Linting ---
-"lint:python" = "uv run ruff check src && uv run mypy src"
-"lint:java" = "cd src/state-manager && ./gradlew checkstyleMain"
-"lint:terraform" = "terraform fmt -recursive infrastructure/on_cloud/terraform"
-"lint:all" = "mise run lint:python && mise run lint:java && mise run lint:terraform"
+[tasks."test:e2e"]
+description = "Run end-to-end tests"
+run = "uv run pytest tests/e2e -v"
 
-# --- Infrastructure (Terraform) ---
-"infra:init-dev" = "cd infrastructure/on_cloud/terraform/environments/dev && terraform init"
-"infra:plan-dev" = "cd infrastructure/on_cloud/terraform/environments/dev && terraform plan"
-"infra:apply-dev" = "cd infrastructure/on_cloud/terraform/environments/dev && terraform apply"
-"infra:destroy-dev" = "cd infrastructure/on_cloud/terraform/environments/dev && terraform destroy"
+[tasks."test:coverage"]
+description = "Run tests with coverage report"
+run = "uv run pytest --cov=src --cov-report=html"
 
-"infra:init-prod" = "cd infrastructure/on_cloud/terraform/environments/prod && terraform init"
-"infra:plan-prod" = "cd infrastructure/on_cloud/terraform/environments/prod && terraform plan"
-"infra:apply-prod" = "cd infrastructure/on_cloud/terraform/environments/prod && terraform apply"
-"infra:destroy-prod" = "cd infrastructure/on_cloud/terraform/environments/prod && terraform destroy"
-# --- Deployment Helpers ---
-"deploy:build-ingestion" = "docker build -t ingestion-api:local -f src/ingestion-api/Dockerfile ."
-"deploy:build-state-manager" = "cd src/state-manager && ./gradlew build && docker build -t state-manager:local ."
+[tasks."test:all"]
+description = "Run all tests"
+depends = ["test:unit", "test:integration", "test:e2e"]
 
-# --- Utilities ---
-"logs:ingestion-dev" = "gcloud run services logs tail ingestion-api --project=drone-fleet-dev"
-"logs:state-manager-dev" = "gcloud run services logs tail state-manager --project=drone-fleet-dev"
-
-# --- Force Delete All Resources ---
-"gcp:delete-all-dev" = """
-  echo "DANGER: This will DELETE all Cloud Run services in dev."
-  echo "Type 'delete' to confirm:"
-  read -r response
-  if [[ "$response" == "delete" ]]; then
-    terraform -chdir=infrastructure/on_cloud/terraform/environments/dev destroy -auto-approve
-    gcloud run services delete ingestion-api --project=drone-fleet-dev --region=europe-west1 --quiet
-    gcloud run services delete state-manager --project=drone-fleet-dev --region=europe-west1 --quiet
-    gcloud run services delete optimizer --project=drone-fleet-dev --region=europe-west1 --quiet
-    echo "All services deleted."
-  else
-    echo "Aborted."
-  fi
-"""
-# --- Cost Estimation ---
-"gcp:cost-estimate-dev" = """
-  gcloud run services describe ingestion-api --project=drone-fleet-dev --region=europe-west1 \
-  --format='value(spec.template.metadata.annotations[autoscaling.knative.dev/minScale])'
-"""
+# --- Lint Aggregator ---
+[tasks."lint:all"]
+description = "Run all linters across the monorepo"
+depends = [
+    "//src/ingestion-api:lint",
+    "//src/state-manager:lint",
+    "//infrastructure/on_cloud:lint",
+]

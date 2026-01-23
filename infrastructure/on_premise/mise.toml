@@ -1,0 +1,13 @@
+# on_premise infrastructure tasks (Docker Compose for local emulators)
+
+[tasks.up]
+description = "Start local emulators (Pub/Sub, Firestore)"
+run = "docker compose -f docker-compose.yml up -d"
+
+[tasks.down]
+description = "Stop local emulators"
+run = "docker compose -f docker-compose.yml down"
+
+[tasks.logs]
+description = "Show logs from local emulators"
+run = "docker compose -f docker-compose.yml logs -f"
