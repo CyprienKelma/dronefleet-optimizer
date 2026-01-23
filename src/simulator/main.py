@@ -1,16 +1,18 @@
-import time
 import random
-import uuid
-import requests
-import logging
 import signal
-from datetime import datetime, timezone
-from typing import List
+import time
+import uuid
+from datetime import UTC, datetime
+
+import requests
+import structlog
+
+from shared.configs.logging_config import setup_logging
+from shared.schemas.protocol import DroneStatus
 
 # Assuming the shared schemas are available in the python path
 # If running via 'uv run', the python path should be set correctly to include src/
 from shared.schemas.telemetry import DroneTelemetry, GeoPoint
-from shared.schemas.protocol import DroneStatus
 
 # Configuration
 API_URL = "http://localhost:8000/api/v1/telemetry"
@@ -18,12 +20,9 @@ DRONE_COUNT = 15
 UPDATE_INTERVAL_SEC = 1.0
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler()]
-)
-logger = logging.getLogger(__name__)
+setup_logging()
+logger = structlog.get_logger(__name__)
+
 
 class SimulatedDrone:
     def __init__(self, drone_id: str):
@@ -44,13 +43,13 @@ class SimulatedDrone:
         """Update drone state for the next time step."""
         # Update position
         if self.status in [DroneStatus.MOVING, DroneStatus.DELIVERING]:
-             self.lat += self.lat_velocity
-             self.lon += self.lon_velocity
-             self.speed = random.uniform(30.0, 60.0) # km/h
-             self.battery -= 0.05 # Drain battery
+            self.lat += self.lat_velocity
+            self.lon += self.lon_velocity
+            self.speed = random.uniform(30.0, 60.0)  # km/h
+            self.battery -= 0.05  # Drain battery
         else:
-             self.speed = 0.0
-             self.battery -= 0.01 # Idle drain
+            self.speed = 0.0
+            self.battery -= 0.01  # Idle drain
 
         # Simple state machine simulation
         # 10% chance to start moving if IDLE
@@ -73,25 +72,28 @@ class SimulatedDrone:
     def get_telemetry(self) -> DroneTelemetry:
         return DroneTelemetry(
             drone_id=self.drone_id,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             position=GeoPoint(lat=self.lat, lon=self.lon),
             battery_percentage=round(self.battery, 2),
             speed_kmh=round(self.speed, 2),
             status=self.status,
-            current_mission_id=self.mission_id
+            current_mission_id=self.mission_id,
         )
 
+
 def main():
-    logger.info(f"Starting Drone Fleet Simulator with {DRONE_COUNT} drones...")
+    logger.info("Starting Drone Fleet Simulator", drone_count=DRONE_COUNT)
 
     # Initialize fleet
-    drones: List[SimulatedDrone] = [SimulatedDrone(f"DRONE-{i+1:03d}") for i in range(DRONE_COUNT)]
+    drones: list[SimulatedDrone] = [
+        SimulatedDrone(f"DRONE-{i + 1:03d}") for i in range(DRONE_COUNT)
+    ]
 
     running = True
 
     def signal_handler(sig, frame):
         nonlocal running
-        logger.info("\nStopping simulator...")
+        logger.info("Stopping simulator...")
         running = False
 
     signal.signal(signal.SIGINT, signal_handler)
@@ -104,17 +106,22 @@ def main():
             telemetry = drone.get_telemetry()
 
             try:
-                # We use model_dump(mode='json') to handle datetime serialization automatically
-                # before sending, but since we use requests which expects a dict/json,
-                # we can pass the dict directly if using the 'json' parameter.
-                payload = telemetry.model_dump(mode='json')
+                # We use model_dump(mode='json') to handle datetime serialization
+                # automatically before sending, but since we use requests which
+                # expects a dict/json, we can pass the dict directly if using
+                # the 'json' parameter.
+                payload = telemetry.model_dump(mode="json")
 
                 response = requests.post(API_URL, json=payload, timeout=0.5)
                 if response.status_code != 202:
-                    logger.warning(f"Failed to push telemetry for {drone.drone_id}: {response.status_code}")
+                    logger.warning(
+                        "Failed to push telemetry",
+                        drone_id=drone.drone_id,
+                        status_code=response.status_code,
+                    )
 
             except requests.exceptions.RequestException as e:
-                logger.error(f"Connection error: {e}")
+                logger.error("Connection error", error=str(e))
                 # Don't crash the simulator if API is down, just wait and retry
 
         # Calculate time to sleep to maintain interval
@@ -122,10 +129,14 @@ def main():
         sleep_time = max(0, UPDATE_INTERVAL_SEC - elapsed)
 
         if running:
-            # logger.info(f"Broadcasted telemetry for {len(drones)} drones. Sleeping {sleep_time:.2f}s")
+            # logger.info(
+            #     f"Broadcasted telemetry for {len(drones)} drones. "
+            #     f"Sleeping {sleep_time:.2f}s"
+            # )
             time.sleep(sleep_time)
 
     logger.info("Simulator stopped.")
+
 
 if __name__ == "__main__":
     main()

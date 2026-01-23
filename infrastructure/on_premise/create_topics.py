@@ -1,25 +1,22 @@
-from google.pubsub_v1.types.pubsub import Topic
 import os
 import time
+
+from google.api_core.exceptions import AlreadyExists, RetryError, ServiceUnavailable
 from google.cloud import pubsub_v1
-from google.api_core.exceptions import AlreadyExists, ServiceUnavailable, RetryError
+from google.pubsub_v1.types.pubsub import Topic
 
 # Configuration
 PROJECT_ID = os.getenv("PROJECT_ID", "drone-fleet-optimizer-local")
-TOPICS = [
-    "requests",
-    "telemetry",
-    "decisions",
-    "orders"
-]
+TOPICS = ["requests", "telemetry", "decisions", "orders"]
 
 # Create subscriptions for debugging/monitoring
 SUBSCRIPTIONS = {
     "requests": ["requests-sub"],
     "telemetry": ["telemetry-sub"],
     "decisions": ["decisions-sub"],
-    "orders": ["orders-sub"]
+    "orders": ["orders-sub"],
 }
+
 
 def wait_for_emulator():
     print("Waiting for Pub/Sub emulator...")
@@ -41,6 +38,7 @@ def wait_for_emulator():
             retries += 1
 
     return False
+
 
 def init_pubsub():
     if not wait_for_emulator():
@@ -76,6 +74,7 @@ def init_pubsub():
                     print(f"  -- Subscription already exists: {sub_id}")
                 except Exception as e:
                     print(f"  -- Error creating subscription {sub_id}: {e}")
+
 
 if __name__ == "__main__":
     init_pubsub()
