@@ -1,0 +1,52 @@
+# Prevent local virtual environment from being included
+.venv/
+venv/
+
+# Git files
+.git/
+.gitignore
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Development and test files
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Logs
+*.log
+logs/
+
+# Environment files (keep config directory)
+.env
+.env.*
+!config/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

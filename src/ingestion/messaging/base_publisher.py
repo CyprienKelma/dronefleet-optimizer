@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any
+
 
 class MessagePublisher(ABC):
     """
@@ -8,7 +9,7 @@ class MessagePublisher(ABC):
     """
 
     @abstractmethod
-    def publish(self, topic: str, message: Dict[str, Any], **kwargs) -> bool:
+    def publish(self, topic: str, message: dict[str, Any], **kwargs) -> bool:
         """
         Publishes a message to a specific topic.
 
