@@ -17,6 +17,17 @@ insert_final_newline = true
 max_line_length = 80
 
 # ==============================================================================
+# Python & TOML
+# ==============================================================================
+# Python follows PEP 8, which recommends 4 spaces for indentation.
+[*.py]
+indent_size = 4
+
+# TOML files typically use 2 spaces; we keep the global default explicit here.
+[*.toml]
+indent_size = 2
+
+# ==============================================================================
 # Java
 # ==============================================================================
 # Standard Java conventions (Oracle style) use 4 spaces.
@@ -38,13 +49,6 @@ charset = utf-8
 indent_size = 2
 
 # ==============================================================================
-# Go (Golang)
-# ==============================================================================
-# Go requires tabs for indentation.
-[*.go]
-indent_style = tab
-indent_size = 4
-
 # ==============================================================================
 # Docker
 # ==============================================================================
