@@ -1,0 +1,74 @@
+root = true
+
+# ==============================================================================
+# Global Default Settings
+# ==============================================================================
+# - Defaults to 2 spaces (standard for JS/TS/Bun, JSON, YAML, HTML, CSS)
+# - UNIX-style newlines (LF)
+# - UTF-8 character set
+# ==============================================================================
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 2
+end_of_line = lf
+trim_trailing_whitespace = true
+insert_final_newline = true
+max_line_length = 80
+
+# ==============================================================================
+# Java
+# ==============================================================================
+# Standard Java conventions (Oracle style) use 4 spaces.
+# If you follow Google Java Style strictly (which uses 2), change this to 2.
+[*.java]
+indent_size = 4
+
+# Java Properties files are traditionally ISO-8859-1, but most modern apps use UTF-8.
+# We enforce UTF-8 here for consistency, but be aware if you support legacy Java 8 systems.
+[*.properties]
+charset = utf-8
+
+# ==============================================================================
+# Terraform
+# ==============================================================================
+# 'terraform fmt' enforces 2 spaces.
+# Explicitly listed for clarity, even though it matches our global default.
+[*.{tf,tfvars,hcl}]
+indent_size = 2
+
+# ==============================================================================
+# Go (Golang)
+# ==============================================================================
+# Go requires tabs for indentation.
+[*.go]
+indent_style = tab
+indent_size = 4
+
+# ==============================================================================
+# Docker
+# ==============================================================================
+# 4 spaces is preferred in Dockerfiles for multi-line readability.
+[{Dockerfile,*.dockerfile}]
+indent_size = 4
+
+# ==============================================================================
+# Makefiles
+# ==============================================================================
+# Makefiles require hard tabs.
+[Makefile]
+indent_style = tab
+
+# ==============================================================================
+# Markdown
+# ==============================================================================
+# Disable trimming to preserve 2-space hard line breaks.
+[*.{md,markdown}]
+trim_trailing_whitespace = false
+max_line_length = 0
+
+# ==============================================================================
+# Shell Scripts
+# ==============================================================================
+[*.{sh,bash,zsh}]
+indent_size = 2

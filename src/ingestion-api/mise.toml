@@ -1,0 +1,15 @@
+# ingestion-api module tasks
+
+[tasks.dev]
+description = "Run ingestion-api in development mode"
+run = "uv run fastapi dev main.py"
+env = { ENVIRONMENT = "local" }
+
+[tasks.lint]
+description = "Lint Python code with ruff and mypy"
+run = ["uv run ruff check .", "uv run mypy ."]
+
+[tasks.build]
+description = "Build Docker image for ingestion-api"
+dir = "{{config_root}}/../.."
+run = "docker build -t ingestion-api:local -f src/ingestion-api/Dockerfile ."

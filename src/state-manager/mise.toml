@@ -1,0 +1,21 @@
+# state-manager module tasks (Java/Gradle)
+
+[tasks.dev]
+description = "Run state-manager in development mode"
+run = "./gradlew bootRun"
+env = { ENVIRONMENT = "local" }
+
+[tasks.lint]
+description = "Run checkstyle on Java code"
+run = "./gradlew checkstyleMain"
+
+[tasks.build]
+description = "Build state-manager and Docker image"
+run = [
+    "./gradlew build",
+    "docker build -t state-manager:local .",
+]
+
+[tasks.test]
+description = "Run Gradle tests"
+run = "./gradlew test"
