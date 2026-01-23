@@ -2,9 +2,13 @@
 
 [tasks.run]
 description = "Run the drone simulator"
-run = "uv run python main.py"
-env = { ENVIRONMENT = "local" }
+dir = "{{env.MISE_PROJECT_ROOT}}"
+run = "uv run python {{config_root}}/main.py"
 
 [tasks.lint]
 description = "Lint Python code with ruff and mypy"
 run = ["uv run ruff check .", "uv run mypy ."]
+
+[tasks.test]
+dir = "{{env.MISE_PROJECT_ROOT}}"
+run = "pwd"

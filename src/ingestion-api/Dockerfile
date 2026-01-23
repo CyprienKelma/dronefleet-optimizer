@@ -9,20 +9,20 @@ ARG ENVIRONMENT=local
 # allow global_config.py to determine which .env file to load
 ENV ENVIRONMENT=${ENVIRONMENT}
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Exclude development dependencies from production builds
+ENV UV_NO_DEV=1
 
-# instal uv
+# No system dependencies needed
+
+# install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# keep cache of dependencies
-COPY pyproject.toml uv.lock /app/
-
-# uv sync to install dependencies
-# --frozen ensures we use exact versions from uv.lock (reproducible builds)
-RUN uv sync --frozen --no-cache --no-install-project
+# Install dependencies using cache mounts and bind mounts for better performance
+# This keeps dependency files out of the image layer and caches package downloads
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    uv sync --frozen --no-cache --no-install-project
 
 ENV PATH="/app/.venv/bin:$PATH"
 

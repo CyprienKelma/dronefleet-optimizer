@@ -11,5 +11,5 @@ run = ["uv run ruff check .", "uv run mypy ."]
 
 [tasks.build]
 description = "Build Docker image for ingestion-api"
-dir = "{{config_root}}/../.."
+dir = "{{env.MISE_PROJECT_ROOT}}"
 run = "docker build -t ingestion-api:local -f src/ingestion-api/Dockerfile ."

@@ -1,11 +1,15 @@
 from enum import Enum
+
 from pydantic import BaseModel, Field
+
 from .protocol import DroneStatus
 
+
 class DroneModel(str, Enum):
-    LIGHT_DELIVERY = "LIGHT_DELIVERY" # Quadcopter, small payload (<2kg), agile
-    HEAVY_LIFT = "HEAVY_LIFT"         # Hexacopter, heavy payload (up to 10kg)
-    LONG_RANGE = "LONG_RANGE"         # Hybrid/VTOL, long distance, medium payload
+    LIGHT_DELIVERY = "LIGHT_DELIVERY"  # Quadcopter, small payload (<2kg), agile
+    HEAVY_LIFT = "HEAVY_LIFT"  # Hexacopter, heavy payload (up to 10kg)
+    LONG_RANGE = "LONG_RANGE"  # Hybrid/VTOL, long distance, medium payload
+
 
 class Drone(BaseModel):
     id: str = Field(..., description="Unique drone serial number")
@@ -38,6 +42,6 @@ class Drone(BaseModel):
                 "max_payload_kg": 2.5,
                 "max_range_km": 15.0,
                 "cruise_speed_kmh": 60.0,
-                "battery_capacity_mah": 5000
+                "battery_capacity_mah": 5000,
             }
         }
