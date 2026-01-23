@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     deployment_strategy: Literal['on_cloud', 'on_premise'] = 'on_cloud'
 
     # GCP
-    project_id:  Literal['drone-fleet-optimizer-dev', 'drone-fleet-optimizer-prod'] = 'drone-fleet-optimizer-dev'
+    project_id:  Literal['drone-fleet-optimizer-local', 'drone-fleet-optimizer-dev', 'drone-fleet-optimizer-prod'] = 'drone-fleet-optimizer-local'
     gcp_region: str = Field(default='europe-west1', description="GCP Region")
 
     # Cloud Run

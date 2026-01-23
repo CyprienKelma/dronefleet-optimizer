@@ -21,11 +21,6 @@ spring:
         project-id: ${PROJECT_ID:drone-fleet-optimizer-local}
         enabled: true
 
-      # For local emulation, we can bypass credential check by setting this
-      credentials:
-        # Base64 for {"account": "fake", "type": "service_account"} to make the emualtor work
-        encoded-key: "eyJhY2NvdW50IjogImZha2UiLCAidHlwZSI6ICJzZXJ2aWNlX2FjY291bnQifQ==" # pragma: allowlist secret
-
 # Topics Pub/Sub
 pubsub:
   topics:

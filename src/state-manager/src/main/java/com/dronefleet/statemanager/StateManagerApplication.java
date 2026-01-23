@@ -13,9 +13,4 @@ public class StateManagerApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(StateManagerApplication.class, args);
 	}
-
-	@GetMapping("/test")
-	public String getStateManager(@RequestParam(value = "input", defaultValue = "default_value") String inputText) {
-		return String.format("It just works with %s.", inputText);
-	}
 }
