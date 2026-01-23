@@ -9,7 +9,7 @@ services:
 
   pubsub-emulator:
     image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
-    command: gcloud beta emulators pubsub start --project=drone-project-dev --host-port=0.0.0.0:8085
+    command: gcloud beta emulators pubsub start --project=drone-fleet-optimizer-local --host-port=0.0.0.0:8085
     ports:
       - "8085:8085"
     networks:
@@ -24,7 +24,7 @@ services:
       - ./create_topics.py:/app/create_topics.py
     environment:
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
-      PROJECT_ID: drone-project-dev
+      PROJECT_ID: drone-fleet-optimizer-local
     command: >
       bash -c "pip install google-cloud-pubsub && python create_topics.py"
     depends_on:
@@ -57,30 +57,33 @@ services:
     profiles:
     - full
 
-  # state-manager:
-  #   build:
-  #     context: ../../src/state-manager
-  #     dockerfile: Dockerfile
-  #   environment:
-  #     PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
-  #     SPRING_CLOUD_GCP_PROJECT_ID: drone-project-dev
-  #   depends_on:
-  #     - pubsub-emulator
-  #   networks:
-  #     - drone-network
+  state-manager:
+    build:
+      context: ../../src/state-manager
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      FIRESTORE_EMULATOR_HOST: firestore-emulator:8080
+      SPRING_CLOUD_GCP_PROJECT_ID: drone-fleet-optimizer-local
+    depends_on:
+      - pubsub-emulator
+      - firestore-emulator
+    networks:
+      - drone-network
 
-  # firestore-emulator:
-  #   image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
-  #   command: gcloud beta emulators firestore start --host-port=0.0.0.0:8080
-  #   ports:
-  #     - "8080:8080"
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8080"]
-  #     interval: 5s
-  #     timeout: 3s
-  #     retries: 5
-  #   networks:
-  #     - drone-network
+  firestore-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: gcloud beta emulators firestore start --host-port=0.0.0.0:8080
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - drone-network
 
 networks:
   drone-network:

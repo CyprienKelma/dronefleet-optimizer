@@ -5,7 +5,7 @@ from google.cloud import pubsub_v1
 from google.api_core.exceptions import AlreadyExists, ServiceUnavailable, RetryError
 
 # Configuration
-PROJECT_ID = os.getenv("PROJECT_ID", "drone-project-dev")
+PROJECT_ID = os.getenv("PROJECT_ID", "drone-fleet-optimizer-local")
 TOPICS = [
     "requests",
     "telemetry",
