@@ -18,15 +18,14 @@ services:
   # Ephemeral service to configure topics on emulator start because GCP
   # emulators don't save topics and content when container is turned off
   pubsub-init:
-    image: python:3.11-slim
+    image: ghcr.io/astral-sh/uv:0.5.11-python3.11-slim
     working_dir: /app
     volumes:
       - ./create_topics.py:/app/create_topics.py
     environment:
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
       PROJECT_ID: drone-fleet-optimizer-local
-    command: >
-      bash -c "pip install google-cloud-pubsub && python create_topics.py"
+    command: run create_topics.py
     depends_on:
       - pubsub-emulator
     networks:

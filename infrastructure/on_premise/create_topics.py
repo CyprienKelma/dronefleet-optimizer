@@ -1,3 +1,10 @@
+#!/usr/bin/env uv run
+# /// script
+# dependencies = [
+#   "google-cloud-pubsub",
+#   "google-api-core",
+# ]
+# ///
 import os
 import time
 
