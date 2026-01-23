@@ -17,14 +17,16 @@ java = "temurin-21"
 terraform = "1.9.0"
 ## cli
 gcloud = "latest"
+## linters
+prettier = "latest"
 
 [env]
+MISE_PROJECT_ROOT = "{{config_root}}"
 # Default to local development
 ENVIRONMENT = "local"
 DEPLOYMENT_STRATEGY = "on_cloud"
 PROJECT_ID = "drone-fleet-optimizer-local"
 PYTHONPATH = "src"
-UV_PROJECT_ENVIRONMENT = ".venv"
 
 # Automatic virtualenv activation
 _.python.venv = { path = ".venv", create = true }
@@ -68,6 +70,7 @@ depends = ["test:unit", "test:integration", "test:e2e"]
 description = "Run all linters across the monorepo"
 depends = [
     "//src/ingestion-api:lint",
+    "//src/simulator:lint",
     "//src/state-manager:lint",
     "//infrastructure/on_cloud:lint",
 ]
