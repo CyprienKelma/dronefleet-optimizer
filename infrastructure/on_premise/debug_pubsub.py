@@ -1,16 +1,15 @@
 from google.pubsub_v1.types.pubsub import Subscription, Topic
 
 
-import os
 from google.cloud import pubsub_v1
 from google.api_core.exceptions import ServiceUnavailable
+from shared.configs.global_config import settings
 
 # Configuration par défaut (basée sur ton docker-compose)
-PROJECT_ID = os.getenv("PROJECT_ID", "drone-project-dev")
-os.environ["PUBSUB_EMULATOR_HOST"] = os.getenv("PUBSUB_EMULATOR_HOST", "localhost:8085")
+PROJECT_ID = "drone-fleet-optimizer-local"
 
 def list_resources():
-    print(f"Connecting to emulator at {os.environ['PUBSUB_EMULATOR_HOST']}...")
+    print(f"Connecting to emulator at {settings.pubsub_emulator_host}...")
     print(f"Project: {PROJECT_ID}")
 
     publisher = pubsub_v1.PublisherClient()

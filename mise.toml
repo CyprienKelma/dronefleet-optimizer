@@ -10,7 +10,7 @@ jq = "1.7.1"
 # Default to local development
 ENVIRONMENT = "local"
 DEPLOYMENT_STRATEGY = "on_cloud"
-PROJECT_ID = "drone-fleet-dev"
+PROJECT_ID = "drone-fleet-optimizer-local"
 PYTHONPATH = "src"
 UV_PROJECT_ENVIRONMENT = ".venv"
 

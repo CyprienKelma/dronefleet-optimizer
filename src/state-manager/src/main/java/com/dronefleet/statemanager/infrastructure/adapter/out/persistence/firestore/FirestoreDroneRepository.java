@@ -1,4 +1,4 @@
-package com.dronefleet.statemanager.infrastructure.adapter.out.persistence;
+package com.dronefleet.statemanager.infrastructure.adapter.out.persistence.firestore;
 
 import com.dronefleet.statemanager.domain.model.Drone;
 import com.dronefleet.statemanager.domain.port.out.DroneRepository;
@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
-public class InMemoryDroneRepository implements DroneRepository {
+public class FirestoreDroneRepository implements DroneRepository {
     private final ConcurrentHashMap<String, Drone> storage = new ConcurrentHashMap<>();
 
     @Override

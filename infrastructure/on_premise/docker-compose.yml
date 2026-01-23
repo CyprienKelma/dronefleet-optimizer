@@ -69,6 +69,7 @@ services:
     depends_on:
       - pubsub-emulator
       - firestore-emulator
+      - pubsub-init
     networks:
       - drone-network
 
