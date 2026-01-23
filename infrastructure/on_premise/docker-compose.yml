@@ -1,11 +1,9 @@
 services:
-
   # To run emulator only :
   # docker compose up -d pubsub-emulator firestore-emulator pubsub-init
   # To run all docker-compose :
   # docker compose --profile full up --build
   # TODO : Need to add profiles: full to proper component
-
 
   pubsub-emulator:
     image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
@@ -18,14 +16,14 @@ services:
   # Ephemeral service to configure topics on emulator start because GCP
   # emulators don't save topics and content when container is turned off
   pubsub-init:
-    image: ghcr.io/astral-sh/uv:0.5.11-python3.11-slim
+    image: ghcr.io/astral-sh/uv:python3.11-alpine
     working_dir: /app
     volumes:
       - ./create_topics.py:/app/create_topics.py
     environment:
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
       PROJECT_ID: drone-fleet-optimizer-local
-    command: run create_topics.py
+    command: /app/create_topics.py
     depends_on:
       - pubsub-emulator
     networks:
@@ -54,7 +52,7 @@ services:
     networks:
       - drone-network
     profiles:
-    - full
+      - full
 
   state-manager:
     build:
