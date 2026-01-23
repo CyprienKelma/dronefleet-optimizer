@@ -6,6 +6,9 @@ config_roots = [
     "src/*/",
 ]
 
+[settings]
+python.uv_venv_auto = true
+
 [tools]
 uv = "0.5.11"
 python = "3.11"
@@ -22,6 +25,9 @@ DEPLOYMENT_STRATEGY = "on_cloud"
 PROJECT_ID = "drone-fleet-dev"
 PYTHONPATH = "src"
 UV_PROJECT_ENVIRONMENT = ".venv"
+
+# Automatic virtualenv activation
+_.python.venv = { path = ".venv", create = true }
 
 # Local emulators
 PUBSUB_EMULATOR_HOST = "localhost:8085"
