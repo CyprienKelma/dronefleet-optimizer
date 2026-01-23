@@ -1,0 +1,54 @@
+# ConfigurConfigation commune à tous les environnements
+
+spring:
+  application:
+    name: state-manager
+
+  # Active les Virtual Threads (Java 21)
+  threads:
+    virtual:
+      enabled: true
+
+  cloud:
+    gcp:
+      pubsub:
+        enabled: true
+      storage:
+        enabled: false
+      firestore:
+        enabled: true
+      core:
+        enabled: true
+
+  # Configuration Actuator (health checks pour Cloud Run)
+  boot:
+    actuator:
+      metrics:
+        export:
+          enabled: true
+
+# Configuration Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+
+# Logging
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    '[com.dronefleet.statemanager]': ${LOG_LEVEL:INFO}
+    '[com.google.cloud]': WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Application custom properties (accessibles via @ConfigurationProperties)
+app:
+  state-manager:
+    batch-write-interval: 5000  # 5 secondes (write-behind pattern)
+    max-batch-size: 100
