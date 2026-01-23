@@ -18,7 +18,7 @@ async def ingest_telemetry(
 ) -> Dict[str, Any]:
     """
     Ingest high-frequency drone telemetry.
-    
+
     - Validates payload
     - Pushes to 'telemetry' topic (fire and forget pattern mostly)
     """
@@ -31,4 +31,3 @@ async def ingest_telemetry(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(e)
         )
-

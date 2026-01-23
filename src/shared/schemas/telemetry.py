@@ -19,7 +19,7 @@ class DroneTelemetry(BaseModel):
     speed_kmh: float
     status: DroneStatus
     current_mission_id: Optional[str] = None # Null if IDLE
-    
+
     class Config:
         json_schema_extra = {
             "example": {

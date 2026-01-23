@@ -1,7 +1,11 @@
-import os
+import logging
+
+from shared.configs.global_config import settings
 from .base_publisher import MessagePublisher
 from .publisher.kafka_publisher import KafkaPublisher
 from .publisher.pubsub_publisher import PubSubPublisher
+
+logger = logging.getLogger(__name__)
 
 class PublisherFactory:
     """
@@ -10,43 +14,24 @@ class PublisherFactory:
 
     @staticmethod
     def get_publisher() -> MessagePublisher:
-        strategy = os.getenv('PROJECT_STRATEGY', 'on_cloud')
-        env = os.getenv('ENVIRONMENT', 'dev')
-        PROJECT_ID = os.getenv("PROJECT_ID", "drone-project-dev")
 
-                
-        if strategy == 'on_cloud':
+        if settings.deployment_strategy == 'on_cloud':
 
-            if env == 'dev':
-                bootstrap_servers = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
-                return PubSubPublisher(project_id=PROJECT_ID)
+            if not settings.project_id:
+                raise ValueError(f"PROJECT_ID must be set for cloud deployment (env={settings.environment})")
 
-            elif env == 'prod':
-                project_id = os.getenv('GCP_PROJECT_ID')
-                if not project_id:
-                    raise ValueError("GCP_PROJECT_ID must be set in production")
-                return PubSubPublisher(project_id=PROJECT_ID)
-                
+            # emulator pub/sub for local
+            if settings.environment == 'local' and settings.pubsub_emulator_host:
+                logger.info(f"Using Pub/Sub Emulator at {settings.pubsub_emulator_host}")
             else:
-                # Default fallback or mock for testing
-                print("Warning: Using default/mock publisher configuration.")
-                # Could return a MockPublisher here for unit tests
-                return PubSubPublisher(project_id=PROJECT_ID)
+                logger.info(f"Using real GCP Pub/Sub on {settings.project_id}")
+            return PubSubPublisher(project_id=settings.project_id)
 
-        elif strategy == 'on_premise':
-            # TODO Setup proper Factory once on_premise is implemented
-            if env == 'prod':
-                bootstrap_servers = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
-                if not bootstrap_servers:
-                    raise ValueError("KAFKA_BOOTSTRAP_SERVERS must be set for on-premise production")
-                return KafkaPublisher(bootstrap_servers=bootstrap_servers)
+        elif settings.deployment_strategy  == 'on_premise':
 
-            elif env == 'dev':
-                bootstrap_servers = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
-                return KafkaPublisher(bootstrap_servers=bootstrap_servers)
+            if not settings.kafka_bootstrap_servers:
+                raise ValueError("KAFKA_BOOTSTRAP_SERVERS must be set for on-premise")
+            return KafkaPublisher(bootstrap_servers=settings.kafka_bootstrap_servers)
 
-            else:
-                # Default fallback or mock for testing
-                print("Warning: Using default/mock publisher configuration.")
-                # Could return a MockPublisher here for unit tests
-                return KafkaPublisher()
+        else:
+            raise ValueError(f"Unknown deployment strategy: {settings.deployment_strategy}")

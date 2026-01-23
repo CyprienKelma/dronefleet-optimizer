@@ -14,14 +14,14 @@ class Product(BaseModel):
     name: str = Field(..., description="Human readable name of the product")
     product_type: ProductType
     weight_kg: float = Field(..., gt=0, description="Weight of one unit in KG")
-    
+
     # Conservation constraints
     requires_cold_chain: bool = False
     min_temperature_celsius: Optional[float] = None
     max_temperature_celsius: Optional[float] = None
-    
+
     is_fragile: bool = False
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -34,4 +34,3 @@ class Product(BaseModel):
                 "max_temperature_celsius": -10.0
             }
         }
-

@@ -1,14 +1,22 @@
 services:
 
+  # To run emulator only :
+  # docker compose up -d pubsub-emulator firestore-emulator pubsub-init
+  # To run all docker-compose :
+  # docker compose --profile full up --build
+  # TODO : Need to add profiles: full to proper component
+
+
   pubsub-emulator:
     image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
-    command: gcloud beta emulators pubsub start --project=drone-project-dev --host-port=0.0.0.0:8085
+    command: gcloud beta emulators pubsub start --project=drone-fleet-optimizer-local --host-port=0.0.0.0:8085
     ports:
       - "8085:8085"
     networks:
       - drone-network
 
-  # Service éphémère qui configure les topics au démarrage
+  # Ephemeral service to configure topics on emulator start because GCP
+  # emulators don't save topics and content when container is turned off
   pubsub-init:
     image: python:3.11-slim
     working_dir: /app
@@ -16,7 +24,7 @@ services:
       - ./create_topics.py:/app/create_topics.py
     environment:
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
-      PROJECT_ID: drone-project-dev
+      PROJECT_ID: drone-fleet-optimizer-local
     command: >
       bash -c "pip install google-cloud-pubsub && python create_topics.py"
     depends_on:
@@ -29,13 +37,16 @@ services:
       context: ../../
       dockerfile: src/ingestion-api/Dockerfile
     environment:
-      # LA VARIABLE MAGIQUE :
-      # Le SDK Google vérifie cette variable. Si elle existe, il ignore la vraie auth GCP
-      # et parle à l'émulateur. Pas besoin de changer ton code !
+      # env variable that determines which .env file to load
+      # global_config.py will read this and load config/dev.env
+      ENVIRONMENT: local
+
+      # pub/sub emulator config
+      # the Google SDK ignores real GCP auth with this variable
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
-      PUBSUB_PROJECT_ID: drone-project-dev
-      PROJECT_STRATEGY: on_cloud # Use the PubSub strategy
-      ENVIRONMENT: dev
+
+      # DEPLOYMENT_STRATEGY and other config values are loaded from
+      # config/dev.env via pydantic_settings in global_config.py
     depends_on:
       - pubsub-emulator
       - pubsub-init
@@ -43,18 +54,36 @@ services:
       - "8000:8000"
     networks:
       - drone-network
+    profiles:
+    - full
 
-  # state-manager:
-  #   build:
-  #     context: ../../src/state-manager
-  #     dockerfile: Dockerfile
-  #   environment:
-  #     PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
-  #     SPRING_CLOUD_GCP_PROJECT_ID: drone-project-dev
-  #   depends_on:
-  #     - pubsub-emulator
-  #   networks:
-  #     - drone-network
+  state-manager:
+    build:
+      context: ../../src/state-manager
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      FIRESTORE_EMULATOR_HOST: firestore-emulator:8080
+      SPRING_CLOUD_GCP_PROJECT_ID: drone-fleet-optimizer-local
+    depends_on:
+      - pubsub-emulator
+      - firestore-emulator
+    networks:
+      - drone-network
+
+  firestore-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: gcloud beta emulators firestore start --host-port=0.0.0.0:8080
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - drone-network
 
 networks:
   drone-network:

@@ -6,20 +6,20 @@ from .product import ProductType
 class Warehouse(BaseModel):
     id: str = Field(..., description="Unique warehouse ID")
     name: str = Field(..., description="Human friendly name")
-    
+
     location: GeoPoint
-    
+
     # Storage capabilities
     total_capacity_kg: float = Field(..., description="Total weight capacity")
     is_cold_storage_capable: bool = False
-    
+
     # Logistics
     landing_pads_count: int = Field(default=1, ge=0)
     charging_stations_count: int = Field(default=1, ge=0)
-    
+
     # Authorized products to store here
     authorized_product_types: List[ProductType] = Field(default_factory=list)
-    
+
     description: Optional[str] = None
 
     class Config:
@@ -34,4 +34,3 @@ class Warehouse(BaseModel):
                 "authorized_product_types": ["MEDICINE", "VACCINE", "BLOOD"]
             }
         }
-

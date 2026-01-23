@@ -5,7 +5,7 @@ from google.cloud import pubsub_v1
 from google.api_core.exceptions import AlreadyExists, ServiceUnavailable, RetryError
 
 # Configuration
-PROJECT_ID = os.getenv("PROJECT_ID", "drone-project-dev")
+PROJECT_ID = os.getenv("PROJECT_ID", "drone-fleet-optimizer-local")
 TOPICS = [
     "requests",
     "telemetry",
@@ -25,10 +25,10 @@ def wait_for_emulator():
     print("Waiting for Pub/Sub emulator...")
     publisher = pubsub_v1.PublisherClient()
     project_path = f"projects/{PROJECT_ID}"
-    
+
     retries = 0
     max_retries = 30
-    
+
     while retries < max_retries:
         try:
             # Try to list topics to check connection
@@ -39,7 +39,7 @@ def wait_for_emulator():
             print(f"Emulator not ready yet: {e}")
             time.sleep(1)
             retries += 1
-            
+
     return False
 
 def init_pubsub():
@@ -79,4 +79,3 @@ def init_pubsub():
 
 if __name__ == "__main__":
     init_pubsub()
-

@@ -1,0 +1,79 @@
+name: CD - Deploy to Production
+
+on:
+  release:
+    types: [published]
+
+env:
+  PROJECT_ID: drone-fleet-optimizer-prod
+  REGION: europe-west1
+  REGISTRY: europe-west1-docker.pkg.dev
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate release tag
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          if [[ ! $TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid tag format. Must be v*.*.* (e.g., v1.0.0)"
+            exit 1
+          fi
+
+  deploy-production:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://drone-fleet-optimizer-prod.example.com
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER_PROD }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT_PROD }}
+
+      - name: Deploy Ingestion API
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/drone-fleet-optimizer/ingestion-api"
+          TAG="${{ github.event.release.tag_name }}"
+
+          # Build and push
+          docker build -t $IMAGE:$TAG -t $IMAGE:latest \
+            -f src/ingestion-api/Dockerfile \
+            --build-arg ENVIRONMENT=prod \
+            .
+          docker push $IMAGE:$TAG
+          docker push $IMAGE:latest
+
+          # Deploy with blue-green (no-traffic first)
+          gcloud run deploy ingestion-api \
+            --image $IMAGE:$TAG \
+            --region ${{ env.REGION }} \
+            --no-traffic \
+            --tag $TAG
+
+          # Wait for manual validation...
+          echo "New revision deployed with tag $TAG"
+          echo "Test at: https://$TAG---ingestion-api-xxxxx-ew.a.run.app"
+          echo "To promote: gcloud run services update-traffic ingestion-api --to-revisions LATEST=100"
+
+      - name: Create deployment notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Production deployment ready for validation
+            Release: ${{ github.event.release.tag_name }}
+            Test URL: https://${{ github.event.release.tag_name }}---ingestion-api-xxxxx-ew.a.run.app
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}

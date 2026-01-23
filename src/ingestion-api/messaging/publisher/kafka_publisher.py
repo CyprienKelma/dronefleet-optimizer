@@ -2,12 +2,8 @@ import json
 from typing import Any, Dict
 from ..base_publisher import MessagePublisher
 
-# Note: Requires 'kafka-python' or 'confluent-kafka' installed
-try:
-    from kafka import KafkaProducer
-    from kafka.errors import KafkaError
-except ImportError:
-    KafkaProducer = None
+# TODO : install 'kafka-python' or 'confluent-kafka'
+from kafka import KafkaProducer
 
 class KafkaPublisher(MessagePublisher):
     """
@@ -15,9 +11,6 @@ class KafkaPublisher(MessagePublisher):
     """
 
     def __init__(self, bootstrap_servers: str = 'localhost:9092'):
-        if KafkaProducer is None:
-            raise ImportError("kafka-python library is not installed.")
-        
         self.producer = KafkaProducer(
             bootstrap_servers=bootstrap_servers,
             value_serializer=lambda m: json.dumps(m).encode('ascii')
