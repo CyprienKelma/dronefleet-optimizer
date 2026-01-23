@@ -1,8 +1,11 @@
-from fastapi import logger
+import logging
+
 from shared.configs.global_config import settings
 from .base_publisher import MessagePublisher
 from .publisher.kafka_publisher import KafkaPublisher
 from .publisher.pubsub_publisher import PubSubPublisher
+
+logger = logging.getLogger(__name__)
 
 class PublisherFactory:
     """

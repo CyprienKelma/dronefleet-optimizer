@@ -37,10 +37,10 @@ class PubSubPublisher(MessagePublisher):
 
             # Block to ensure message ID is returned (confirms publish)
             message_id = future.result()
-            print(f"Message published to Pub/Sub: {message_id}")
+            print(f"Message published to Pub/Sub on topic {topic}: {message_id}")
             return True
         except Exception as e:
-            print(f"Error publishing to Pub/Sub: {e}")
+            print(f"Error publishing to Pub/Sub on topic {topic}: {e}")
             return False
 
     def close(self):

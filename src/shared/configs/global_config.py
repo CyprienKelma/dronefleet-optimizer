@@ -1,7 +1,7 @@
 from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, ValidationError, field_validator
+from pydantic import Field, ValidationError
 
 
 class Settings(BaseSettings):
@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     deployment_strategy: Literal['on_cloud', 'on_premise'] = 'on_cloud'
 
     # GCP
-    project_id:  Literal['drone-fleet-dev', 'drone-fleet-prod'] = 'on_cloud'
+    project_id:  Literal['drone-fleet-optimizer-dev', 'drone-fleet-optimizer-prod'] = 'drone-fleet-optimizer-dev'
     gcp_region: str = Field(default='europe-west1', description="GCP Region")
 
     # Cloud Run
@@ -51,12 +51,6 @@ class Settings(BaseSettings):
     # Monitoring (for prod)
     enable_profiling: bool = Field(default=False, description="Enable profiling")
     metrics_export_interval: int = Field(default=60, description="Metrics export interval in seconds")
-
-    @field_validator('project_id')
-    def validate_project_id(self, v):
-        if not v.startswith('drone-fleet-'):
-            raise ValueError("PROJECT_ID must start with 'drone-fleet-'")
-        return v
 
     @property
     def is_local(self) -> bool:
