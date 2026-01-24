@@ -45,19 +45,19 @@ jobs:
 
       - name: Deploy Ingestion API
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/drone-fleet-optimizer/ingestion-api"
+          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/drone-fleet-optimizer/ingestion"
           TAG="${{ github.event.release.tag_name }}"
 
           # Build and push
           docker build -t $IMAGE:$TAG -t $IMAGE:latest \
-            -f src/ingestion-api/Dockerfile \
+            -f src/ingestion/Dockerfile \
             --build-arg ENVIRONMENT=prod \
             .
           docker push $IMAGE:$TAG
           docker push $IMAGE:latest
 
           # Deploy with blue-green (no-traffic first)
-          gcloud run deploy ingestion-api \
+          gcloud run deploy ingestion \
             --image $IMAGE:$TAG \
             --region ${{ env.REGION }} \
             --no-traffic \
@@ -65,8 +65,8 @@ jobs:
 
           # Wait for manual validation...
           echo "New revision deployed with tag $TAG"
-          echo "Test at: https://$TAG---ingestion-api-xxxxx-ew.a.run.app"
-          echo "To promote: gcloud run services update-traffic ingestion-api --to-revisions LATEST=100"
+          echo "Test at: https://$TAG---ingestion-xxxxx-ew.a.run.app"
+          echo "To promote: gcloud run services update-traffic ingestion --to-revisions LATEST=100"
 
       - name: Create deployment notification
         uses: 8398a7/action-slack@v3
@@ -75,5 +75,5 @@ jobs:
           text: |
             Production deployment ready for validation
             Release: ${{ github.event.release.tag_name }}
-            Test URL: https://${{ github.event.release.tag_name }}---ingestion-api-xxxxx-ew.a.run.app
+            Test URL: https://${{ github.event.release.tag_name }}---ingestion-xxxxx-ew.a.run.app
           webhook_url: ${{ secrets.SLACK_WEBHOOK }}

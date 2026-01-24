@@ -103,7 +103,7 @@ resource "google_artifact_registry_repository" "drone_fleet" {
 
 # Service Accounts
 resource "google_service_account" "ingestion_api" {
-  account_id   = "ingestion-api"
+  account_id   = "ingestion"
   display_name = "Ingestion API Service Account"
   project      = var.project_id
 }

@@ -1,7 +1,7 @@
-# ingestion-api module tasks
+# ingestion module tasks
 
 [tasks.dev]
-description = "Run ingestion-api in development mode"
+description = "Run ingestion in development mode"
 run = "uv run fastapi dev main.py"
 env = { ENVIRONMENT = "local" }
 
@@ -10,6 +10,6 @@ description = "Lint Python code with ruff and mypy"
 run = ["uv run ruff check .", "uv run mypy ."]
 
 [tasks.build]
-description = "Build Docker image for ingestion-api"
+description = "Build Docker image for ingestion"
 dir = "{{env.MISE_PROJECT_ROOT}}"
-run = "docker build -t ingestion-api:local -f src/ingestion-api/Dockerfile ."
+run = "docker build -t ingestion:local -f src/ingestion/Dockerfile ."

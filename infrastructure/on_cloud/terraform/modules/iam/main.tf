@@ -2,7 +2,7 @@
 
 # Service Account pour Ingestion API
 resource "google_service_account" "ingestion_api" {
-  account_id   = "ingestion-api"
+  account_id   = "ingestion"
   display_name = "Ingestion API Service Account"
   project      = var.project_id
   description  = "Used by Ingestion API to publish to Pub/Sub"

@@ -49,8 +49,8 @@ run = "terraform destroy"
 
 # --- Logs ---
 [tasks."logs:ingestion:dev"]
-description = "Tail ingestion-api logs in dev"
-run = "gcloud run services logs tail ingestion-api --project=drone-fleet-dev"
+description = "Tail ingestion logs in dev"
+run = "gcloud run services logs tail ingestion --project=drone-fleet-dev"
 
 [tasks."logs:state-manager:dev"]
 description = "Tail state-manager logs in dev"
@@ -58,9 +58,9 @@ run = "gcloud run services logs tail state-manager --project=drone-fleet-dev"
 
 # --- Cost Estimation ---
 [tasks."gcp:cost-estimate:dev"]
-description = "Show autoscaling config for ingestion-api"
+description = "Show autoscaling config for ingestion"
 run = """
-gcloud run services describe ingestion-api --project=drone-fleet-dev --region=europe-west1 \
+gcloud run services describe ingestion --project=drone-fleet-dev --region=europe-west1 \
   --format='value(spec.template.metadata.annotations[autoscaling.knative.dev/minScale])'
 """
 
@@ -71,7 +71,7 @@ shell = "bash"
 confirm = "This will DELETE all Cloud Run services in dev. Are you sure?"
 run = """
 terraform -chdir=terraform/environments/dev destroy -auto-approve
-gcloud run services delete ingestion-api --project=drone-fleet-dev --region=europe-west1 --quiet
+gcloud run services delete ingestion --project=drone-fleet-dev --region=europe-west1 --quiet
 gcloud run services delete state-manager --project=drone-fleet-dev --region=europe-west1 --quiet
 gcloud run services delete optimizer --project=drone-fleet-dev --region=europe-west1 --quiet
 echo "All services deleted."
