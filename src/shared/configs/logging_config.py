@@ -21,12 +21,9 @@ def setup_logging():
         structlog.processors.UnicodeDecoder(),
     ]
 
-    if settings.is_local:
-        processors = shared_processors + [structlog.dev.ConsoleRenderer()]
-    else:
-        processors = shared_processors + [
-            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
-        ]
+    processors = shared_processors + [
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ]
 
     structlog.configure(
         processors=processors,
@@ -38,9 +35,9 @@ def setup_logging():
 
     # Standard logging configuration to capture logs from other libraries
     formatter = structlog.stdlib.ProcessorFormatter(
-        processor=structlog.processors.JSONRenderer()
-        if not settings.is_local
-        else structlog.dev.ConsoleRenderer(),
+        processor=structlog.dev.ConsoleRenderer()
+        if settings.is_local
+        else structlog.processors.JSONRenderer(),
         foreign_pre_chain=shared_processors,
     )
 
