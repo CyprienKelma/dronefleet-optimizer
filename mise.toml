@@ -70,5 +70,6 @@ depends = [
   "//src/ingestion:lint",
   "//src/simulator:lint",
   "//src/state-manager:lint",
+  "//src/visualizer:lint",
   "//infrastructure/on_cloud:lint",
 ]
