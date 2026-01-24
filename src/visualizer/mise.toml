@@ -6,12 +6,12 @@ bun = "latest"
 [tasks.dev]
 description = "Run visualizer in development mode (mock data)"
 run = "bun run vite"
-env = { ENVIRONMENT = "local" }
+env = { ENVIRONMENT = "local", VITE_DEBUG = "true" }
 
 [tasks."dev:server"]
 description = "Run SSE bridge server (connects to Pub/Sub)"
 run = "bun run server/index.ts"
-env = { ENVIRONMENT = "local" }
+env = { ENVIRONMENT = "local", PUBSUB_EMULATOR_HOST = "localhost:8085" }
 
 [tasks.build]
 description = "Build visualizer for production"

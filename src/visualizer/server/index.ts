@@ -12,16 +12,30 @@ import type { Server } from "bun";
 const PORT = Number(process.env.PORT) || 3001;
 const PROJECT_ID =
   process.env.PUBSUB_PROJECT_ID || "drone-fleet-optimizer-local";
-const SUBSCRIPTION_NAME = process.env.PUBSUB_SUBSCRIPTION || "telemetry";
+const SUBSCRIPTION_NAME = process.env.PUBSUB_SUBSCRIPTION || "telemetry-sub";
+const TELEMETRY_TOPIC = process.env.PUBSUB_TOPIC || "telemetry";
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
 
 // Active SSE connections
 const clients = new Set<ReadableStreamDefaultController>();
 
 // Pub/Sub setup
-const pubsub = new PubSub({ projectId: PROJECT_ID, emulatorMode: true });
-const subscription = pubsub.subscription(SUBSCRIPTION_NAME);
-
+const pubsub = new PubSub({ projectId: PROJECT_ID });
+// Log the subscription object to verify connection
+const topic = pubsub.topic(TELEMETRY_TOPIC);
+topic.exists().then(([exists]) => {
+  if (!exists) {
+    console.error(
+      `[PubSub] Topic "${TELEMETRY_TOPIC}" does not exist in project "${PROJECT_ID}"`,
+    );
+  } else {
+    console.log(
+      `[PubSub] Topic "${TELEMETRY_TOPIC}" exists in project "${PROJECT_ID}"`,
+    );
+  }
+});
+const subscription = topic.subscription(SUBSCRIPTION_NAME, {});
+// console.log("[PubSub] Subscription object:", subscription);
 /**
  * Handle incoming Pub/Sub messages
  */

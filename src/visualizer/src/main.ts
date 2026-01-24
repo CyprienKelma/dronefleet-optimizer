@@ -92,7 +92,7 @@ function initApp(): void {
     onError: (error) => {
       console.error("Telemetry stream error:", error);
     },
-    useMockData: config.debugMode, // Use mock data in debug mode
+    useMockData: false, //config.debugMode, // Use mock data in debug mode
   });
 
   stream.start();
