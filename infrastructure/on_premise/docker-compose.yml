@@ -10,6 +10,11 @@ services:
     command: gcloud beta emulators pubsub start --project=drone-fleet-optimizer-local --host-port=0.0.0.0:8085
     ports:
       - "8085:8085"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     networks:
       - drone-network
 
@@ -23,16 +28,17 @@ services:
     environment:
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
       PROJECT_ID: drone-fleet-optimizer-local
-    command: /app/create_topics.py
+    command: uv run /app/create_topics.py
     depends_on:
-      - pubsub-emulator
+      pubsub-emulator:
+        condition: service_healthy
     networks:
       - drone-network
 
-  ingestion-api:
+  ingestion:
     build:
       context: ../../
-      dockerfile: src/ingestion-api/Dockerfile
+      dockerfile: src/ingestion/Dockerfile
     environment:
       # env variable that determines which .env file to load
       # global_config.py will read this and load config/dev.env
@@ -45,8 +51,10 @@ services:
       # DEPLOYMENT_STRATEGY and other config values are loaded from
       # config/dev.env via pydantic_settings in global_config.py
     depends_on:
-      - pubsub-emulator
-      - pubsub-init
+      pubsub-init:
+        condition: service_completed_successfully
+      pubsub-emulator:
+        condition: service_healthy
     ports:
       - "8000:8000"
     networks:
@@ -64,9 +72,12 @@ services:
       FIRESTORE_EMULATOR_HOST: firestore-emulator:8080
       SPRING_CLOUD_GCP_PROJECT_ID: drone-fleet-optimizer-local
     depends_on:
-      - pubsub-emulator
-      - firestore-emulator
-      - pubsub-init
+      pubsub-init:
+        condition: service_completed_successfully
+      pubsub-emulator:
+        condition: service_healthy
+      firestore-emulator:
+        condition: service_healthy
     networks:
       - drone-network
 
