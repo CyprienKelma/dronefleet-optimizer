@@ -1,4 +1,3 @@
-import logging
 from typing import Literal
 
 from pydantic import Field, ValidationError
@@ -102,13 +101,7 @@ class Settings(BaseSettings):
 
 
 # Instantiation with dynamic env file loading
-logger = logging.getLogger(__name__)
-
 try:
     settings = Settings()  # get correct env from model_config
-    logger.info(f"Config loaded for environment: {settings.environment}")
-    logger.info(f"Project ID: {settings.project_id}")
-    logger.info(f"Deployment strategy: {settings.deployment_strategy}")
 except ValidationError as e:
-    logger.error(f"Config error: {e}")
-    exit(1)
+    raise SystemExit(f"Config error: {e}")

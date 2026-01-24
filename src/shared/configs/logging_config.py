@@ -47,10 +47,8 @@ def setup_logging():
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(formatter)
 
+    # Clear existing handlers to avoid double logging and ensure deterministic behavior
     root_logger = logging.getLogger()
+    root_logger.handlers.clear()
     root_logger.addHandler(handler)
     root_logger.setLevel(settings.log_level)
-
-    # Remove existing handlers to avoid double logging
-    for h in root_logger.handlers[:-1]:
-        root_logger.removeHandler(h)
