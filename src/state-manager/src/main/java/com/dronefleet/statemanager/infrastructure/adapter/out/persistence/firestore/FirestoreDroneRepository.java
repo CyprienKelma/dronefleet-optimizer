@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
 public class FirestoreDroneRepository implements DroneRepository {
+
     private final ConcurrentHashMap<String, Drone> storage = new ConcurrentHashMap<>();
 
     @Override
@@ -25,6 +26,11 @@ public class FirestoreDroneRepository implements DroneRepository {
 
     @Override
     public void save(Drone drone) {
+        storage.put(drone.getId(), drone);
+    }
+
+    @Override
+    public void updateTelemetry(Drone drone) {
         storage.put(drone.getId(), drone);
     }
 }

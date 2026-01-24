@@ -32,7 +32,7 @@ public class TelemetryListener {
             TelemetryEventDto dto = objectMapper.readValue(payload, TelemetryEventDto.class);
 
             // mapping DTO -> domain model
-            DroneTelemetry domainModel = new DroneTelemetry(
+            DroneTelemetry DroneDomainModel = new DroneTelemetry(
                 dto.droneId(),
                 dto.timestamp(),
                 new Position(dto.position().lat(), dto.position().lon()),
@@ -42,7 +42,7 @@ public class TelemetryListener {
                 dto.currentMissionId()
             );
 
-            updateDroneStateUseCase.handleTelemetry(domainModel);
+            updateDroneStateUseCase.handleTelemetry(DroneDomainModel);
         } catch (Exception e) {
             log.error("Error processing telemetry message: {}", e.getMessage());
             // TODO : handle message nack with a dead letter queue

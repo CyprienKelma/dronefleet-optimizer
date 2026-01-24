@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "app.state-manager")
 public class AppProperties {
+
     private int batchWriteInterval;
+
     private int maxBatchSize;
 }
