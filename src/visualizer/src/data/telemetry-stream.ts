@@ -1,4 +1,4 @@
-import { type DroneTelemetry, safeParseTelemetry } from "@/schemas";
+import { type DroneTelemetry, safeParseTelemetry } from "@shared/schemas";
 import {
   logEvent,
   recordMessageFailed,
@@ -62,7 +62,7 @@ export class TelemetryStream {
     logEvent("info", `Connecting to telemetry stream: ${this.endpoint}`);
 
     const config = getConfig();
-    const ssebridgeHost = "localhost:3001"; //config.sseBridgeHost || window.location.origin;
+    const ssebridgeHost = config.sseBridgeHost || window.location.origin;
     // const url = new URL(this.endpoint, ssebridgeHost); //window.location.origin);
     const url = new URL(this.endpoint, `http://${ssebridgeHost}`);
 

@@ -20,6 +20,7 @@ export interface AppConfig {
   debugMode: boolean;
   useMockData: boolean;
   maxEventLogSize: number;
+  sseBridgeHost: string;
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -32,6 +33,7 @@ const DEFAULT_CONFIG: AppConfig = {
   debugMode: true,
   useMockData: false,
   maxEventLogSize: 100,
+  sseBridgeHost: "localhost:3001",
 };
 
 /**
@@ -111,6 +113,10 @@ export function loadConfig(): AppConfig {
       "max_event_log",
       DEFAULT_CONFIG.maxEventLogSize,
       Number,
+    ),
+    sseBridgeHost: getConfigValue(
+      "sse_bridge_host",
+      DEFAULT_CONFIG.sseBridgeHost,
     ),
   };
 }

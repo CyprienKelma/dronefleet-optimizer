@@ -1,5 +1,5 @@
+import type { DroneTelemetry } from "@shared/schemas";
 import { atom, map } from "nanostores";
-import type { DroneTelemetry } from "@/schemas";
 
 /**
  * Drone telemetry store using Nano Stores

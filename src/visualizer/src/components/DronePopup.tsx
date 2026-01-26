@@ -1,5 +1,5 @@
+import type { DroneStatus } from "@shared/schemas";
 import { type Component, Show } from "solid-js";
-import type { DroneStatus } from "@/schemas";
 
 export const STATUS_COLORS: Record<DroneStatus, string> = {
   IDLE: "#4ecdc4",

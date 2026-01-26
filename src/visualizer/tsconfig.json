@@ -21,7 +21,8 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["vite/client", "bun-types"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shared/*": ["./shared/*"]
     },
     "baseUrl": "."
   },

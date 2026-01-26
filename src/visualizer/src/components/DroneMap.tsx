@@ -1,4 +1,5 @@
 import { useStore } from "@nanostores/solid";
+import type { DroneTelemetry } from "@shared/schemas";
 import maplibregl from "maplibre-gl";
 import {
   type Component,
@@ -8,7 +9,6 @@ import {
   onMount,
 } from "solid-js";
 import { render } from "solid-js/web";
-import type { DroneTelemetry } from "@/schemas";
 import {
   $drones,
   $lastUpdateTime,
@@ -209,7 +209,6 @@ const DroneMap: Component = () => {
     const loaded = isMapLoaded();
 
     if (loaded && map) {
-      console.log(`Updating map with ${droneList.length} drones`);
       const source = map.getSource("drones") as maplibregl.GeoJSONSource;
       if (source) {
         source.setData(createGeoJSON(droneList));
