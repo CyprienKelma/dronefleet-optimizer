@@ -27,7 +27,7 @@ const App: Component = () => {
       onError: (error) => {
         console.error("Telemetry stream error:", error);
       },
-      useMockData: config.debugMode,
+      useMockData: config.useMockData,
     });
 
     stream.start();

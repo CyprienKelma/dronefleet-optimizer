@@ -39,7 +39,7 @@ export class TelemetryStream {
     this.endpoint = options.endpoint ?? "/api/telemetry/stream";
     this.onMessage = options.onMessage ?? null;
     this.onError = options.onError ?? null;
-    this.useMockData = options.useMockData ?? config.debugMode;
+    this.useMockData = options.useMockData ?? config.useMockData;
   }
 
   /**
@@ -96,6 +96,19 @@ export class TelemetryStream {
 
     try {
       const rawData = JSON.parse(data);
+
+      // Handle system messages (non-telemetry)
+      if (
+        typeof rawData === "object" &&
+        rawData !== null &&
+        "type" in rawData &&
+        rawData.type === "connected"
+      ) {
+        logEvent("info", "Stream connected (Server handshake received)");
+        recordMessageProcessed();
+        return;
+      }
+
       const result = safeParseTelemetry(rawData);
 
       if (!result.success) {

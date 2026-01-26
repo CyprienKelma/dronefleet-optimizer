@@ -1,9 +1,20 @@
 import { useStore } from "@nanostores/solid";
 import maplibregl from "maplibre-gl";
-import { type Component, createEffect, onCleanup, onMount } from "solid-js";
+import {
+  type Component,
+  createEffect,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
 import { render } from "solid-js/web";
 import type { DroneTelemetry } from "@/schemas";
-import { $drones, $selectedDroneId, selectDrone } from "@/stores";
+import {
+  $drones,
+  $lastUpdateTime,
+  $selectedDroneId,
+  selectDrone,
+} from "@/stores";
 import { getConfig } from "@/utils/config";
 import DronePopup, { STATUS_COLORS } from "./DronePopup";
 
@@ -46,8 +57,12 @@ const DroneMap: Component = () => {
   let popup: maplibregl.Popup | null = null;
   let popupCleanup: (() => void) | null = null;
 
+  const [isMapLoaded, setIsMapLoaded] = createSignal(false);
+  const [hasInitialPositioned, setHasInitialPositioned] = createSignal(false);
+
   const drones = useStore($drones);
   const selectedDroneId = useStore($selectedDroneId);
+  const lastUpdate = useStore($lastUpdateTime);
 
   const showPopup = (
     coordinates: [number, number],
@@ -138,6 +153,8 @@ const DroneMap: Component = () => {
         },
       });
 
+      setIsMapLoaded(true);
+
       map.on("mouseenter", "drone-markers", (e) => {
         if (!map || !e.features?.length) return;
         map.getCanvas().style.cursor = "pointer";
@@ -186,11 +203,26 @@ const DroneMap: Component = () => {
 
   // React to drone changes
   createEffect(() => {
+    // Subscribe to lastUpdate to ensure reactivity even if drone object references stay the same
+    lastUpdate();
     const droneList = Object.values(drones());
-    if (map?.isStyleLoaded()) {
+    const loaded = isMapLoaded();
+
+    if (loaded && map) {
+      console.log(`Updating map with ${droneList.length} drones`);
       const source = map.getSource("drones") as maplibregl.GeoJSONSource;
       if (source) {
         source.setData(createGeoJSON(droneList));
+      }
+
+      // Auto-center on first batch of drones if not already positioned
+      if (droneList.length > 0 && !hasInitialPositioned()) {
+        const bounds = new maplibregl.LngLatBounds();
+        for (const drone of droneList) {
+          bounds.extend([drone.position.lon, drone.position.lat]);
+        }
+        map.fitBounds(bounds, { padding: 50, maxZoom: 14 });
+        setHasInitialPositioned(true);
       }
     }
   });
@@ -199,8 +231,9 @@ const DroneMap: Component = () => {
   createEffect(() => {
     const selectedId = selectedDroneId();
     const droneList = drones();
+    const loaded = isMapLoaded();
 
-    if (map?.isStyleLoaded()) {
+    if (loaded && map) {
       // Clear all selected states
       for (const id of Object.keys(droneList)) {
         map?.setFeatureState({ source: "drones", id }, { selected: false });

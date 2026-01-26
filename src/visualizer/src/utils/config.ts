@@ -18,6 +18,7 @@ export interface AppConfig {
 
   // Debug
   debugMode: boolean;
+  useMockData: boolean;
   maxEventLogSize: number;
 }
 
@@ -29,6 +30,7 @@ const DEFAULT_CONFIG: AppConfig = {
   mapCenter: [3.057, 50.629], // Lille, France
   mapZoom: 12,
   debugMode: true,
+  useMockData: false,
   maxEventLogSize: 100,
 };
 
@@ -100,6 +102,9 @@ export function loadConfig(): AppConfig {
     }),
     mapZoom: getConfigValue("map_zoom", DEFAULT_CONFIG.mapZoom, Number),
     debugMode: getConfigValue("debug", DEFAULT_CONFIG.debugMode, (v) =>
+      ["true", "1", "yes"].includes(v.toLowerCase()),
+    ),
+    useMockData: getConfigValue("mock", DEFAULT_CONFIG.useMockData, (v) =>
       ["true", "1", "yes"].includes(v.toLowerCase()),
     ),
     maxEventLogSize: getConfigValue(
