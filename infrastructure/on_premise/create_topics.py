@@ -14,14 +14,13 @@ from google.pubsub_v1.types.pubsub import Topic
 
 # Configuration
 PROJECT_ID = os.getenv("PROJECT_ID", "drone-fleet-optimizer-local")
-TOPICS = ["requests", "telemetry", "decisions", "orders"]
+TOPICS = ["telemetry", "decisions", "orders"]
 
 # Create subscriptions for debugging/monitoring
 SUBSCRIPTIONS = {
-    "requests": ["requests-sub"],
     "telemetry": ["telemetry-sub"],
     "decisions": ["decisions-sub"],
-    "orders": ["orders-sub"],
+    "orders": ["orders-sub"]
 }
 
 
@@ -36,7 +35,7 @@ def wait_for_emulator():
     while retries < max_retries:
         try:
             # Try to list topics to check connection
-            list[Topic](publisher.list_topics(request={"project": project_path}))
+            publisher.list_topics(request={"project": project_path})
             print("Pub/Sub emulator is ready!")
             return True
         except (ServiceUnavailable, RetryError, Exception) as e:

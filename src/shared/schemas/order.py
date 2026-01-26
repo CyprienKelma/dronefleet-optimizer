@@ -11,9 +11,8 @@ from .telemetry import GeoPoint
 Simulator -> Ingestion API -> Queue
 """
 
-
-class DeliveryRequest(BaseModel):
-    request_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+class DeliveryOrder(BaseModel):
+    order_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = Field(default_factory=datetime.utcnow)
     priority: UrgencyLevel
 

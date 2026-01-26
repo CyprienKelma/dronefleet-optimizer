@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.stereotype.Component;
+import com.dronefleet.statemanager.domain.exception.BusinessRejectionException;
 
 /**
  * Inbound adapter that listens to Pub/Sub messages and routes them to the domain.
@@ -32,7 +33,7 @@ public class TelemetryListener {
             TelemetryEventDto dto = objectMapper.readValue(payload, TelemetryEventDto.class);
 
             // mapping DTO -> domain model
-            DroneTelemetry domainModel = new DroneTelemetry(
+            DroneTelemetry DroneDomainModel = new DroneTelemetry(
                 dto.droneId(),
                 dto.timestamp(),
                 new Position(dto.position().lat(), dto.position().lon()),
@@ -42,10 +43,12 @@ public class TelemetryListener {
                 dto.currentMissionId()
             );
 
-            updateDroneStateUseCase.handleTelemetry(domainModel);
+            updateDroneStateUseCase.handleTelemetry(DroneDomainModel);
+        } catch (BusinessRejectionException e) {
+            log.warn("Telemetry update rejected: {}", e.getMessage());
         } catch (Exception e) {
-            log.error("Error processing telemetry message: {}", e.getMessage());
-            // TODO : handle message nack with a dead letter queue
+            log.error("Error processing telemetry message: {}. Retrying.", e.getMessage());
+            throw new RuntimeException("Error processing telemetry message", e);
         }
     }
 }

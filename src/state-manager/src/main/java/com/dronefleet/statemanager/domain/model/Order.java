@@ -18,4 +18,6 @@ public class Order {
     private String status; // PENDING, ASSIGNED, DELIVERED, CANCELLED
     private String priority; // STANDARD, HIGH, CRITICAL
     private Instant createdAt;
+    private String assignedDroneId;
+    private String assignedMissionId;
 }

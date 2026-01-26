@@ -13,10 +13,12 @@ pubsub:
   topics:
     telemetry: ${PUBSUB_TOPIC_TELEMETRY:telemetry}
     orders: ${PUBSUB_TOPIC_ORDERS:orders}
+    decisions: ${PUBSUB_TOPIC_DECISIONS:decisions}
     commands: ${PUBSUB_TOPIC_COMMANDS:commands}
   subscriptions:
     telemetry: ${PUBSUB_TOPIC_TELEMETRY:telemetry}-sub
     orders: ${PUBSUB_TOPIC_ORDERS:orders}-sub
+    decisions: ${PUBSUB_TOPIC_DECISIONS:decisions}-sub
     commands: ${PUBSUB_TOPIC_COMMANDS:commands}-sub
 
 logging:
