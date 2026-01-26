@@ -9,9 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.messaging.MessageChannel;
 
-/**
- * Spring configuration for Pub/Sub integration.
- */
+/** Spring configuration for Pub/Sub integration. */
 @Configuration
 public class PubSubConfig {
 
@@ -42,10 +40,10 @@ public class PubSubConfig {
     @Bean
     public PubSubInboundChannelAdapter telemetryAdapter(
             @Qualifier("telemetryInputChannel") MessageChannel inputChannel,
-            PubSubTemplate pubSubTemplate
-        ) {
+            PubSubTemplate pubSubTemplate) {
 
-        PubSubInboundChannelAdapter adapter = new PubSubInboundChannelAdapter(pubSubTemplate, telemetrySubscription);
+        PubSubInboundChannelAdapter adapter =
+                new PubSubInboundChannelAdapter(pubSubTemplate, telemetrySubscription);
         adapter.setOutputChannel(inputChannel);
 
         return adapter;
@@ -54,10 +52,10 @@ public class PubSubConfig {
     @Bean
     public PubSubInboundChannelAdapter ordersAdapter(
             @Qualifier("ordersInputChannel") MessageChannel inputChannel,
-            PubSubTemplate pubSubTemplate
-    ) {
+            PubSubTemplate pubSubTemplate) {
 
-        PubSubInboundChannelAdapter adapter = new PubSubInboundChannelAdapter(pubSubTemplate, ordersSubscription);
+        PubSubInboundChannelAdapter adapter =
+                new PubSubInboundChannelAdapter(pubSubTemplate, ordersSubscription);
         adapter.setOutputChannel(inputChannel);
 
         return adapter;
@@ -66,10 +64,10 @@ public class PubSubConfig {
     @Bean
     public PubSubInboundChannelAdapter decisionsAdapter(
             @Qualifier("decisionsInputChannel") MessageChannel inputChannel,
-            PubSubTemplate pubSubTemplate
-    ) {
+            PubSubTemplate pubSubTemplate) {
 
-        PubSubInboundChannelAdapter adapter = new PubSubInboundChannelAdapter(pubSubTemplate, decisionsSubscription);
+        PubSubInboundChannelAdapter adapter =
+                new PubSubInboundChannelAdapter(pubSubTemplate, decisionsSubscription);
         adapter.setOutputChannel(inputChannel);
 
         return adapter;

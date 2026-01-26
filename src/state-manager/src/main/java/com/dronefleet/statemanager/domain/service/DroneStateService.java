@@ -1,16 +1,12 @@
 package com.dronefleet.statemanager.domain.service;
 
-import com.dronefleet.statemanager.domain.model.Drone;
-import com.dronefleet.statemanager.domain.model.DroneTelemetry;
-import com.dronefleet.statemanager.domain.port.in.UpdateDroneStateUseCase;
-import com.dronefleet.statemanager.domain.port.out.DroneRepository;
-import com.dronefleet.statemanager.domain.port.out.StateTransactionPort;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.dronefleet.statemanager.domain.model.DroneTelemetry;
+import com.dronefleet.statemanager.domain.port.in.UpdateDroneStateUseCase;
+import com.dronefleet.statemanager.domain.port.out.StateTransactionPort;
 
 @Slf4j
 @Service

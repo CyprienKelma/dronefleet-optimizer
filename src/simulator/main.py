@@ -8,21 +8,20 @@ import requests
 import structlog
 
 from shared.configs.logging_config import setup_logging
-from shared.schemas.protocol import DroneStatus
+from shared.schemas.order import DeliveryOrder
+from shared.schemas.product import ProductType
+from shared.schemas.protocol import DroneStatus, UrgencyLevel
 
 # Assuming the shared schemas are available in the python path
 # If running via 'uv run', the python path should be set correctly to include src/
 from shared.schemas.telemetry import DroneTelemetry, GeoPoint
-from shared.schemas.protocol import DroneStatus, UrgencyLevel
-from shared.schemas.order import DeliveryOrder
-from shared.schemas.product import ProductType
 
 # Configuration
 TELEMETRY_API_URL = "http://localhost:8000/api/v1/telemetry"
 ORDERS_API_URL = "http://localhost:8000/api/v1/orders"
 DRONE_COUNT = 15
 UPDATE_INTERVAL_SEC = 1.0
-ORDER_PROBABILITY = 0.05 # 5% chance to generate an order per loop iteration
+ORDER_PROBABILITY = 0.05  # 5% chance to generate an order per loop iteration
 
 # Center: Paris (Lat: 48.8566, Lon: 2.3522)
 PARIS_LAT = 48.8566
@@ -89,6 +88,7 @@ class SimulatedDrone:
             current_mission_id=self.mission_id,
         )
 
+
 class SimulatedOrderGenerator:
     @staticmethod
     def generate_random_order() -> DeliveryOrder:
@@ -109,7 +109,7 @@ class SimulatedOrderGenerator:
             ProductType.MEDICINE: ["Antibiotics", "Insulin", "Painkillers"],
             ProductType.VACCINE: ["Covid Vaccines", "Flu Vaccines"],
             ProductType.ORGAN: ["Kidney", "Heart", "Liver"],
-            ProductType.MEDICAL_DEVICE: ["Defibrillator", "EPIPen", "First Aid Kit"]
+            ProductType.MEDICAL_DEVICE: ["Defibrillator", "EPIPen", "First Aid Kit"],
         }
 
         content = random.choice(contents_map.get(product_type, ["Medical Supplies"]))
@@ -121,9 +121,13 @@ class SimulatedOrderGenerator:
             product_type=product_type,
             package_weight_kg=round(random.uniform(0.1, 5.0), 2),
             content_description=content,
-            requires_cold_chain=(product_type in [ProductType.VACCINE, ProductType.BLOOD, ProductType.ORGAN]),
-            requester_id=f"HOSP-{random.randint(1, 100):03d}"
+            requires_cold_chain=(
+                product_type
+                in [ProductType.VACCINE, ProductType.BLOOD, ProductType.ORGAN]
+            ),
+            requester_id=f"HOSP-{random.randint(1, 100):03d}",
         )
+
 
 def main():
     logger.info("Starting Drone Fleet Simulator", drone_count=DRONE_COUNT)
@@ -151,7 +155,7 @@ def main():
             telemetry = drone.get_telemetry()
 
             try:
-                payload = telemetry.model_dump(mode='json')
+                payload = telemetry.model_dump(mode="json")
                 response = requests.post(TELEMETRY_API_URL, json=payload, timeout=0.5)
                 if response.status_code != 202:
                     logger.warning(
@@ -166,15 +170,19 @@ def main():
         # 2. Randomly generate and send a new order
         if random.random() < ORDER_PROBABILITY:
             order = SimulatedOrderGenerator.generate_random_order()
-            logger.info(f"Generating new random order: {order.order_id} ({order.priority})")
+            logger.info(
+                f"Generating new random order: {order.order_id} ({order.priority})"
+            )
 
             try:
-                payload = order.model_dump(mode='json')
+                payload = order.model_dump(mode="json")
                 response = requests.post(ORDERS_API_URL, json=payload, timeout=0.5)
                 if response.status_code == 201:
                     logger.info(f"Successfully pushed order {order.order_id}")
                 else:
-                    logger.warning(f"Failed to push order {order.order_id}: {response.status_code}")
+                    logger.warning(
+                        f"Failed to push order {order.order_id}: {response.status_code}"
+                    )
             except requests.exceptions.RequestException as e:
                 logger.error(f"Orders API connection error: {e}")
 

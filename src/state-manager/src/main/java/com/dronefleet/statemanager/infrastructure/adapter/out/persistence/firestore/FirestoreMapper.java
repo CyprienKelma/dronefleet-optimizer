@@ -1,30 +1,31 @@
 package com.dronefleet.statemanager.infrastructure.adapter.out.persistence.firestore;
 
-import com.dronefleet.statemanager.domain.model.Drone;
-import com.dronefleet.statemanager.domain.model.DroneStatus;
-import com.dronefleet.statemanager.domain.model.Mission;
-import com.dronefleet.statemanager.domain.model.Order;
-import com.dronefleet.statemanager.domain.model.Position;
-import com.google.cloud.Timestamp;
-import com.google.cloud.firestore.DocumentSnapshot;
-import org.springframework.stereotype.Component;
-
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Shared mapper for converting between Firestore documents and domain objects.
- */
+import com.google.cloud.Timestamp;
+import com.google.cloud.firestore.DocumentSnapshot;
+import org.springframework.stereotype.Component;
+
+import com.dronefleet.statemanager.domain.model.Drone;
+import com.dronefleet.statemanager.domain.model.DroneStatus;
+import com.dronefleet.statemanager.domain.model.Mission;
+import com.dronefleet.statemanager.domain.model.Order;
+import com.dronefleet.statemanager.domain.model.Position;
+
+/** Shared mapper for converting between Firestore documents and domain objects. */
 @Component
 public class FirestoreMapper {
 
     // --- Drone Mapping ---
 
     public Drone mapToDrone(DocumentSnapshot doc) {
-        if (!doc.exists()) return null;
+        if (!doc.exists()) {
+            return null;
+        }
 
         Map<String, Object> posMap = (Map<String, Object>) doc.get("position");
         Position position = mapToPosition(posMap);
@@ -35,7 +36,10 @@ public class FirestoreMapper {
         return Drone.builder()
                 .id(doc.getId())
                 .position(position)
-                .batteryPercentage(doc.getDouble("batteryPercentage") != null ? doc.getDouble("batteryPercentage") : 0.0)
+                .batteryPercentage(
+                        doc.getDouble("batteryPercentage") != null
+                                ? doc.getDouble("batteryPercentage")
+                                : 0.0)
                 .speedKmh(doc.getDouble("speedKmh") != null ? doc.getDouble("speedKmh") : 0.0)
                 .status(DroneStatus.parseStatus(doc.getString("status")))
                 .currentMissionId(doc.getString("currentMissionId"))
@@ -64,7 +68,9 @@ public class FirestoreMapper {
     // --- Order Mapping ---
 
     public Order mapToOrder(DocumentSnapshot doc) {
-        if (!doc.exists()) return null;
+        if (!doc.exists()) {
+            return null;
+        }
 
         return Order.builder()
                 .id(doc.getId())
@@ -72,7 +78,10 @@ public class FirestoreMapper {
                 .deliveryLocation(mapToPosition((Map<String, Object>) doc.get("deliveryLocation")))
                 .status(doc.getString("status"))
                 .priority(doc.getString("priority"))
-                .createdAt(doc.getTimestamp("createdAt") != null ? doc.getTimestamp("createdAt").toDate().toInstant() : null)
+                .createdAt(
+                        doc.getTimestamp("createdAt") != null
+                                ? doc.getTimestamp("createdAt").toDate().toInstant()
+                                : null)
                 .assignedDroneId(doc.getString("assignedDroneId"))
                 .assignedMissionId(doc.getString("assignedMissionId"))
                 .build();
@@ -100,14 +109,14 @@ public class FirestoreMapper {
     // --- Mission Mapping ---
 
     public Mission mapToMission(DocumentSnapshot doc) {
-        if (!doc.exists()) return null;
+        if (!doc.exists()) {
+            return null;
+        }
 
         List<Map<String, Object>> routeMaps = (List<Map<String, Object>>) doc.get("route");
         List<Position> route = null;
         if (routeMaps != null) {
-            route = routeMaps.stream()
-                    .map(this::mapToPosition)
-                    .collect(Collectors.toList());
+            route = routeMaps.stream().map(this::mapToPosition).collect(Collectors.toList());
         }
 
         return Mission.builder()
@@ -116,8 +125,14 @@ public class FirestoreMapper {
                 .orderId(doc.getString("orderId"))
                 .route(route)
                 .status(doc.getString("status"))
-                .startTime(doc.getTimestamp("startTime") != null ? doc.getTimestamp("startTime").toDate().toInstant() : null)
-                .endTime(doc.getTimestamp("endTime") != null ? doc.getTimestamp("endTime").toDate().toInstant() : null)
+                .startTime(
+                        doc.getTimestamp("startTime") != null
+                                ? doc.getTimestamp("startTime").toDate().toInstant()
+                                : null)
+                .endTime(
+                        doc.getTimestamp("endTime") != null
+                                ? doc.getTimestamp("endTime").toDate().toInstant()
+                                : null)
                 .build();
     }
 
@@ -128,9 +143,11 @@ public class FirestoreMapper {
         map.put("status", mission.getStatus());
 
         if (mission.getRoute() != null) {
-            map.put("route", mission.getRoute().stream()
-                    .map(this::mapFromPosition)
-                    .collect(Collectors.toList()));
+            map.put(
+                    "route",
+                    mission.getRoute().stream()
+                            .map(this::mapFromPosition)
+                            .collect(Collectors.toList()));
         }
 
         if (mission.getStartTime() != null) {
@@ -145,15 +162,17 @@ public class FirestoreMapper {
     // --- Position Mapping ---
 
     public Position mapToPosition(Map<String, Object> map) {
-        if (map == null) return null;
+        if (map == null) {
+            return null;
+        }
         return new Position(
-                ((Number) map.get("lat")).doubleValue(),
-                ((Number) map.get("lon")).doubleValue()
-        );
+                ((Number) map.get("lat")).doubleValue(), ((Number) map.get("lon")).doubleValue());
     }
 
     public Map<String, Object> mapFromPosition(Position pos) {
-        if (pos == null) return null;
+        if (pos == null) {
+            return null;
+        }
         Map<String, Object> map = new HashMap<>();
         map.put("lat", pos.lat());
         map.put("lon", pos.lon());

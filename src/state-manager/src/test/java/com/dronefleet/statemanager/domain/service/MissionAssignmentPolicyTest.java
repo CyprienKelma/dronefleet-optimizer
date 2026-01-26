@@ -1,17 +1,18 @@
 package com.dronefleet.statemanager.domain.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import com.dronefleet.statemanager.domain.exception.BusinessRejectionException;
 import com.dronefleet.statemanager.domain.model.Drone;
 import com.dronefleet.statemanager.domain.model.DroneStatus;
 import com.dronefleet.statemanager.domain.model.Order;
 import com.dronefleet.statemanager.domain.model.Position;
 import com.dronefleet.statemanager.domain.port.out.StateTransactionPort.MissionAssignmentResult;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class MissionAssignmentPolicyTest {
 
@@ -24,16 +25,10 @@ class MissionAssignmentPolicyTest {
 
     @Test
     void shouldCreateMissionWhenDroneAndOrderAreAvailable() {
-        Drone drone = Drone.builder()
-                .id("D1")
-                .status(DroneStatus.IDLE)
-                .batteryPercentage(100.0)
-                .build();
+        Drone drone =
+                Drone.builder().id("D1").status(DroneStatus.IDLE).batteryPercentage(100.0).build();
 
-        Order order = Order.builder()
-                .id("O1")
-                .status("PENDING")
-                .build();
+        Order order = Order.builder().id("O1").status("PENDING").build();
 
         List<Position> route = List.of(new Position(1.0, 1.0));
 
@@ -49,18 +44,16 @@ class MissionAssignmentPolicyTest {
 
     @Test
     void shouldBeIdempotentIfAlreadyAssignedToSameDrone() {
-        Drone drone = Drone.builder()
-                .id("D1")
-                .status(DroneStatus.MOVING)
-                .currentMissionId("M1")
-                .build();
+        Drone drone =
+                Drone.builder().id("D1").status(DroneStatus.MOVING).currentMissionId("M1").build();
 
-        Order order = Order.builder()
-                .id("O1")
-                .status("ASSIGNED")
-                .assignedDroneId("D1")
-                .assignedMissionId("M1")
-                .build();
+        Order order =
+                Order.builder()
+                        .id("O1")
+                        .status("ASSIGNED")
+                        .assignedDroneId("D1")
+                        .assignedMissionId("M1")
+                        .build();
 
         List<Position> route = List.of(new Position(1.0, 1.0));
 
@@ -73,35 +66,29 @@ class MissionAssignmentPolicyTest {
 
     @Test
     void shouldRejectIfDroneIsNotAvailable() {
-        Drone drone = Drone.builder()
-                .id("D1")
-                .status(DroneStatus.MOVING)
-                .build();
+        Drone drone = Drone.builder().id("D1").status(DroneStatus.MOVING).build();
 
-        Order order = Order.builder()
-                .id("O1")
-                .status("PENDING")
-                .build();
+        Order order = Order.builder().id("O1").status("PENDING").build();
 
-        assertThrows(BusinessRejectionException.class,
+        assertThrows(
+                BusinessRejectionException.class,
                 () -> policy.computeAssignment(drone, order, List.of()));
     }
 
     @Test
     void shouldRejectIfOrderIsNotPending() {
-        Drone drone = Drone.builder()
-                .id("D1")
-                .status(DroneStatus.IDLE)
-                .batteryPercentage(100.0)
-                .build();
+        Drone drone =
+                Drone.builder().id("D1").status(DroneStatus.IDLE).batteryPercentage(100.0).build();
 
-        Order order = Order.builder()
-                .id("O1")
-                .status("ASSIGNED")
-                .assignedDroneId("D2") // assigned to someone else
-                .build();
+        Order order =
+                Order.builder()
+                        .id("O1")
+                        .status("ASSIGNED")
+                        .assignedDroneId("D2") // assigned to someone else
+                        .build();
 
-        assertThrows(BusinessRejectionException.class,
+        assertThrows(
+                BusinessRejectionException.class,
                 () -> policy.computeAssignment(drone, order, List.of()));
     }
 }

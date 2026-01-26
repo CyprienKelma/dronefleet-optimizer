@@ -6,6 +6,7 @@ public interface ProcessOrderUseCase {
 
     /**
      * Process an order.
+     *
      * @param order the order to process
      */
     void processOrder(Order order);

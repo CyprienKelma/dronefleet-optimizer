@@ -9,6 +9,10 @@ env = { ENVIRONMENT = "local" }
 description = "Lint Python code with ruff and mypy"
 run = ["uv run ruff check .", "uv run mypy ."]
 
+[tasks.format]
+description = "Format Python code with black"
+run = "uv run black ."
+
 [tasks.build]
 description = "Build Docker image for ingestion"
 dir = "{{env.MISE_PROJECT_ROOT}}"

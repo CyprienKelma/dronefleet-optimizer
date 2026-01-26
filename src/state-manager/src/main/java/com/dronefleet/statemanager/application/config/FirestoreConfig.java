@@ -16,7 +16,8 @@ public class FirestoreConfig {
 
     @Bean
     @Profile("local")
-    public Firestore firestoreLocal(@Value("${spring.cloud.gcp.firestore.host-port:localhost:8080}") String hostPort) {
+    public Firestore firestoreLocal(
+            @Value("${spring.cloud.gcp.firestore.host-port:localhost:8080}") String hostPort) {
         return FirestoreOptions.getDefaultInstance().toBuilder()
                 .setProjectId(projectId)
                 .setHost(hostPort)

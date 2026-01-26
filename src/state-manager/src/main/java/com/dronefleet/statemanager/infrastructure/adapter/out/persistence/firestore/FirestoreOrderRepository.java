@@ -1,11 +1,11 @@
 package com.dronefleet.statemanager.infrastructure.adapter.out.persistence.firestore;
 
-import com.dronefleet.statemanager.application.config.AppProperties;
-import com.dronefleet.statemanager.domain.model.Order;
-import com.dronefleet.statemanager.domain.model.Position;
-import com.dronefleet.statemanager.domain.port.out.OrderRepository;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+
 import com.google.api.core.ApiFuture;
-import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QuerySnapshot;
@@ -13,12 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
+import com.dronefleet.statemanager.application.config.AppProperties;
+import com.dronefleet.statemanager.domain.model.Order;
+import com.dronefleet.statemanager.domain.port.out.OrderRepository;
 
 @Slf4j
 @Repository
@@ -33,7 +30,8 @@ public class FirestoreOrderRepository implements OrderRepository {
     public void save(Order order) {
         try {
             log.debug("Saving order {} to Firestore...", order.getId());
-            firestore.collection(appProperties.getOrdersCollection())
+            firestore
+                    .collection(appProperties.getOrdersCollection())
                     .document(order.getId())
                     .set(mapper.mapFromOrder(order))
                     .get();
@@ -46,10 +44,12 @@ public class FirestoreOrderRepository implements OrderRepository {
     @Override
     public Optional<Order> findById(String id) {
         try {
-            DocumentSnapshot document = firestore.collection(appProperties.getOrdersCollection())
-                    .document(id)
-                    .get()
-                    .get();
+            DocumentSnapshot document =
+                    firestore
+                            .collection(appProperties.getOrdersCollection())
+                            .document(id)
+                            .get()
+                            .get();
             if (document.exists()) {
                 return Optional.of(mapper.mapToOrder(document));
             }
@@ -63,9 +63,11 @@ public class FirestoreOrderRepository implements OrderRepository {
     @Override
     public List<Order> findPending() {
         try {
-            ApiFuture<QuerySnapshot> future = firestore.collection(appProperties.getOrdersCollection())
-                    .whereEqualTo("status", "PENDING")
-                    .get();
+            ApiFuture<QuerySnapshot> future =
+                    firestore
+                            .collection(appProperties.getOrdersCollection())
+                            .whereEqualTo("status", "PENDING")
+                            .get();
             return future.get().getDocuments().stream()
                     .map(mapper::mapToOrder)
                     .collect(Collectors.toList());
