@@ -152,9 +152,10 @@ export function clearDebugData(): void {
 /**
  * Get formatted metrics for display
  */
-export function getFormattedMetrics(): Record<string, string> {
-  const metrics = $metrics.get();
-  const uptime = getUptime();
+export function getFormattedMetrics(
+  metrics: DebugMetrics,
+): Record<string, string> {
+  const uptime = Date.now() - startTime;
 
   return {
     "Messages Received": metrics.messagesReceived.toString(),

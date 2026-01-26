@@ -4,6 +4,7 @@ import {
   $connectionError,
   $connectionStatus,
   $eventLog,
+  $metrics,
   getFormattedMetrics,
 } from "@/stores";
 import { $drones } from "@/stores/drones";
@@ -21,9 +22,18 @@ const DebugPanel: Component = () => {
   const connectionError = useStore($connectionError);
   const drones = useStore($drones);
   const eventLog = useStore($eventLog);
+  const metrics = useStore($metrics);
 
   const droneCount = () => Object.keys(drones()).length;
-  const formattedMetrics = () => getFormattedMetrics();
+  const formattedMetrics = () => getFormattedMetrics(metrics());
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
 
   return (
     <div class="fixed top-[10px] left-[10px] z-[1000] font-mono text-[11px]">
@@ -106,7 +116,12 @@ const DebugPanel: Component = () => {
             <div class="max-h-[150px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-[#1a1a1a]">
               <For each={eventLog().slice(0, 20)}>
                 {(event) => (
-                  <div class="py-1 border-b border-[#222] flex gap-2 last:border-0">
+                  <button
+                    type="button"
+                    class="w-full text-left py-1 border-b border-[#222] flex gap-2 last:border-0 cursor-copy hover:bg-[#222] transition-colors px-1 focus:outline-none focus:bg-[#222]"
+                    onClick={() => copyToClipboard(event.message)}
+                    title={`Click to copy: ${event.message}`}
+                  >
                     <span class="text-[#666] shrink-0">
                       {event.timestamp.toLocaleTimeString()}
                     </span>
@@ -123,13 +138,12 @@ const DebugPanel: Component = () => {
                     >
                       {event.type}
                     </span>
-                    <span
-                      class="text-[#ccc] overflow-hidden text-ellipsis whitespace-nowrap"
-                      title={event.message}
-                    >
-                      {event.message}
+                    <span class="text-[#ccc] overflow-hidden text-ellipsis whitespace-nowrap">
+                      {event.message.length > 40
+                        ? `${event.message.substring(0, 40)}...`
+                        : event.message}
                     </span>
-                  </div>
+                  </button>
                 )}
               </For>
             </div>
