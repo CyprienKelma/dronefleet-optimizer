@@ -17,9 +17,21 @@ dependencies = [
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
     "ruff>=0.14.13",
+    "types-requests>=2.32.0",
 ]
 
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+explicit_package_bases = true
+ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = [
+    "google.*",
+    "kafka.*",
+]
+ignore_missing_imports = true
 
 [tool.ruff]
 line-length = 88

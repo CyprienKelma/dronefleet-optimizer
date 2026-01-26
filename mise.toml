@@ -19,6 +19,7 @@ terraform = "1.9.0"
 gcloud = "latest"
 ## linters
 prettier = "latest"
+node = "latest"
 
 [env]
 MISE_PROJECT_ROOT = "{{config_root}}"
