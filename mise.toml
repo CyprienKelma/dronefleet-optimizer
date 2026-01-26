@@ -23,7 +23,6 @@ prettier = "latest"
 [env]
 MISE_PROJECT_ROOT = "{{config_root}}"
 # Default to local development
-ENVIRONMENT = "local"
 DEPLOYMENT_STRATEGY = "on_cloud"
 PROJECT_ID = "drone-fleet-optimizer-local"
 PYTHONPATH = "src"
@@ -32,6 +31,8 @@ _.python.venv = { path = ".venv", create = true }
 # Local emulators
 PUBSUB_EMULATOR_HOST = "localhost:8085"
 FIRESTORE_EMULATOR_HOST = "localhost:8080"
+
+_.file = [{path= ".env"},"config/{{env.ENVIRONMENT}}.env"]
 
 # --- Project Setup ---
 [tasks.init]
