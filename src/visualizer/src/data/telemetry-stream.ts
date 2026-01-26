@@ -65,7 +65,6 @@ export class TelemetryStream {
     const ssebridgeHost = "localhost:3001"; //config.sseBridgeHost || window.location.origin;
     // const url = new URL(this.endpoint, ssebridgeHost); //window.location.origin);
     const url = new URL(this.endpoint, `http://${ssebridgeHost}`);
-    console.log("Connecting to SSE URL:", url.toString());
 
     // Add auth token if available
     if (config.adminToken) {
