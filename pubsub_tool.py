@@ -1,17 +1,21 @@
 import os
-from google.cloud import pubsub_v1
+
 from google.api_core.exceptions import AlreadyExists, NotFound
+from google.cloud import pubsub_v1
 
 # CONFIGURATION
 # On force l'utilisation de l'émulateur pour ce script
 os.environ["PUBSUB_EMULATOR_HOST"] = "localhost:8085"
 PROJECT_ID = "drone-project-dev"
 
+
 def get_publisher():
     return pubsub_v1.PublisherClient()
 
+
 def get_subscriber():
     return pubsub_v1.SubscriberClient()
+
 
 def list_topics():
     publisher = get_publisher()
@@ -23,6 +27,7 @@ def list_topics():
     except Exception as e:
         print(f"Erreur: {e}")
 
+
 def create_topic(topic_id):
     publisher = get_publisher()
     topic_path = publisher.topic_path(PROJECT_ID, topic_id)
@@ -31,6 +36,7 @@ def create_topic(topic_id):
         print(f"✅ Topic créé : {topic_path}")
     except AlreadyExists:
         print(f"⚠️  Le topic existe déjà : {topic_path}")
+
 
 def create_subscription(topic_id, sub_id):
     subscriber = get_subscriber()
@@ -44,6 +50,7 @@ def create_subscription(topic_id, sub_id):
     except NotFound:
         print(f"❌ Le topic '{topic_id}' n'existe pas. Créez-le d'abord.")
 
+
 def publish_message(topic_id, message):
     publisher = get_publisher()
     topic_path = publisher.topic_path(PROJECT_ID, topic_id)
@@ -54,14 +61,14 @@ def publish_message(topic_id, message):
     except NotFound:
         print(f"❌ Topic introuvable : {topic_id}")
 
+
 def read_messages(sub_id):
     subscriber = get_subscriber()
     sub_path = subscriber.subscription_path(PROJECT_ID, sub_id)
     print(f"\n📥 Lecture de '{sub_id}'...")
     try:
         response = subscriber.pull(
-            request={"subscription": sub_path, "max_messages": 5},
-            timeout=5.0
+            request={"subscription": sub_path, "max_messages": 5}, timeout=5.0
         )
 
         if not response.received_messages:
@@ -76,11 +83,14 @@ def read_messages(sub_id):
 
         # Acknowledge (valider la lecture)
         if ack_ids:
-            subscriber.acknowledge(request={"subscription": sub_path, "ack_ids": ack_ids})
+            subscriber.acknowledge(
+                request={"subscription": sub_path, "ack_ids": ack_ids}
+            )
             print(f"✅ {len(ack_ids)} messages acquittés (supprimés de la file).")
 
     except Exception as e:
         print(f"Erreur lors de la lecture (timeout ou autre): {e}")
+
 
 def main():
     while True:
@@ -114,6 +124,7 @@ def main():
             break
         else:
             print("Choix invalide.")
+
 
 if __name__ == "__main__":
     main()

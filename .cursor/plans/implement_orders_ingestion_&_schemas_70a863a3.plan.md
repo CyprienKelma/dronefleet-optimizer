@@ -38,7 +38,7 @@ We will populate the empty schema files with realistic, typed Pydantic models.
 
 Create the logic to validate and publish orders.
 
--   **[src/ingestion-api/services/request.py](src/ingestion-api/services/request.py)**
+-   **[src/ingestion/services/request.py](src/ingestion/services/request.py)**
     -   Create `RequestService` class.
     -   Initialize `PublisherFactory` to get the correct publisher.
     -   Implement `process_order(request: DeliveryRequest)`:
@@ -50,4 +50,4 @@ Create the logic to validate and publish orders.
 
 Connect the HTTP layer to the service.
 
--   **[src/ingestion-api/api/v1/endpoints/orders.py](src/ingestion-api/api/v1/endpoints/orders.py)**
+-   **[src/ingestion/api/v1/endpoints/orders.py](src/ingestion/api/v1/endpoints/orders.py)**

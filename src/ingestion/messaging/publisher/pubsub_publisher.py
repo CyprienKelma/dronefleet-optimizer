@@ -1,12 +1,18 @@
 import json
-from typing import Any, Dict
+from typing import Any
+
+import structlog
+
 from ..base_publisher import MessagePublisher
+
+logger = structlog.get_logger(__name__)
 
 # Note: Requires 'google-cloud-pubsub' installed
 try:
     from google.cloud import pubsub_v1
 except ImportError:
     pubsub_v1 = None
+
 
 class PubSubPublisher(MessagePublisher):
     """
@@ -20,7 +26,7 @@ class PubSubPublisher(MessagePublisher):
         self.publisher = pubsub_v1.PublisherClient()
         self.project_id = project_id
 
-    def publish(self, topic: str, message: Dict[str, Any], **kwargs) -> bool:
+    def publish(self, topic: str, message: dict[str, Any], **kwargs) -> bool:
         """
         Publishes to a Pub/Sub topic.
         Expects topic to be the topic ID (not full path), unless fully qualified.
@@ -37,10 +43,12 @@ class PubSubPublisher(MessagePublisher):
 
             # Block to ensure message ID is returned (confirms publish)
             message_id = future.result()
-            print(f"Message published to Pub/Sub on topic {topic}: {message_id}")
+            logger.info(
+                "Message published to Pub/Sub", topic=topic, message_id=message_id
+            )
             return True
         except Exception as e:
-            print(f"Error publishing to Pub/Sub on topic {topic}: {e}")
+            logger.error("Error publishing to Pub/Sub", topic=topic, error=str(e))
             return False
 
     def close(self):

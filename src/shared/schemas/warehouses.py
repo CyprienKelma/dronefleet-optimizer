@@ -1,7 +1,9 @@
-from typing import List, Optional
+
 from pydantic import BaseModel, Field
-from .telemetry import GeoPoint
+
 from .product import ProductType
+from .telemetry import GeoPoint
+
 
 class Warehouse(BaseModel):
     id: str = Field(..., description="Unique warehouse ID")
@@ -18,9 +20,9 @@ class Warehouse(BaseModel):
     charging_stations_count: int = Field(default=1, ge=0)
 
     # Authorized products to store here
-    authorized_product_types: List[ProductType] = Field(default_factory=list)
+    authorized_product_types: list[ProductType] = Field(default_factory=list)
 
-    description: Optional[str] = None
+    description: str | None = None
 
     class Config:
         json_schema_extra = {
@@ -31,6 +33,6 @@ class Warehouse(BaseModel):
                 "total_capacity_kg": 500.0,
                 "is_cold_storage_capable": True,
                 "landing_pads_count": 4,
-                "authorized_product_types": ["MEDICINE", "VACCINE", "BLOOD"]
+                "authorized_product_types": ["MEDICINE", "VACCINE", "BLOOD"],
             }
         }

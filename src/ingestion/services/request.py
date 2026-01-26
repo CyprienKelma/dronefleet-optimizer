@@ -1,9 +1,12 @@
-import logging
-from ..messaging.factory import PublisherFactory
+import structlog
+
 from shared.schemas.request import DeliveryRequest
 
+from ..messaging.factory import PublisherFactory
+
 # Configure logging
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
+
 
 class RequestService:
     """
@@ -15,7 +18,7 @@ class RequestService:
         # Initialize the publisher via the factory pattern
         # This decouples the service from the specific broker (Kafka vs PubSub)
         self.publisher = PublisherFactory.get_publisher()
-        self.topic_name = "requests" # Topic name as defined in the architecture
+        self.topic_name = "requests"  # Topic name as defined in the architecture
 
     def process_order(self, request: DeliveryRequest) -> str:
         """
@@ -30,7 +33,11 @@ class RequestService:
         Raises:
             RuntimeError: If publishing to the message broker fails.
         """
-        logger.info(f"Processing delivery request {request.request_id} [{request.priority}]")
+        logger.info(
+            "Processing delivery request",
+            request_id=request.request_id,
+            priority=request.priority,
+        )
 
         # 1. Additional Business Validation (if any)
         # e.g., Check if pickup_location is within service area
@@ -38,23 +45,30 @@ class RequestService:
 
         # 2. Serialize Payload
         # model_dump(mode='json') ensures Enums and Datetimes are serialized to strings
-        message_payload = request.model_dump(mode='json')
-
-        # TODO : remove
-        print(message_payload)
+        message_payload = request.model_dump(mode="json")
 
         # publish to Event Bus
         try:
             success = self.publisher.publish(self.topic_name, message_payload)
             if not success:
-                logger.error(f"Publisher returned False for order {request.request_id}")
+                logger.error(
+                    "Publisher returned False for order", request_id=request.request_id
+                )
                 raise RuntimeError("Failed to queue the order. Publisher declined.")
 
         except Exception as e:
-            logger.error(f"Exception while publishing order {request.request_id}: {str(e)}")
-            raise RuntimeError(f"Internal error publishing order: {str(e)}")
+            logger.error(
+                "Exception while publishing order",
+                request_id=request.request_id,
+                error=str(e),
+            )
+            raise RuntimeError(f"Internal error publishing order: {str(e)}") from e
 
-        logger.info(f"Successfully queued order {request.request_id} to topic '{self.topic_name}'")
+        logger.info(
+            "Successfully queued order",
+            request_id=request.request_id,
+            topic=self.topic_name,
+        )
         return request.request_id
 
     def shutdown(self):

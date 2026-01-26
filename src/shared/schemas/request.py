@@ -1,15 +1,16 @@
 import uuid
 from datetime import datetime
-from typing import Optional
+
 from pydantic import BaseModel, Field
 
+from .product import ProductType
 from .protocol import UrgencyLevel
 from .telemetry import GeoPoint
-from .product import ProductType
 
 """
 Simulator -> Ingestion API -> Queue
 """
+
 
 class DeliveryRequest(BaseModel):
     request_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -17,19 +18,21 @@ class DeliveryRequest(BaseModel):
     priority: UrgencyLevel
 
     # Locations
-    pickup_location: GeoPoint   # Where to pick up the package (e.g., Central warehouse)
+    pickup_location: GeoPoint  # Where to pick up the package (e.g., Central warehouse)
     dropoff_location: GeoPoint  # Where to deliver (e.g., South Hospital)
 
     # Package Details
     product_type: ProductType
-    package_weight_kg: float = Field(..., gt=0, description="Total weight including packaging")
-    content_description: str    # "Covid Vaccines", "O+ Blood"
+    package_weight_kg: float = Field(
+        ..., gt=0, description="Total weight including packaging"
+    )
+    content_description: str  # "Covid Vaccines", "O+ Blood"
 
     # Constraints
     requires_cold_chain: bool = False
 
     # Metadata
-    requester_id: Optional[str] = None # Who asked for this (Doctor ID, Hospital ID)
+    requester_id: str | None = None  # Who asked for this (Doctor ID, Hospital ID)
 
     class Config:
         json_schema_extra = {
@@ -40,6 +43,6 @@ class DeliveryRequest(BaseModel):
                 "product_type": "BLOOD",
                 "package_weight_kg": 1.2,
                 "content_description": "O- Negative Blood Bags",
-                "requires_cold_chain": True
+                "requires_cold_chain": True,
             }
         }

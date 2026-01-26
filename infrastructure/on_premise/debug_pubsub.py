@@ -1,12 +1,12 @@
+from google.api_core.exceptions import ServiceUnavailable
+from google.cloud import pubsub_v1
 from google.pubsub_v1.types.pubsub import Subscription, Topic
 
-
-from google.cloud import pubsub_v1
-from google.api_core.exceptions import ServiceUnavailable
 from shared.configs.global_config import settings
 
 # Configuration par défaut (basée sur ton docker-compose)
 PROJECT_ID = "drone-fleet-optimizer-local"
+
 
 def list_resources():
     print(f"Connecting to emulator at {settings.pubsub_emulator_host}...")
@@ -27,7 +27,9 @@ def list_resources():
 
         # Lister les Subscriptions
         print("\n=== CURRENT SUBSCRIPTIONS ===")
-        subscriptions = list[Subscription](subscriber.list_subscriptions(request={"project": project_path}))
+        subscriptions = list[Subscription](
+            subscriber.list_subscriptions(request={"project": project_path})
+        )
         if not subscriptions:
             print("Aucune souscription trouvée.")
         for sub in subscriptions:
@@ -39,6 +41,7 @@ def list_resources():
     except Exception as e:
         print(f"\nUnexpected error: {e}")
 
+
 def list_last_messages():
     """Reads available messages from subscriptions (non-blocking)."""
     print("\n=== LATEST MESSAGES (PEEK) ===")
@@ -47,10 +50,12 @@ def list_last_messages():
     project_path = f"projects/{PROJECT_ID}"
 
     try:
-        subscriptions = list[Subscription](subscriber.list_subscriptions(request={"project": project_path}))
+        subscriptions = list[Subscription](
+            subscriber.list_subscriptions(request={"project": project_path})
+        )
 
         for sub in subscriptions:
-            sub_name = sub.name.split('/')[-1]
+            sub_name = sub.name.split("/")[-1]
             print(f"\n--- Subscription: {sub_name} ---")
 
             # The emulator (and Pub/Sub) doesn't support "peeking" without acknowledgment easily.
@@ -62,7 +67,7 @@ def list_last_messages():
                     request={
                         "subscription": sub.name,
                         "max_messages": 5,
-                        "return_immediately": True # Don't block if empty
+                        "return_immediately": True,  # Don't block if empty
                     }
                 )
 
@@ -88,6 +93,7 @@ def list_last_messages():
 
     except Exception as e:
         print(f"Error listing subscriptions for messages: {e}")
+
 
 if __name__ == "__main__":
     list_resources()

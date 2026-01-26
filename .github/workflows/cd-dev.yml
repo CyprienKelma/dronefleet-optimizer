@@ -5,8 +5,8 @@ on:
     branches:
       - develop
     paths:
-      - 'src/**'
-      - '.github/workflows/cd-dev.yml'
+      - "src/**"
+      - ".github/workflows/cd-dev.yml"
 
 env:
   PROJECT_ID: drone-fleet-optimizer-dev
@@ -14,8 +14,8 @@ env:
   REGISTRY: europe-west1-docker.pkg.dev
 
 jobs:
-  deploy-ingestion-api:
-    if: contains(github.event.head_commit.modified, 'src/ingestion-api')
+  deploy-ingestion:
+    if: contains(github.event.head_commit.modified, 'src/ingestion')
     runs-on: ubuntu-latest
 
     permissions:
@@ -39,11 +39,11 @@ jobs:
 
       - name: Build and Push Docker image
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/drone-fleet-optimizer/ingestion-api"
+          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/drone-fleet-optimizer/ingestion"
           TAG="dev-${{ github.sha }}"
 
           docker build -t $IMAGE:$TAG -t $IMAGE:latest-dev \
-            -f src/ingestion-api/Dockerfile \
+            -f src/ingestion/Dockerfile \
             --build-arg ENVIRONMENT=dev \
             .
 
@@ -52,11 +52,11 @@ jobs:
 
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy ingestion-api \
-            --image ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/drone-fleet-optimizer/ingestion-api:dev-${{ github.sha }} \
+          gcloud run deploy ingestion \
+            --image ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/drone-fleet-optimizer/ingestion:dev-${{ github.sha }} \
             --region ${{ env.REGION }} \
             --platform managed \
-            --service-account ingestion-api@${{ env.PROJECT_ID }}.iam.gserviceaccount.com \
+            --service-account ingestion@${{ env.PROJECT_ID }}.iam.gserviceaccount.com \
             --set-env-vars ENVIRONMENT=dev,PROJECT_ID=${{ env.PROJECT_ID }} \
             --min-instances 0 \
             --max-instances 2 \
@@ -67,7 +67,7 @@ jobs:
 
       - name: Output Service URL
         run: |
-          SERVICE_URL=$(gcloud run services describe ingestion-api \
+          SERVICE_URL=$(gcloud run services describe ingestion \
             --region ${{ env.REGION }} \
             --format 'value(status.url)')
           echo "Ingestion API deployed to: $SERVICE_URL"
@@ -86,8 +86,8 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
 
       - name: Build with Gradle
         run: |

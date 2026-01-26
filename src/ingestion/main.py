@@ -1,7 +1,13 @@
 from fastapi import FastAPI
+
+from shared.configs.logging_config import setup_logging
+
 from .api.v1.endpoints.orders import router as orders_router
 from .api.v1.endpoints.states import router as states_router
 from .api.v1.endpoints.telemetry import router as telemetry_router
+
+# Initialize logging
+setup_logging()
 
 app = FastAPI()
 
