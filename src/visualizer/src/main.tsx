@@ -1,5 +1,6 @@
 import { type Component, onMount, Show } from "solid-js";
 import { render } from "solid-js/web";
+import ConfigPanel from "./components/ConfigPanel";
 import DebugPanel from "./components/DebugPanel";
 import DroneMap from "./components/DroneMap";
 import { getTelemetryStream } from "./data";
@@ -44,6 +45,7 @@ const App: Component = () => {
       </header>
 
       <main class="flex-1 relative overflow-hidden">
+        <ConfigPanel />
         <DroneMap />
         <Show when={config.debugMode}>
           <DebugPanel />

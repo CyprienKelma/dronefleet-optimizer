@@ -13,6 +13,7 @@ import {
   $drones,
   $lastUpdateTime,
   $selectedDroneId,
+  $userConfig,
   selectDrone,
 } from "@/stores";
 import { getConfig } from "@/utils/config";
@@ -63,12 +64,18 @@ const DroneMap: Component = () => {
   const drones = useStore($drones);
   const selectedDroneId = useStore($selectedDroneId);
   const lastUpdate = useStore($lastUpdateTime);
+  const userConfig = useStore($userConfig);
 
   const showPopup = (
     coordinates: [number, number],
-    props: Record<string, string | number | boolean | null | undefined>,
+    props: Record<string, unknown>,
   ) => {
     if (!popup || !map) return;
+
+    // Type guard/assertion for DroneTelemetry properties
+    // In a real app we might want more robust validation here,
+    // but for now we'll cast since we know the source is our own GeoJSON
+    const telemetry = props as unknown as DroneTelemetry;
 
     // Clean up previous popup render
     popupCleanup?.();
@@ -77,13 +84,17 @@ const DroneMap: Component = () => {
     popupCleanup = render(
       () => (
         <DronePopup
-          drone_id={props.drone_id}
-          status={props.status}
-          battery_percentage={props.battery_percentage}
-          speed_kmh={props.speed_kmh}
-          lat={props.lat}
-          lon={props.lon}
-          current_mission_id={props.current_mission_id}
+          drone_id={telemetry.drone_id}
+          status={telemetry.status}
+          battery_percentage={telemetry.battery_percentage}
+          speed_kmh={telemetry.speed_kmh}
+          lat={
+            telemetry.position ? telemetry.position.lat : (props.lat as number)
+          }
+          lon={
+            telemetry.position ? telemetry.position.lon : (props.lon as number)
+          }
+          current_mission_id={telemetry.current_mission_id}
         />
       ),
       container,
@@ -126,8 +137,8 @@ const DroneMap: Component = () => {
           "circle-radius": [
             "case",
             ["boolean", ["feature-state", "selected"], false],
-            12,
-            8,
+            userConfig().droneSelectedIconRadius,
+            userConfig().droneIconRadius,
           ],
           "circle-color": ["get", "color"],
           "circle-stroke-width": 2,
@@ -220,7 +231,10 @@ const DroneMap: Component = () => {
         for (const drone of droneList) {
           bounds.extend([drone.position.lon, drone.position.lat]);
         }
-        map.fitBounds(bounds, { padding: 50, maxZoom: 14 });
+        map.fitBounds(bounds, {
+          padding: userConfig().mapFitPadding,
+          maxZoom: userConfig().mapMaxZoom,
+        });
         setHasInitialPositioned(true);
       }
     }
@@ -249,10 +263,25 @@ const DroneMap: Component = () => {
           map.flyTo({
             center: [drone.position.lon, drone.position.lat],
             zoom: Math.max(map.getZoom(), 14),
-            duration: 500,
+            duration: userConfig().mapFlyDuration,
           });
         }
       }
+    }
+  });
+
+  // React to config changes (update paint properties)
+  createEffect(() => {
+    if (!isMapLoaded() || !map) return;
+    const config = userConfig();
+
+    if (map.getLayer("drone-markers")) {
+      map.setPaintProperty("drone-markers", "circle-radius", [
+        "case",
+        ["boolean", ["feature-state", "selected"], false],
+        config.droneSelectedIconRadius,
+        config.droneIconRadius,
+      ]);
     }
   });
 

@@ -32,3 +32,9 @@ export {
   updateDronesTelemetry,
   updateDroneTelemetry,
 } from "./drones";
+
+export {
+  $userConfig,
+  type UserConfig,
+  updateUserConfig,
+} from "./user-config";

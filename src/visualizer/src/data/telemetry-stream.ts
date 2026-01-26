@@ -1,5 +1,6 @@
 import { type DroneTelemetry, safeParseTelemetry } from "@shared/schemas";
 import {
+  $userConfig,
   logEvent,
   recordMessageFailed,
   recordMessageProcessed,
@@ -30,8 +31,6 @@ export class TelemetryStream {
   private useMockData: boolean;
   private mockInterval: ReturnType<typeof setInterval> | null = null;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectDelay = 1000;
 
   constructor(options: TelemetryStreamOptions = {}) {
     const config = getConfig();
@@ -138,13 +137,15 @@ export class TelemetryStream {
   private handleConnectionError(): void {
     setConnectionStatus("error", "Connection lost");
 
-    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+    const config = $userConfig.get();
+    if (this.reconnectAttempts < config.reconnectMaxAttempts) {
       this.reconnectAttempts++;
-      const delay = this.reconnectDelay * 2 ** (this.reconnectAttempts - 1);
+      const delay =
+        config.reconnectBaseDelay * 2 ** (this.reconnectAttempts - 1);
 
       logEvent(
         "info",
-        `Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
+        `Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${config.reconnectMaxAttempts})`,
       );
 
       setTimeout(() => {
