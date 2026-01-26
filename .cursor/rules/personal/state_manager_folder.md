@@ -68,6 +68,51 @@ src/state-manager/src/main/java/com/dronefleet/statemanager/
 
 ````
 
+## Uses cases
+````
+
+┌────────────────────────────────────────────────────┐
+│        EVENT DRIVEN ARCHI : DRONEFLEET             │
+├────────────────────────────────────────────────────┤
+│                                                    │
+│ ACTEURS (Qui interagit avec le système ?)          │
+│ ├─ Dispatcher (humain qui coordonne)               │
+│ ├─ Drones (agents autonomes)                       │
+│ ├─ Hôpitaux (clients)                              │
+│ └─ Optimizer (algorithme)                          │
+│                                                    │
+│ ÉVÉNEMENTS MÉTIER (Que se passe-t-il ?)            │
+│ ├─ [1] Un hôpital demande une livraison urgente    │
+│ ├─ [2] Un drone envoie sa position toutes les 1s   │
+│ ├─ [3] L'optimizer assigne un drone à une order    │
+│ ├─ [4] Le drone accepte ou refuse la mission       │
+│ ├─ [5] Le drone arrive à l'entrepôt (pickup)       │
+│ ├─ [6] Le drone prend le colis                     │
+│ ├─ [7] Le drone arrive à destination (delivery)    │
+│ ├─ [8] Le drone livre le colis                     │
+│ ├─ [9] Le drone retourne à la base                 │
+│ └─ [10] Le drone a une batterie faible             │
+│                                                    │
+│ COMMANDES (Que peut-on FAIRE ?)                    │
+│ ├─ CreateOrder (hôpital crée une demande)          │
+│ ├─ UpdateDronePosition (drone envoie telemetry)    │
+│ ├─ AssignDroneToOrder (optimizer décide)           │
+│ ├─ ConfirmPickup (drone confirme prise de colis)  │
+│ ├─ ConfirmDelivery (drone confirme livraison)     │
+│ └─ RequestCharging (drone demande recharge)       │
+│                                                    │
+│ RÈGLES MÉTIER (Contraintes)                        │
+│ ├─ Un drone ne peut avoir qu'UNE mission active   │
+│ ├─ Un drone avec batterie < 20% ne peut pas       │
+│ │   accepter de nouvelle mission                  │
+│ ├─ Une order en attente > 5 min trigger une alerte│
+│ ├─ Un drone en panne doit être marqué MAINTENANCE │
+│ └─ Les orders HIGH priority sont traitées en 1er  │
+│                                                    │
+└────────────────────────────────────────────────────┘
+````
+## Choix de structure de code :
+
 ```
 ┌────────────────────────────────────────────────────┐
 │              ARCHITECTURE EN 3 COUCHES             │

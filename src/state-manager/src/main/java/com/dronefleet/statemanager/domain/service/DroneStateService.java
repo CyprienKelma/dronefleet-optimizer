@@ -22,7 +22,7 @@ public class DroneStateService implements UpdateDroneStateUseCase {
     }
 
     /**
-     * Update the state of a drone from telemetry data.
+     * Handle the new state of a drone from telemetry data.
      *
      * @param telemetry The telemetry data to update the drone state from.
      */
@@ -45,6 +45,6 @@ public class DroneStateService implements UpdateDroneStateUseCase {
                 telemetry.currentMissionId()
         );
 
-        droneRepository.save(drone);
+        droneRepository.saveDrone(drone);
     }
 }

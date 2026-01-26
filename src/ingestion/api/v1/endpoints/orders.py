@@ -3,33 +3,32 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from shared.schemas.request import DeliveryRequest
-
-from ....services.request import RequestService
+from shared.schemas.order import DeliveryOrder
+from ....services.order import OrderService
 
 router = APIRouter()
 
-
-@lru_cache
-def get_service() -> RequestService:
-    return RequestService()
+@lru_cache()
+def get_service() -> OrderService:
+    return OrderService()
 
 
 @router.post("/orders", status_code=status.HTTP_201_CREATED)
 async def create_order(
-    request: DeliveryRequest, service: RequestService = Depends(get_service)
-) -> dict[str, Any]:
+    order: DeliveryOrder,
+    service: OrderService = Depends(get_service)
+) -> Dict[str, Any]:
     """
     Ingest a new delivery order.
 
     - Validates the payload (Pydantic)
     - Publishes to the event bus
-    - Returns the request ID
+    - Returns the order ID
     """
     try:
-        request_id = service.process_order(request)
+        order_id = service.process_order(order)
         return {
-            "request_id": request_id,
+            "order_id": order_id,
             "status": "QUEUED",
             "message": "Order successfully received and queued for processing.",
         }
@@ -42,9 +41,8 @@ async def create_order(
         # Catch-all for other unexpected errors
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Error processing request: {str(e)}",
-        ) from e
-
+            detail=f"Error processing order: {str(e)}"
+        )
 
 @router.get("/orders/{order_id}")
 async def get_order(order_id: str) -> dict[str, Any]:

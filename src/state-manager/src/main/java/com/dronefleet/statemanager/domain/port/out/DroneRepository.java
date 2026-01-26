@@ -11,7 +11,7 @@ public interface DroneRepository {
      *
      * @param drone The drone to save.
      */
-    void save(Drone drone);
+    void saveDrone(Drone drone);
 
     /**
      * Find a drone by id.
@@ -27,11 +27,4 @@ public interface DroneRepository {
      * @return A list of all drones.
      */
     List<Drone> findAll();
-
-    /**
-     * Update the telemetry information of a drone.
-     *
-     * @param drone The drone to update the telemetry information of.
-     */
-    void updateTelemetry(Drone drone);
 }

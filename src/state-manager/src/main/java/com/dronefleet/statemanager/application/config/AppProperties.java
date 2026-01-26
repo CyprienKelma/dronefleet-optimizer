@@ -12,4 +12,10 @@ public class AppProperties {
     private int batchWriteInterval;
 
     private int maxBatchSize;
+
+    private String dronesCollection;
+
+    private String ordersCollection;
+
+    private String missionsCollection;
 }
