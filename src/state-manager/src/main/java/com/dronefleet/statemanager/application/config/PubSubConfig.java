@@ -18,8 +18,24 @@ public class PubSubConfig {
     @Value("${pubsub.subscriptions.telemetry}")
     private String telemetrySubscription;
 
+    @Value("${pubsub.subscriptions.orders}")
+    private String ordersSubscription;
+
+    @Value("${pubsub.subscriptions.decisions}")
+    private String decisionsSubscription;
+
     @Bean
     public MessageChannel telemetryInputChannel() {
+        return new DirectChannel();
+    }
+
+    @Bean
+    public MessageChannel ordersInputChannel() {
+        return new DirectChannel();
+    }
+
+    @Bean
+    public MessageChannel decisionsInputChannel() {
         return new DirectChannel();
     }
 
@@ -30,6 +46,30 @@ public class PubSubConfig {
         ) {
 
         PubSubInboundChannelAdapter adapter = new PubSubInboundChannelAdapter(pubSubTemplate, telemetrySubscription);
+        adapter.setOutputChannel(inputChannel);
+
+        return adapter;
+    }
+
+    @Bean
+    public PubSubInboundChannelAdapter ordersAdapter(
+            @Qualifier("ordersInputChannel") MessageChannel inputChannel,
+            PubSubTemplate pubSubTemplate
+    ) {
+
+        PubSubInboundChannelAdapter adapter = new PubSubInboundChannelAdapter(pubSubTemplate, ordersSubscription);
+        adapter.setOutputChannel(inputChannel);
+
+        return adapter;
+    }
+
+    @Bean
+    public PubSubInboundChannelAdapter decisionsAdapter(
+            @Qualifier("decisionsInputChannel") MessageChannel inputChannel,
+            PubSubTemplate pubSubTemplate
+    ) {
+
+        PubSubInboundChannelAdapter adapter = new PubSubInboundChannelAdapter(pubSubTemplate, decisionsSubscription);
         adapter.setOutputChannel(inputChannel);
 
         return adapter;

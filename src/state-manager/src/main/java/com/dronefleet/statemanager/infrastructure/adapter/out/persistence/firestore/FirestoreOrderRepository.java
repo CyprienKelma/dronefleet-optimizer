@@ -27,6 +27,7 @@ public class FirestoreOrderRepository implements OrderRepository {
 
     private final Firestore firestore;
     private final AppProperties appProperties;
+    private final FirestoreMapper mapper;
 
     @Override
     public void save(Order order) {
@@ -34,7 +35,7 @@ public class FirestoreOrderRepository implements OrderRepository {
             log.debug("Saving order {} to Firestore...", order.getId());
             firestore.collection(appProperties.getOrdersCollection())
                     .document(order.getId())
-                    .set(mapToDocument(order))
+                    .set(mapper.mapFromOrder(order))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
             log.error("Error saving order to Firestore: {}", order.getId(), e);
@@ -50,7 +51,7 @@ public class FirestoreOrderRepository implements OrderRepository {
                     .get()
                     .get();
             if (document.exists()) {
-                return Optional.of(mapToDomain(document));
+                return Optional.of(mapper.mapToOrder(document));
             }
         } catch (InterruptedException | ExecutionException e) {
             log.error("Error retrieving order from Firestore: {}", id, e);
@@ -66,54 +67,12 @@ public class FirestoreOrderRepository implements OrderRepository {
                     .whereEqualTo("status", "PENDING")
                     .get();
             return future.get().getDocuments().stream()
-                    .map(this::mapToDomain)
+                    .map(mapper::mapToOrder)
                     .collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException e) {
             log.error("Error retrieving pending orders from Firestore", e);
             Thread.currentThread().interrupt();
             return List.of();
         }
-    }
-
-    private Order mapToDomain(DocumentSnapshot doc) {
-        return Order.builder()
-                .id(doc.getId())
-                .pickupLocation(mapPosition((Map<String, Object>) doc.get("pickupLocation")))
-                .deliveryLocation(mapPosition((Map<String, Object>) doc.get("deliveryLocation")))
-                .status(doc.getString("status"))
-                .priority(doc.getString("priority"))
-                .createdAt(doc.getTimestamp("createdAt") != null ? doc.getTimestamp("createdAt").toDate().toInstant() : null)
-                .build();
-    }
-
-    private Map<String, Object> mapToDocument(Order order) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("status", order.getStatus());
-        map.put("priority", order.getPriority());
-        if (order.getPickupLocation() != null) {
-            map.put("pickupLocation", mapPosition(order.getPickupLocation()));
-        }
-        if (order.getDeliveryLocation() != null) {
-            map.put("deliveryLocation", mapPosition(order.getDeliveryLocation()));
-        }
-        if (order.getCreatedAt() != null) {
-            map.put("createdAt", Timestamp.of(java.util.Date.from(order.getCreatedAt())));
-        }
-        return map;
-    }
-
-    private Position mapPosition(Map<String, Object> map) {
-        if (map == null) return null;
-        return new Position(
-                ((Number) map.get("lat")).doubleValue(),
-                ((Number) map.get("lon")).doubleValue()
-        );
-    }
-
-    private Map<String, Object> mapPosition(Position pos) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("lat", pos.lat());
-        map.put("lon", pos.lon());
-        return map;
     }
 }

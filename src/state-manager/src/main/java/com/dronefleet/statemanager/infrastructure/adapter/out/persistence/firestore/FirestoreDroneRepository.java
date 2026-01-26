@@ -31,13 +31,14 @@ public class FirestoreDroneRepository implements DroneRepository {
 
     private final Firestore firestore;
     private final AppProperties appProperties;
+    private final FirestoreMapper mapper;
 
     @Override
     public Optional<Drone> findById(String id) {
         try {
             DocumentSnapshot document = firestore.collection(appProperties.getDronesCollection()).document(id).get().get();
             if (document.exists()) {
-                return Optional.of(mapToDomain(document));
+                return Optional.of(mapper.mapToDrone(document));
             }
         // if the thread is interrupted or error occurs during Firestore query
         } catch (InterruptedException | ExecutionException e) {
@@ -53,7 +54,7 @@ public class FirestoreDroneRepository implements DroneRepository {
             ApiFuture<QuerySnapshot> future = firestore.collection(appProperties.getDronesCollection()).get();
             List<QueryDocumentSnapshot> documents = future.get().getDocuments();
             return documents.stream()
-                    .map(this::mapToDomain)
+                    .map(mapper::mapToDrone)
                     .collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException e) {
             log.error("Error retrieving all drones from Firestore", e);
@@ -66,62 +67,11 @@ public class FirestoreDroneRepository implements DroneRepository {
     public void saveDrone(Drone drone) {
         try {
             log.debug("Saving drone {} to Firestore...", drone.getId());
-            firestore.collection(appProperties.getDronesCollection()).document(drone.getId()).set(mapToDocument(drone)).get();
+            firestore.collection(appProperties.getDronesCollection()).document(drone.getId()).set(mapper.mapFromDrone(drone)).get();
             log.debug("Drone {} saved successfully.", drone.getId());
         } catch (InterruptedException | ExecutionException e) {
             log.error("Error saving drone to Firestore: {}", drone.getId(), e);
             Thread.currentThread().interrupt();
         }
-    }
-
-    /**
-     * Maps a Firestore DocumentSnapshot to a Drone domain object.
-     */
-    private Drone mapToDomain(DocumentSnapshot doc) {
-        Map<String, Object> posMap = (Map<String, Object>) doc.get("position");
-        Position position = null;
-        if (posMap != null) {
-            position = new Position(
-                    ((Number) posMap.get("lat")).doubleValue(),
-                    ((Number) posMap.get("lon")).doubleValue()
-            );
-        }
-
-        Timestamp timestamp = doc.getTimestamp("lastUpdate");
-        Instant lastUpdate = (timestamp != null) ? timestamp.toDate().toInstant() : null;
-
-        return Drone.builder()
-                .id(doc.getId())
-                .position(position)
-                .batteryPercentage(((Number) doc.get("batteryPercentage")).doubleValue())
-                .speedKmh(((Number) doc.get("speedKmh")).doubleValue())
-                .status(DroneStatus.parseStatus(doc.getString("status")))
-                .currentMissionId(doc.getString("currentMissionId"))
-                .lastUpdate(lastUpdate)
-                .build();
-    }
-
-    /**
-     * Maps a Drone domain object to a Firestore document map.
-     */
-    private Map<String, Object> mapToDocument(Drone drone) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("batteryPercentage", drone.getBatteryPercentage());
-        map.put("speedKmh", drone.getSpeedKmh());
-        map.put("status", drone.getStatus().name());
-        map.put("currentMissionId", drone.getCurrentMissionId());
-
-        if (drone.getPosition() != null) {
-            Map<String, Object> posMap = new HashMap<>();
-            posMap.put("lat", drone.getPosition().lat());
-            posMap.put("lon", drone.getPosition().lon());
-            map.put("position", posMap);
-        }
-
-        if (drone.getLastUpdate() != null) {
-            map.put("lastUpdate", Timestamp.of(java.util.Date.from(drone.getLastUpdate())));
-        }
-
-        return map;
     }
 }

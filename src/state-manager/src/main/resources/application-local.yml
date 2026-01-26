@@ -26,9 +26,11 @@ pubsub:
   topics:
     telemetry: ${PUBSUB_TOPIC_TELEMETRY:telemetry}
     orders: ${PUBSUB_TOPIC_ORDERS:orders}
+    decisions: ${PUBSUB_TOPIC_DECISIONS:decisions}
   subscriptions:
     telemetry: ${PUBSUB_TOPIC_TELEMETRY:telemetry}-sub
     orders: ${PUBSUB_TOPIC_ORDERS:orders}-sub
+    decisions: ${PUBSUB_TOPIC_DECISIONS:decisions}-sub
 
 # Logging verbose en local
 logging:

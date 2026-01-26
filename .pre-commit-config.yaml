@@ -7,10 +7,10 @@ repos:
         args: ['--baseline', '.secrets.baseline']
         exclude: package.lock.json
 
-  # Prevent committing large files
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
+      # Prevent committing large files
       - id: check-added-large-files
         args: ['--maxkb=1000']
 

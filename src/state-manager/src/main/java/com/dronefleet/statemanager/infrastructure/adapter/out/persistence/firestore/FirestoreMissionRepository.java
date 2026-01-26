@@ -25,6 +25,7 @@ public class FirestoreMissionRepository implements MissionRepository {
 
     private final Firestore firestore;
     private final AppProperties appProperties;
+    private final FirestoreMapper mapper;
 
     @Override
     public void save(Mission mission) {
@@ -32,7 +33,7 @@ public class FirestoreMissionRepository implements MissionRepository {
             log.debug("Saving mission {} to Firestore...", mission.getId());
             firestore.collection(appProperties.getMissionsCollection())
                     .document(mission.getId())
-                    .set(mapToDocument(mission))
+                    .set(mapper.mapFromMission(mission))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
             log.error("Error saving mission to Firestore: {}", mission.getId(), e);
@@ -48,68 +49,12 @@ public class FirestoreMissionRepository implements MissionRepository {
                     .get()
                     .get();
             if (document.exists()) {
-                return Optional.of(mapToDomain(document));
+                return Optional.of(mapper.mapToMission(document));
             }
         } catch (InterruptedException | ExecutionException e) {
             log.error("Error retrieving mission from Firestore: {}", id, e);
             Thread.currentThread().interrupt();
         }
         return Optional.empty();
-    }
-
-    private Mission mapToDomain(DocumentSnapshot doc) {
-        List<Map<String, Object>> routeMaps = (List<Map<String, Object>>) doc.get("route");
-        List<Position> route = null;
-        if (routeMaps != null) {
-            route = routeMaps.stream()
-                    .map(this::mapPosition)
-                    .collect(Collectors.toList());
-        }
-
-        return Mission.builder()
-                .id(doc.getId())
-                .droneId(doc.getString("droneId"))
-                .orderId(doc.getString("orderId"))
-                .route(route)
-                .status(doc.getString("status"))
-                .startTime(doc.getTimestamp("startTime") != null ? doc.getTimestamp("startTime").toDate().toInstant() : null)
-                .endTime(doc.getTimestamp("endTime") != null ? doc.getTimestamp("endTime").toDate().toInstant() : null)
-                .build();
-    }
-
-    private Map<String, Object> mapToDocument(Mission mission) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("droneId", mission.getDroneId());
-        map.put("orderId", mission.getOrderId());
-        map.put("status", mission.getStatus());
-
-        if (mission.getRoute() != null) {
-            map.put("route", mission.getRoute().stream()
-                    .map(this::mapPosition)
-                    .collect(Collectors.toList()));
-        }
-
-        if (mission.getStartTime() != null) {
-            map.put("startTime", Timestamp.of(java.util.Date.from(mission.getStartTime())));
-        }
-        if (mission.getEndTime() != null) {
-            map.put("endTime", Timestamp.of(java.util.Date.from(mission.getEndTime())));
-        }
-        return map;
-    }
-
-    private Position mapPosition(Map<String, Object> map) {
-        if (map == null) return null;
-        return new Position(
-                ((Number) map.get("lat")).doubleValue(),
-                ((Number) map.get("lon")).doubleValue()
-        );
-    }
-
-    private Map<String, Object> mapPosition(Position pos) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("lat", pos.lat());
-        map.put("lon", pos.lon());
-        return map;
     }
 }
