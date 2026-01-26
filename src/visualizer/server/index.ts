@@ -5,75 +5,42 @@
  * Run with: bun run server/index.ts
  */
 
-import { type Message, PubSub } from "@google-cloud/pubsub";
+import type { DroneTelemetry } from "@shared/schemas";
 import type { Server } from "bun";
+import { startInstrumentation } from "./instrumentation";
+import { logger } from "./logger";
+import { getPubSubClient } from "./pubsub-client";
+
+// Start tracing immediately
+startInstrumentation();
 
 // Configuration from environment
 const PORT = Number(process.env.PORT) || 3001;
-const PROJECT_ID =
-  process.env.PUBSUB_PROJECT_ID || "drone-fleet-optimizer-local";
-const SUBSCRIPTION_NAME = process.env.PUBSUB_SUBSCRIPTION || "telemetry-sub";
-const TELEMETRY_TOPIC = process.env.PUBSUB_TOPIC || "telemetry";
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
 
 // Active SSE connections
 const clients = new Set<ReadableStreamDefaultController>();
 
-// Pub/Sub setup
-const pubsub = new PubSub({ projectId: PROJECT_ID });
-// Log the subscription object to verify connection
-const topic = pubsub.topic(TELEMETRY_TOPIC);
-topic.exists().then(([exists]) => {
-  if (!exists) {
-    console.error(
-      `[PubSub] Topic "${TELEMETRY_TOPIC}" does not exist in project "${PROJECT_ID}"`,
-    );
-  } else {
-    console.log(
-      `[PubSub] Topic "${TELEMETRY_TOPIC}" exists in project "${PROJECT_ID}"`,
-    );
-  }
-});
-const subscription = topic.subscription(SUBSCRIPTION_NAME, {});
-// console.log("[PubSub] Subscription object:", subscription);
-/**
- * Handle incoming Pub/Sub messages
- */
-function handleMessage(message: Message): void {
-  try {
-    const data = message.data.toString();
-
+// Initialize Pub/Sub Client
+const pubsubClient = getPubSubClient({
+  onMessage: (telemetry: DroneTelemetry) => {
     // Broadcast to all connected clients
+    const data = JSON.stringify(telemetry);
+    const message = `data: ${data}\n\n`;
+
     for (const controller of clients) {
       try {
-        controller.enqueue(`data: ${data}\n\n`);
+        controller.enqueue(message);
       } catch {
         // Client disconnected, will be cleaned up
         clients.delete(controller);
       }
     }
-
-    message.ack();
-    console.log(
-      `[PubSub] Message ${message.id} broadcasted to ${clients.size} clients`,
-    );
-  } catch (error) {
-    console.error("[PubSub] Error processing message:", error);
-    message.nack();
-  }
-}
-
-/**
- * Start listening to Pub/Sub
- */
-function startPubSubListener(): void {
-  subscription.on("message", handleMessage);
-  subscription.on("error", (error) => {
-    console.error("[PubSub] Subscription error:", error);
-  });
-
-  console.log(`[PubSub] Listening to subscription: ${SUBSCRIPTION_NAME}`);
-}
+  },
+  onError: (error: Error) => {
+    logger.error(error, "[Server] Pub/Sub error");
+  },
+});
 
 /**
  * Verify admin token
@@ -94,13 +61,17 @@ function verifyToken(request: Request): boolean {
  */
 function handleSSE(request: Request): Response {
   if (!verifyToken(request)) {
+    logger.warn(
+      { ip: request.headers.get("x-forwarded-for") },
+      "[Server] Unauthorized connection attempt",
+    );
     return new Response("Unauthorized", { status: 401 });
   }
 
   const stream = new ReadableStream({
     start(controller) {
       clients.add(controller);
-      console.log(`[SSE] Client connected. Total: ${clients.size}`);
+      logger.info({ totalClients: clients.size }, "[SSE] Client connected");
 
       // Send initial connection message
       controller.enqueue(
@@ -109,7 +80,7 @@ function handleSSE(request: Request): Response {
     },
     cancel() {
       // Will be cleaned up on next broadcast
-      console.log("[SSE] Client disconnected");
+      logger.info("[SSE] Client disconnected");
     },
   });
 
@@ -127,10 +98,15 @@ function handleSSE(request: Request): Response {
  * Health check endpoint
  */
 function handleHealth(): Response {
+  const metrics = pubsubClient.getMetrics();
+
   return Response.json({
     status: "ok",
     clients: clients.size,
-    subscription: SUBSCRIPTION_NAME,
+    subscription: {
+      connected: pubsubClient.isConnected(),
+      ...metrics,
+    },
     timestamp: new Date().toISOString(),
   });
 }
@@ -163,16 +139,20 @@ function handleRequest(request: Request, _server: Server): Response {
 }
 
 // Start the server
-startPubSubListener();
+pubsubClient.start().catch((err) => {
+  logger.error(err, "Failed to start Pub/Sub client");
+  // Continue running server even if Pub/Sub fails (so health check works)
+});
 
 const server = Bun.serve({
   port: PORT,
   fetch: handleRequest,
 });
 
-console.log(
-  `[Server] Visualizer SSE bridge running on http://localhost:${server.port}`,
+logger.info(
+  {
+    port: server.port,
+    authEnabled: !!ADMIN_TOKEN,
+  },
+  "[Server] Visualizer SSE bridge running",
 );
-console.log(`[Server] Project: ${PROJECT_ID}`);
-console.log(`[Server] Subscription: ${SUBSCRIPTION_NAME}`);
-console.log(`[Server] Auth: ${ADMIN_TOKEN ? "enabled" : "disabled"}`);

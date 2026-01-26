@@ -1,17 +1,10 @@
 import { type Message, PubSub, type Subscription } from "@google-cloud/pubsub";
-import { type DroneTelemetry, safeParseTelemetry } from "@/schemas";
-import {
-  logEvent,
-  recordMessageFailed,
-  recordMessageProcessed,
-  recordMessageReceived,
-  setConnectionStatus,
-} from "@/stores";
-import { getConfig } from "@/utils/config";
+import { type DroneTelemetry, safeParseTelemetry } from "@shared/schemas";
+import { logger } from "./logger";
 
 /**
  * GCP Pub/Sub client for receiving drone telemetry
- * This runs on the server-side (Bun runtime) and streams to the browser
+ * Server-side implementation
  */
 
 export interface PubSubClientOptions {
@@ -19,6 +12,13 @@ export interface PubSubClientOptions {
   subscriptionName?: string;
   onMessage?: (telemetry: DroneTelemetry) => void;
   onError?: (error: Error) => void;
+}
+
+export interface PubSubMetrics {
+  messagesReceived: number;
+  messagesProcessed: number;
+  messagesFailed: number;
+  lastMessageTime: Date | null;
 }
 
 export class PubSubClient {
@@ -29,15 +29,28 @@ export class PubSubClient {
   private onError: ((error: Error) => void) | null = null;
   private isRunning = false;
 
+  // Metrics
+  private metrics: PubSubMetrics = {
+    messagesReceived: 0,
+    messagesProcessed: 0,
+    messagesFailed: 0,
+    lastMessageTime: null,
+  };
+
   constructor(options: PubSubClientOptions = {}) {
-    const config = getConfig();
+    const projectId =
+      options.projectId ||
+      process.env.PUBSUB_PROJECT_ID ||
+      "drone-fleet-optimizer-local";
 
     this.pubsub = new PubSub({
-      projectId: options.projectId ?? config.pubsubProjectId,
+      projectId,
     });
 
     this.subscriptionName =
-      options.subscriptionName ?? config.pubsubSubscription;
+      options.subscriptionName ||
+      process.env.PUBSUB_SUBSCRIPTION ||
+      "telemetry-sub";
     this.onMessage = options.onMessage ?? null;
     this.onError = options.onError ?? null;
   }
@@ -47,13 +60,14 @@ export class PubSubClient {
    */
   async start(): Promise<void> {
     if (this.isRunning) {
-      logEvent("info", "Pub/Sub client already running");
+      logger.info("[PubSub] Client already running");
       return;
     }
 
     try {
-      setConnectionStatus("connecting");
-      logEvent("info", `Connecting to subscription: ${this.subscriptionName}`);
+      logger.info(
+        `[PubSub] Connecting to subscription: ${this.subscriptionName}`,
+      );
 
       this.subscription = this.pubsub.subscription(this.subscriptionName);
       this.isRunning = true;
@@ -66,18 +80,15 @@ export class PubSubClient {
 
       // Set up close handler
       this.subscription.on("close", () => {
-        logEvent("info", "Subscription closed");
-        setConnectionStatus("disconnected");
+        logger.info("[PubSub] Subscription closed");
         this.isRunning = false;
       });
 
-      setConnectionStatus("connected");
-      logEvent("info", "Successfully connected to Pub/Sub");
+      logger.info("[PubSub] Successfully connected");
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      setConnectionStatus("error", errorMessage);
-      logEvent("error", `Failed to connect to Pub/Sub: ${errorMessage}`);
+      logger.error(`[PubSub] Failed to connect: ${errorMessage}`);
       throw error;
     }
   }
@@ -90,45 +101,37 @@ export class PubSubClient {
       return;
     }
 
-    logEvent("info", "Stopping Pub/Sub client");
+    logger.info("[PubSub] Stopping client");
     this.subscription.removeAllListeners();
     await this.subscription.close();
     this.subscription = null;
     this.isRunning = false;
-    setConnectionStatus("disconnected");
   }
 
   /**
    * Handle incoming Pub/Sub message
    */
   private handleMessage(message: Message): void {
-    recordMessageReceived();
+    this.metrics.messagesReceived++;
+    this.metrics.lastMessageTime = new Date();
 
     try {
       // Parse message data as JSON
       const rawData = JSON.parse(message.data.toString());
 
-      logEvent("telemetry", `Received message ${message.id}`, {
-        messageId: message.id,
-        publishTime: message.publishTime,
-        attributes: message.attributes,
-      });
-
       // Validate and parse telemetry
       const result = safeParseTelemetry(rawData);
 
       if (!result.success) {
-        recordMessageFailed(`Validation failed: ${result.error.message}`);
-        logEvent("error", "Telemetry validation failed", {
-          errors: result.error.errors,
-          rawData,
-        });
+        this.metrics.messagesFailed++;
+        logger.error(`[PubSub] Validation failed: ${result.error.message}`);
+
         // Still acknowledge to avoid redelivery of invalid messages
         message.ack();
         return;
       }
 
-      recordMessageProcessed();
+      this.metrics.messagesProcessed++;
 
       // Notify listener
       if (this.onMessage) {
@@ -138,12 +141,10 @@ export class PubSubClient {
       // Acknowledge the message
       message.ack();
     } catch (error) {
+      this.metrics.messagesFailed++;
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      recordMessageFailed(errorMessage);
-      logEvent("error", `Error processing message: ${errorMessage}`, {
-        messageId: message.id,
-      });
+      logger.error(`[PubSub] Error processing message: ${errorMessage}`);
 
       // Negative acknowledge to retry later
       message.nack();
@@ -154,8 +155,7 @@ export class PubSubClient {
    * Handle subscription errors
    */
   private handleError(error: Error): void {
-    logEvent("error", `Subscription error: ${error.message}`);
-    setConnectionStatus("error", error.message);
+    logger.error(`[PubSub] Subscription error: ${error.message}`);
 
     if (this.onError) {
       this.onError(error);
@@ -167,6 +167,13 @@ export class PubSubClient {
    */
   isConnected(): boolean {
     return this.isRunning;
+  }
+
+  /**
+   * Get current metrics
+   */
+  getMetrics(): PubSubMetrics {
+    return { ...this.metrics };
   }
 }
 
@@ -181,14 +188,4 @@ export function getPubSubClient(options?: PubSubClientOptions): PubSubClient {
     _client = new PubSubClient(options);
   }
   return _client;
-}
-
-/**
- * Reset the client (for testing)
- */
-export function resetPubSubClient(): void {
-  if (_client) {
-    _client.stop();
-    _client = null;
-  }
 }
