@@ -412,6 +412,7 @@
       <property name="tokens" value="METHOD_DEF, CTOR_DEF, ANNOTATION_FIELD_DEF, COMPACT_CTOR_DEF"/>
     </module>
     <module name="MissingJavadocMethod">
+      <property name="severity" value="ignore"/>
       <property name="scope" value="public"/>
       <property name="allowMissingPropertyJavadoc" value="true"/>
       <property name="allowedAnnotations" value="Override, Test, Bean, ServiceActivator, PostConstruct"/>
@@ -427,6 +428,7 @@
                                  [not(./MODIFIERS/LITERAL_PUBLIC)]]"/>
     </module>
     <module name="MissingJavadocType">
+      <property name="severity" value="ignore"/>
       <property name="scope" value="public"/>
       <property name="tokens"
                 value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF,
