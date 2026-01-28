@@ -15,9 +15,10 @@ public class Order {
     private String id;
     private Position pickupLocation;
     private Position deliveryLocation;
-    private String status; // PENDING, ASSIGNED, DELIVERED, CANCELLED
-    private String priority; // STANDARD, HIGH, CRITICAL
+    private OrderStatus status;
+    private String priority;
     private Instant createdAt;
     private String assignedDroneId;
     private String assignedMissionId;
+    private String solvingSessionId;
 }

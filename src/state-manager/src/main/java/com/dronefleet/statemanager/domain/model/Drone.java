@@ -23,6 +23,8 @@ public class Drone {
     private DroneStatus status;
     private String currentMissionId;
     private Instant lastUpdate;
+    private String solvingSessionId;
+    private String homeDepotId;
 
 
     public boolean isAvailable() {

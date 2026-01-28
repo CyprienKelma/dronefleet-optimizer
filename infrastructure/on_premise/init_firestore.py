@@ -1,6 +1,8 @@
-import time
-import requests
 import os
+import time
+
+import requests
+
 
 def wait_for_firestore():
     emulator_host = os.getenv("FIRESTORE_EMULATOR_HOST", "localhost:8080")
@@ -25,6 +27,7 @@ def wait_for_firestore():
         print(f"  -- Attempt {retries}/{max_retries}...")
 
     return False
+
 
 if __name__ == "__main__":
     if wait_for_firestore():

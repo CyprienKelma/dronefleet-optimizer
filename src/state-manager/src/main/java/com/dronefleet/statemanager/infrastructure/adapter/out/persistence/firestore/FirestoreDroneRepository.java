@@ -64,6 +64,23 @@ public class FirestoreDroneRepository implements DroneRepository {
     }
 
     @Override
+    public List<Drone> findAvailableForOptimization(int minBatteryPercent) {
+        try {
+            ApiFuture<QuerySnapshot> future = firestore.collection(appProperties.getDronesCollection())
+                    .whereEqualTo("status", DroneStatus.IDLE.name())
+                    .whereGreaterThanOrEqualTo("batteryPercentage", (double) minBatteryPercent)
+                    .get();
+            return future.get().getDocuments().stream()
+                    .map(mapper::mapToDrone)
+                    .collect(Collectors.toList());
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("Error retrieving available drones from Firestore", e);
+            Thread.currentThread().interrupt();
+            return List.of();
+        }
+    }
+
+    @Override
     public void saveDrone(Drone drone) {
         try {
             log.debug("Saving drone {} to Firestore...", drone.getId());

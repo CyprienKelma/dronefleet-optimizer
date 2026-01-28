@@ -2,6 +2,9 @@ package com.dronefleet.statemanager.domain.port.in;
 
 import com.dronefleet.statemanager.domain.model.Mission;
 import com.dronefleet.statemanager.domain.model.Position;
+import com.dronefleet.statemanager.domain.model.Drone;
+import com.dronefleet.statemanager.domain.model.Order;
+import com.dronefleet.statemanager.domain.port.out.StateTransactionPort.MissionAssignmentResult;
 import java.util.List;
 
 public interface AssignMissionUseCase {

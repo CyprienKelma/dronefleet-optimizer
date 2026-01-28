@@ -1,0 +1,18 @@
+[tools]
+python = "3.11"
+uv = "0.5.11"
+
+[env]
+PYTHONPATH = "{{config_root}}/../.."
+
+[tasks.run]
+description = "Run the optimizer"
+run = "uv run python -m optimizer.main"
+
+[tasks.lint]
+description = "Run linters"
+run = "uv run ruff check ."
+
+[tasks.format]
+description = "Format code with ruff"
+run = "uv run ruff format ."

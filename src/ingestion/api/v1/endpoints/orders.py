@@ -4,20 +4,21 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from shared.schemas.order import DeliveryOrder
+
 from ....services.order import OrderService
 
 router = APIRouter()
 
-@lru_cache()
+
+@lru_cache
 def get_service() -> OrderService:
     return OrderService()
 
 
 @router.post("/orders", status_code=status.HTTP_201_CREATED)
 async def create_order(
-    order: DeliveryOrder,
-    service: OrderService = Depends(get_service)
-) -> Dict[str, Any]:
+    order: DeliveryOrder, service: OrderService = Depends(get_service)
+) -> dict[str, Any]:
     """
     Ingest a new delivery order.
 
@@ -41,8 +42,9 @@ async def create_order(
         # Catch-all for other unexpected errors
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Error processing order: {str(e)}"
-        )
+            detail=f"Error processing order: {str(e)}",
+        ) from e
+
 
 @router.get("/orders/{order_id}")
 async def get_order(order_id: str) -> dict[str, Any]:

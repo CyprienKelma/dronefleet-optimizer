@@ -19,6 +19,8 @@ dependencies = [
     "pytest-cov>=7.0.0",
     "ruff>=0.14.13",
     "types-requests>=2.32.0",
+    "ortools>=9.8.3296",
+    "httpx>=0.27.0",
 ]
 
 [tool.mypy]

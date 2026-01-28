@@ -58,10 +58,11 @@ def list_last_messages():
             sub_name = sub.name.split("/")[-1]
             print(f"\n--- Subscription: {sub_name} ---")
 
-            # The emulator (and Pub/Sub) doesn't support "peeking" without acknowledgment easily.
-            # We use 'pull' with 'return_immediately=True' to check for messages.
-            # WARNING: We use 'ack_ids' to acknowledge them immediately in this debug tool
-            # so they don't clog the queue, but in production, this would consume the message.
+            # The emulator (and Pub/Sub) doesn't support "peeking" without
+            # acknowledgment easily. We use 'pull' with 'return_immediately=True' to
+            # check for messages. WARNING: We use 'ack_ids' to acknowledge them
+            # immediately in this debug tool so they don't clog the queue, but in
+            # production, this would consume the message.
             try:
                 response = subscriber.pull(
                     request={
@@ -84,11 +85,13 @@ def list_last_messages():
 
                 # Acknowledge messages so they are removed from the subscription
                 # (Remove this block if you want messages to reappear)
-                # subscriber.acknowledge(request={"subscription": sub.name, "ack_ids": ack_ids})
-                # print(f"  -> Acknowledged {len(ack_ids)} messages (removed from queue)")
+                # subscriber.acknowledge(request={
+                # "subscription": sub.name, "ack_ids": ack_ids
+                # })
+                # print(f"-> Acknowledged {len(ack_ids)} messages (removed from queue)")
 
             except Exception as e:
-                # Often occurs if no messages are available and return_immediately is strict
+                # Often occurs if no messages available and return_immediately is strict
                 print(f"  Error pulling messages: {e}")
 
     except Exception as e:

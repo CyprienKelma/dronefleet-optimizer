@@ -4,7 +4,9 @@ import com.dronefleet.statemanager.domain.model.Drone;
 import com.dronefleet.statemanager.domain.model.DroneStatus;
 import com.dronefleet.statemanager.domain.model.Mission;
 import com.dronefleet.statemanager.domain.model.Order;
+import com.dronefleet.statemanager.domain.model.OrderStatus;
 import com.dronefleet.statemanager.domain.model.Position;
+import com.dronefleet.statemanager.domain.model.Warehouse;
 import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.DocumentSnapshot;
 import org.springframework.stereotype.Component;
@@ -40,6 +42,8 @@ public class FirestoreMapper {
                 .status(DroneStatus.parseStatus(doc.getString("status")))
                 .currentMissionId(doc.getString("currentMissionId"))
                 .lastUpdate(lastUpdate)
+                .solvingSessionId(doc.getString("solvingSessionId"))
+                .homeDepotId(doc.getString("homeDepotId"))
                 .build();
     }
 
@@ -49,6 +53,8 @@ public class FirestoreMapper {
         map.put("speedKmh", drone.getSpeedKmh());
         map.put("status", drone.getStatus().name());
         map.put("currentMissionId", drone.getCurrentMissionId());
+        map.put("solvingSessionId", drone.getSolvingSessionId());
+        map.put("homeDepotId", drone.getHomeDepotId());
 
         if (drone.getPosition() != null) {
             map.put("position", mapFromPosition(drone.getPosition()));
@@ -70,20 +76,22 @@ public class FirestoreMapper {
                 .id(doc.getId())
                 .pickupLocation(mapToPosition((Map<String, Object>) doc.get("pickupLocation")))
                 .deliveryLocation(mapToPosition((Map<String, Object>) doc.get("deliveryLocation")))
-                .status(doc.getString("status"))
+                .status(OrderStatus.parseStatus(doc.getString("status")))
                 .priority(doc.getString("priority"))
                 .createdAt(doc.getTimestamp("createdAt") != null ? doc.getTimestamp("createdAt").toDate().toInstant() : null)
                 .assignedDroneId(doc.getString("assignedDroneId"))
                 .assignedMissionId(doc.getString("assignedMissionId"))
+                .solvingSessionId(doc.getString("solvingSessionId"))
                 .build();
     }
 
     public Map<String, Object> mapFromOrder(Order order) {
         Map<String, Object> map = new HashMap<>();
-        map.put("status", order.getStatus());
+        map.put("status", order.getStatus() != null ? order.getStatus().name() : null);
         map.put("priority", order.getPriority());
         map.put("assignedDroneId", order.getAssignedDroneId());
         map.put("assignedMissionId", order.getAssignedMissionId());
+        map.put("solvingSessionId", order.getSolvingSessionId());
 
         if (order.getPickupLocation() != null) {
             map.put("pickupLocation", mapFromPosition(order.getPickupLocation()));
@@ -157,6 +165,33 @@ public class FirestoreMapper {
         Map<String, Object> map = new HashMap<>();
         map.put("lat", pos.lat());
         map.put("lon", pos.lon());
+        return map;
+    }
+
+    // --- Warehouse Mapping ---
+
+    public Warehouse mapToWarehouse(DocumentSnapshot doc) {
+        if (!doc.exists()) return null;
+
+        return Warehouse.builder()
+                .id(doc.getId())
+                .name(doc.getString("name"))
+                .position(mapToPosition((Map<String, Object>) doc.get("position")))
+                .authorizedProductTypes((List<String>) doc.get("authorizedProductTypes"))
+                .isColdStorageCapable(doc.getBoolean("isColdStorageCapable") != null && doc.getBoolean("isColdStorageCapable"))
+                .build();
+    }
+
+    public Map<String, Object> mapFromWarehouse(Warehouse warehouse) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("name", warehouse.getName());
+        map.put("authorizedProductTypes", warehouse.getAuthorizedProductTypes());
+        map.put("isColdStorageCapable", warehouse.isColdStorageCapable());
+
+        if (warehouse.getPosition() != null) {
+            map.put("position", mapFromPosition(warehouse.getPosition()));
+        }
+
         return map;
     }
 }

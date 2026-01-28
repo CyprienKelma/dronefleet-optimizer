@@ -11,6 +11,7 @@ public enum DroneStatus {
     MAINTENANCE,
     PROBLEM,
     EMERGENCY,
+    RESERVED,
     UNKNOWN;
 
 

@@ -24,7 +24,7 @@ class Drone(BaseModel):
     battery_capacity_mah: int = Field(..., gt=0)
     current_battery_cycles: int = 0
 
-    # Current State (Snapshot) - Often updated but part of the entity definition in some contexts
+    # Current State (Snapshot) - Part of entity definition in some contexts
     # or kept separate in Telemetry. Here we define the "Entity" definition.
     # However, sometimes we want the full view.
     # Let's keep it as static/inventory definition mainly, but status is useful.

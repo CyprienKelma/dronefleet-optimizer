@@ -3,6 +3,7 @@ package com.dronefleet.statemanager.domain.port.out;
 import com.dronefleet.statemanager.domain.model.Drone;
 import com.dronefleet.statemanager.domain.model.DroneTelemetry;
 import com.dronefleet.statemanager.domain.model.Mission;
+import com.dronefleet.statemanager.domain.model.OptimizationSnapshot;
 import com.dronefleet.statemanager.domain.model.Order;
 
 import java.util.function.Function;
@@ -40,6 +41,16 @@ public interface StateTransactionPort {
      * @param order The order to ingest.
      */
     void runOrderIngestionTransaction(Order order);
+
+    /**
+     * Atomically acquires a snapshot of available drones and orders for optimization,
+     * marking them as RESERVED/SOLVING respectively.
+     *
+     * @param sessionId The optimization session ID.
+     * @param minBatteryPercent The minimum battery percentage for drones.
+     * @return The optimization snapshot.
+     */
+    OptimizationSnapshot runSnapshotAcquisitionTransaction(String sessionId, int minBatteryPercent);
 
     /**
      * Context for drone and order during a mission assignment transaction.
