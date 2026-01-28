@@ -1,8 +1,10 @@
 package com.dronefleet.statemanager.infrastructure.adapter.out.persistence.firestore;
 
-import com.dronefleet.statemanager.domain.model.Warehouse;
-import com.dronefleet.statemanager.domain.port.out.WarehouseRepository;
-import com.dronefleet.statemanager.application.config.AppProperties;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
@@ -12,10 +14,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
+import com.dronefleet.statemanager.application.config.AppProperties;
+import com.dronefleet.statemanager.domain.model.Warehouse;
+import com.dronefleet.statemanager.domain.port.out.WarehouseRepository;
 
 @Slf4j
 @Repository
@@ -29,11 +30,10 @@ public class FirestoreWarehouseRepository implements WarehouseRepository {
     @Override
     public List<Warehouse> findAll() {
         try {
-            ApiFuture<QuerySnapshot> future = firestore.collection(appProperties.getWarehousesCollection()).get();
+            ApiFuture<QuerySnapshot> future =
+                    firestore.collection(appProperties.getWarehousesCollection()).get();
             List<QueryDocumentSnapshot> documents = future.get().getDocuments();
-            return documents.stream()
-                    .map(mapper::mapToWarehouse)
-                    .collect(Collectors.toList());
+            return documents.stream().map(mapper::mapToWarehouse).collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException e) {
             log.error("Error retrieving all warehouses from Firestore", e);
             Thread.currentThread().interrupt();
@@ -44,7 +44,12 @@ public class FirestoreWarehouseRepository implements WarehouseRepository {
     @Override
     public Optional<Warehouse> findById(String id) {
         try {
-            DocumentSnapshot document = firestore.collection(appProperties.getWarehousesCollection()).document(id).get().get();
+            DocumentSnapshot document =
+                    firestore
+                            .collection(appProperties.getWarehousesCollection())
+                            .document(id)
+                            .get()
+                            .get();
             if (document.exists()) {
                 return Optional.of(mapper.mapToWarehouse(document));
             }
@@ -59,7 +64,8 @@ public class FirestoreWarehouseRepository implements WarehouseRepository {
     public void save(Warehouse warehouse) {
         try {
             log.debug("Saving warehouse {} to Firestore...", warehouse.getId());
-            firestore.collection(appProperties.getWarehousesCollection())
+            firestore
+                    .collection(appProperties.getWarehousesCollection())
                     .document(warehouse.getId())
                     .set(mapper.mapFromWarehouse(warehouse))
                     .get();

@@ -31,6 +31,7 @@ public interface DroneRepository {
 
     /**
      * Find drones that are IDLE and have battery percentage above threshold.
+     *
      * @param minBatteryPercent The minimum battery percentage.
      * @return A list of available drones.
      */

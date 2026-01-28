@@ -35,19 +35,28 @@ public class MissionAssignmentPolicy {
     public MissionAssignmentResult computeAssignment(
             Drone drone, Order order, List<Position> route) {
         // Idempotency check: if order is already assigned to this drone, return current state
-        if (order.getStatus() == OrderStatus.ASSIGNED && drone.getId().equals(order.getAssignedDroneId())) {
-            log.info("Order {} already assigned to drone {}. Skipping mission creation (idempotent).",
-                    order.getId(), drone.getId());
+        if (order.getStatus() == OrderStatus.ASSIGNED
+                && drone.getId().equals(order.getAssignedDroneId())) {
+            log.info(
+                    "Order {} already assigned to drone {}. Skipping mission creation"
+                            + " (idempotent).",
+                    order.getId(),
+                    drone.getId());
             return new MissionAssignmentResult(null, drone, order);
         }
 
         // Validation: Optimizer locks drones as RESERVED and orders as SOLVING
         if (drone.getStatus() != DroneStatus.IDLE && drone.getStatus() != DroneStatus.RESERVED) {
-            throw new BusinessRejectionException("Drone " + drone.getId() + " is not available. Status: " + drone.getStatus());
+            throw new BusinessRejectionException(
+                    "Drone " + drone.getId() + " is not available. Status: " + drone.getStatus());
         }
 
         if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.SOLVING) {
-            throw new BusinessRejectionException("Order " + order.getId() + " is not in PENDING or SOLVING status. Status: " + order.getStatus());
+            throw new BusinessRejectionException(
+                    "Order "
+                            + order.getId()
+                            + " is not in PENDING or SOLVING status. Status: "
+                            + order.getStatus());
         }
 
         // Create Mission

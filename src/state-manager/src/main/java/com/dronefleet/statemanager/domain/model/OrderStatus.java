@@ -1,8 +1,6 @@
 package com.dronefleet.statemanager.domain.model;
 
-/**
- * Represents the lifecycle stages of a delivery order.
- */
+/** Represents the lifecycle stages of a delivery order. */
 public enum OrderStatus {
     /** Order has been received but not yet processed by the optimizer. */
     PENDING,
@@ -19,6 +17,7 @@ public enum OrderStatus {
 
     /**
      * Parse a status string to an OrderStatus enum.
+     *
      * @param statusStr the status string to parse
      * @return the OrderStatus enum
      */

@@ -197,7 +197,9 @@ public class FirestoreMapper {
                 .name(doc.getString("name"))
                 .position(mapToPosition((Map<String, Object>) doc.get("position")))
                 .authorizedProductTypes((List<String>) doc.get("authorizedProductTypes"))
-                .isColdStorageCapable(doc.getBoolean("isColdStorageCapable") != null && doc.getBoolean("isColdStorageCapable"))
+                .isColdStorageCapable(
+                        doc.getBoolean("isColdStorageCapable") != null
+                                && doc.getBoolean("isColdStorageCapable"))
                 .build();
     }
 

@@ -32,10 +32,7 @@ class MissionAssignmentPolicyTest {
         Drone drone =
                 Drone.builder().id("D1").status(DroneStatus.IDLE).batteryPercentage(100.0).build();
 
-        Order order = Order.builder()
-                .id("O1")
-                .status(OrderStatus.PENDING)
-                .build();
+        Order order = Order.builder().id("O1").status(OrderStatus.PENDING).build();
 
         List<Position> route = List.of(new Position(1.0, 1.0));
 
@@ -54,12 +51,13 @@ class MissionAssignmentPolicyTest {
         Drone drone =
                 Drone.builder().id("D1").status(DroneStatus.MOVING).currentMissionId("M1").build();
 
-        Order order = Order.builder()
-                .id("O1")
-                .status(OrderStatus.ASSIGNED)
-                .assignedDroneId("D1")
-                .assignedMissionId("M1")
-                .build();
+        Order order =
+                Order.builder()
+                        .id("O1")
+                        .status(OrderStatus.ASSIGNED)
+                        .assignedDroneId("D1")
+                        .assignedMissionId("M1")
+                        .build();
 
         List<Position> route = List.of(new Position(1.0, 1.0));
 
@@ -74,10 +72,7 @@ class MissionAssignmentPolicyTest {
     void shouldRejectIfDroneIsNotAvailable() {
         Drone drone = Drone.builder().id("D1").status(DroneStatus.MOVING).build();
 
-        Order order = Order.builder()
-                .id("O1")
-                .status(OrderStatus.PENDING)
-                .build();
+        Order order = Order.builder().id("O1").status(OrderStatus.PENDING).build();
 
         assertThrows(
                 BusinessRejectionException.class,
@@ -89,11 +84,12 @@ class MissionAssignmentPolicyTest {
         Drone drone =
                 Drone.builder().id("D1").status(DroneStatus.IDLE).batteryPercentage(100.0).build();
 
-        Order order = Order.builder()
-                .id("O1")
-                .status(OrderStatus.ASSIGNED)
-                .assignedDroneId("D2") // assigned to someone else
-                .build();
+        Order order =
+                Order.builder()
+                        .id("O1")
+                        .status(OrderStatus.ASSIGNED)
+                        .assignedDroneId("D2") // assigned to someone else
+                        .build();
 
         assertThrows(
                 BusinessRejectionException.class,

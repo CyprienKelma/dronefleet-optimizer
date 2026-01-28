@@ -1,11 +1,10 @@
 package com.dronefleet.statemanager.domain.model;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Value;
-
 import java.time.Instant;
 import java.util.List;
+
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

@@ -1,12 +1,13 @@
 package com.dronefleet.statemanager.domain.service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
 import com.dronefleet.statemanager.application.config.AppProperties;
 import com.dronefleet.statemanager.domain.model.OptimizationSnapshot;
 import com.dronefleet.statemanager.domain.port.in.GetOptimizationSnapshotUseCase;
 import com.dronefleet.statemanager.domain.port.out.StateTransactionPort;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -20,8 +21,6 @@ public class OptimizationSnapshotService implements GetOptimizationSnapshotUseCa
     public OptimizationSnapshot acquireSnapshot(String solvingSessionId) {
         log.info("Acquiring optimization snapshot for session: {}", solvingSessionId);
         return stateTransactionPort.runSnapshotAcquisitionTransaction(
-                solvingSessionId,
-                appProperties.getMinBatteryForOptimization()
-        );
+                solvingSessionId, appProperties.getMinBatteryForOptimization());
     }
 }

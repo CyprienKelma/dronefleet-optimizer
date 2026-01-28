@@ -65,10 +65,13 @@ public class FirestoreDroneRepository implements DroneRepository {
     @Override
     public List<Drone> findAvailableForOptimization(int minBatteryPercent) {
         try {
-            ApiFuture<QuerySnapshot> future = firestore.collection(appProperties.getDronesCollection())
-                    .whereEqualTo("status", DroneStatus.IDLE.name())
-                    .whereGreaterThanOrEqualTo("batteryPercentage", (double) minBatteryPercent)
-                    .get();
+            ApiFuture<QuerySnapshot> future =
+                    firestore
+                            .collection(appProperties.getDronesCollection())
+                            .whereEqualTo("status", DroneStatus.IDLE.name())
+                            .whereGreaterThanOrEqualTo(
+                                    "batteryPercentage", (double) minBatteryPercent)
+                            .get();
             return future.get().getDocuments().stream()
                     .map(mapper::mapToDrone)
                     .collect(Collectors.toList());
