@@ -67,9 +67,8 @@ depends = ["test:unit", "test:integration", "test:e2e"]
 # --- Lint Aggregator ---
 [tasks."lint:all"]
 description = "Run all linters across the monorepo"
-depends = [
-  "//src/ingestion:lint",
-  "//src/simulator:lint",
-  "//src/state-manager:lint",
-  "//infrastructure/on_cloud:lint",
-]
+run = {task = "//...:lint"}
+
+[tasks."format:all"]
+description = "Run all formatters across the monorepo"
+run = {task = "//...:format"}

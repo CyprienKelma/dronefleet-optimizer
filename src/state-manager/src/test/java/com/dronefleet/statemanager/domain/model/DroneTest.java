@@ -1,20 +1,18 @@
 package com.dronefleet.statemanager.domain.model;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 class DroneTest {
 
     @Test
     void shouldUpdateTelemetryAndPreserveMissionIdIfNullInIncoming() {
-        Drone drone = Drone.builder()
-                .id("D1")
-                .status(DroneStatus.MOVING)
-                .currentMissionId("M1")
-                .build();
+        Drone drone =
+                Drone.builder().id("D1").status(DroneStatus.MOVING).currentMissionId("M1").build();
 
         Position newPos = new Position(10.0, 20.0);
         Instant now = Instant.now();
@@ -28,13 +26,11 @@ class DroneTest {
 
     @Test
     void shouldClearMissionIdIfStatusIsIdle() {
-        Drone drone = Drone.builder()
-                .id("D1")
-                .status(DroneStatus.MOVING)
-                .currentMissionId("M1")
-                .build();
+        Drone drone =
+                Drone.builder().id("D1").status(DroneStatus.MOVING).currentMissionId("M1").build();
 
-        drone.updateTelemetry(new Position(0,0), 100.0, 0.0, DroneStatus.IDLE, null, Instant.now());
+        drone.updateTelemetry(
+                new Position(0, 0), 100.0, 0.0, DroneStatus.IDLE, null, Instant.now());
 
         assertNull(drone.getCurrentMissionId());
         assertEquals(DroneStatus.IDLE, drone.getStatus());
@@ -42,13 +38,11 @@ class DroneTest {
 
     @Test
     void shouldTriggerEmergencyIfBatteryTooLow() {
-        Drone drone = Drone.builder()
-                .id("D1")
-                .status(DroneStatus.MOVING)
-                .batteryPercentage(10.0)
-                .build();
+        Drone drone =
+                Drone.builder().id("D1").status(DroneStatus.MOVING).batteryPercentage(10.0).build();
 
-        drone.updateTelemetry(new Position(0,0), 4.0, 0.0, DroneStatus.MOVING, null, Instant.now());
+        drone.updateTelemetry(
+                new Position(0, 0), 4.0, 0.0, DroneStatus.MOVING, null, Instant.now());
 
         assertEquals(DroneStatus.EMERGENCY, drone.getStatus());
     }

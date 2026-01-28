@@ -18,7 +18,8 @@ class OrderService:
         # Initialize the publisher via the factory pattern
         # This decouples the service from the specific broker (Kafka vs PubSub)
         self.publisher = PublisherFactory.get_publisher()
-        self.topic_name = "orders" # Topic name as defined in the architecture
+
+        self.topic_name = "orders"  # Topic name as defined in the architecture
 
     def process_order(self, order: DeliveryOrder) -> str:
         """
@@ -33,9 +34,10 @@ class OrderService:
         Raises:
             RuntimeError: If publishing to the message broker fails.
         """
+
         logger.info(
-            "Processing delivery order",
-            order_id=order.order_id,
+            "Processing delivery request",
+            request_id=order.order_id,
             priority=order.priority,
         )
 

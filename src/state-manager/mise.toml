@@ -6,8 +6,15 @@ run = "./gradlew bootRun"
 env = { ENVIRONMENT = "local" }
 
 [tasks.lint]
-description = "Run checkstyle on Java code"
-run = "./gradlew checkstyleMain"
+description = "Run checkstyle and spotless check on Java code"
+run = [
+    "./gradlew checkstyleMain",
+    "./gradlew spotlessCheck"
+]
+
+[tasks.format]
+description = "Format Java code using Spotless"
+run = "./gradlew spotlessApply"
 
 [tasks.build]
 description = "Build state-manager and Docker image"

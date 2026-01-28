@@ -14,9 +14,9 @@ public enum DroneStatus {
     RESERVED,
     UNKNOWN;
 
-
     /**
      * Parse a status string to a DroneStatus enum.
+     *
      * @param statusStr the status string to parse
      * @return the DroneStatus enum
      */
@@ -30,8 +30,9 @@ public enum DroneStatus {
     }
 
     /**
-     * Check if the drone is operational.
-     * Business rule: A drone is operational if it's IDLE or MOVING.
+     * Check if the drone is operational. Business rule: A drone is operational if it's IDLE or
+     * MOVING.
+     *
      * @return true if the drone is operational, false otherwise
      */
     public boolean isOperational() {
@@ -39,8 +40,9 @@ public enum DroneStatus {
     }
 
     /**
-     * Check if the drone requires immediate attention.
-     * Business rule: MAINTENANCE and PROBLEM states require intervention.
+     * Check if the drone requires immediate attention. Business rule: MAINTENANCE and PROBLEM
+     * states require intervention.
+     *
      * @return true if the drone requires attention, false otherwise
      */
     public boolean requiresAttention() {
@@ -48,8 +50,9 @@ public enum DroneStatus {
     }
 
     /**
-     * Check if the drone can accept a new mission.
-     * Business rule: Only IDLE drones can be assigned new missions.
+     * Check if the drone can accept a new mission. Business rule: Only IDLE drones can be assigned
+     * new missions.
+     *
      * @return true if the drone can accept a new mission, false otherwise
      */
     public boolean canAcceptMission() {

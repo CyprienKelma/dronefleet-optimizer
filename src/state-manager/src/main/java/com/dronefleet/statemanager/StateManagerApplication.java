@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class StateManagerApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(StateManagerApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(StateManagerApplication.class, args);
+    }
 }

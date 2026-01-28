@@ -1,16 +1,16 @@
 package com.dronefleet.statemanager.domain.port.out;
 
+import java.util.function.Function;
+
 import com.dronefleet.statemanager.domain.model.Drone;
 import com.dronefleet.statemanager.domain.model.DroneTelemetry;
 import com.dronefleet.statemanager.domain.model.Mission;
 import com.dronefleet.statemanager.domain.model.OptimizationSnapshot;
 import com.dronefleet.statemanager.domain.model.Order;
 
-import java.util.function.Function;
-
 /**
- * Port for atomic state transitions in the domain.
- * This decouples the domain from the underlying transaction mechanism (e.g. Firestore transactions).
+ * Port for atomic state transitions in the domain. This decouples the domain from the underlying
+ * transaction mechanism (e.g. Firestore transactions).
  */
 public interface StateTransactionPort {
 
@@ -19,8 +19,8 @@ public interface StateTransactionPort {
      *
      * @param droneId The ID of the drone to assign.
      * @param orderId The ID of the order to fulfill.
-     * @param assignmentLogic A function that takes the current drone and order,
-     *                        validates them, and returns a mission if valid.
+     * @param assignmentLogic A function that takes the current drone and order, validates them, and
+     *     returns a mission if valid.
      * @return The created mission.
      */
     Mission runMissionAssignmentTransaction(
@@ -42,23 +42,11 @@ public interface StateTransactionPort {
      */
     void runOrderIngestionTransaction(Order order);
 
-    /**
-     * Atomically acquires a snapshot of available drones and orders for optimization,
-     * marking them as RESERVED/SOLVING respectively.
-     *
-     * @param sessionId The optimization session ID.
-     * @param minBatteryPercent The minimum battery percentage for drones.
-     * @return The optimization snapshot.
-     */
-    OptimizationSnapshot runSnapshotAcquisitionTransaction(String sessionId, int minBatteryPercent);
-
-    /**
-     * Context for drone and order during a mission assignment transaction.
-     */
+    /** Context for drone and order during a mission assignment transaction. */
     record DroneOrderContext(Drone drone, Order order) {}
 
-    /**
-     * Result of the mission assignment logic.
-     */
+    /** Result of the mission assignment logic. */
     record MissionAssignmentResult(Mission mission, Drone updatedDrone, Order updatedOrder) {}
+
+    OptimizationSnapshot runSnapshotAcquisitionTransaction(String sessionId, int minBatteryPercent)
 }
