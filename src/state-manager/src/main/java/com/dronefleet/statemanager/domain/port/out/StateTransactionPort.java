@@ -48,5 +48,5 @@ public interface StateTransactionPort {
     /** Result of the mission assignment logic. */
     record MissionAssignmentResult(Mission mission, Drone updatedDrone, Order updatedOrder) {}
 
-    OptimizationSnapshot runSnapshotAcquisitionTransaction(String sessionId, int minBatteryPercent)
+    OptimizationSnapshot runSnapshotAcquisitionTransaction(String sessionId, int minBatteryPercent);
 }

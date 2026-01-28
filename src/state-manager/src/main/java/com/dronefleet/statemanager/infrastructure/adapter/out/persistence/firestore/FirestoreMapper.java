@@ -14,7 +14,9 @@ import com.dronefleet.statemanager.domain.model.Drone;
 import com.dronefleet.statemanager.domain.model.DroneStatus;
 import com.dronefleet.statemanager.domain.model.Mission;
 import com.dronefleet.statemanager.domain.model.Order;
+import com.dronefleet.statemanager.domain.model.OrderStatus;
 import com.dronefleet.statemanager.domain.model.Position;
+import com.dronefleet.statemanager.domain.model.Warehouse;
 
 /** Shared mapper for converting between Firestore documents and domain objects. */
 @Component

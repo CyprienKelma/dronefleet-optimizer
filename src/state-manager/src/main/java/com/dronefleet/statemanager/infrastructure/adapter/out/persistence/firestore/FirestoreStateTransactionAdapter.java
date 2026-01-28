@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -220,7 +221,7 @@ public class FirestoreStateTransactionAdapter implements StateTransactionPort {
             }
 
             // Read all documents in one go (ALL READS)
-            List<DocumentSnapshot> allSnapshots = transaction.getAll(allRefs.toArray(new DocumentReference[0])).get();
+            List<DocumentSnapshot> allSnapshots = transaction.getAll(Objects.requireNonNull(allRefs.toArray(new DocumentReference[0]))).get();
 
             // 3. Business Logic & Writes
             // Now that all reads are done, we can start the writes
