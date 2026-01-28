@@ -1,10 +1,13 @@
 import math
 from typing import NamedTuple
 
+import structlog
+
 from src.optimizer.models.snapshot import (
     OptimizationSnapshot,
-    OrderSnapshot,
 )
+
+logger = structlog.get_logger(__name__)
 
 
 class VRPProblem(NamedTuple):
@@ -52,13 +55,15 @@ class VRPProblemBuilder:
         depot_node = 0
         nodes = []
         # Add warehouse (depot)
+        if not self.warehouses:
+            raise ValueError("Cannot build VRPProblem: no warehouses available in snapshot")
         nodes.append((self.warehouses[0].position.lat, self.warehouses[0].position.lon))
 
         pickups_deliveries = []
         node_to_order_id = {}
         order_ids = []
 
-        for _, order in enumerate[OrderSnapshot](self.orders):
+        for order in self.orders:
             pickup_idx = len(nodes)
             nodes.append((order.pickup_location.lat, order.pickup_location.lon))
             delivery_idx = len(nodes)
@@ -79,7 +84,7 @@ class VRPProblemBuilder:
                 else:
                     distance_matrix[i][j] = self._haversine_distance(nodes[i], nodes[j])
 
-        print(f"Distance matrice rendered : \n {distance_matrix}")
+        logger.debug("Distance matrix rendered", matrix=distance_matrix)
 
         return VRPProblem(
             distance_matrix=distance_matrix,
