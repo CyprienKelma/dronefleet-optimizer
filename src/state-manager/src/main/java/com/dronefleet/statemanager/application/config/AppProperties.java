@@ -18,4 +18,8 @@ public class AppProperties {
     private String ordersCollection;
 
     private String missionsCollection;
+
+    private String warehousesCollection;
+
+    private int minBatteryForOptimization = 20;
 }

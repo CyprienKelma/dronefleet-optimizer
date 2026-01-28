@@ -5,6 +5,7 @@ import java.util.function.Function;
 import com.dronefleet.statemanager.domain.model.Drone;
 import com.dronefleet.statemanager.domain.model.DroneTelemetry;
 import com.dronefleet.statemanager.domain.model.Mission;
+import com.dronefleet.statemanager.domain.model.OptimizationSnapshot;
 import com.dronefleet.statemanager.domain.model.Order;
 
 /**
@@ -46,4 +47,6 @@ public interface StateTransactionPort {
 
     /** Result of the mission assignment logic. */
     record MissionAssignmentResult(Mission mission, Drone updatedDrone, Order updatedOrder) {}
+
+    OptimizationSnapshot runSnapshotAcquisitionTransaction(String sessionId, int minBatteryPercent);
 }

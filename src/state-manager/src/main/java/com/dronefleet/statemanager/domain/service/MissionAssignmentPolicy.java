@@ -12,6 +12,7 @@ import com.dronefleet.statemanager.domain.model.Drone;
 import com.dronefleet.statemanager.domain.model.DroneStatus;
 import com.dronefleet.statemanager.domain.model.Mission;
 import com.dronefleet.statemanager.domain.model.Order;
+import com.dronefleet.statemanager.domain.model.OrderStatus;
 import com.dronefleet.statemanager.domain.model.Position;
 import com.dronefleet.statemanager.domain.port.out.StateTransactionPort.MissionAssignmentResult;
 
@@ -34,7 +35,7 @@ public class MissionAssignmentPolicy {
     public MissionAssignmentResult computeAssignment(
             Drone drone, Order order, List<Position> route) {
         // Idempotency check: if order is already assigned to this drone, return current state
-        if ("ASSIGNED".equals(order.getStatus())
+        if (order.getStatus() == OrderStatus.ASSIGNED
                 && drone.getId().equals(order.getAssignedDroneId())) {
             log.info(
                     "Order {} already assigned to drone {}. Skipping mission creation"
@@ -44,17 +45,17 @@ public class MissionAssignmentPolicy {
             return new MissionAssignmentResult(null, drone, order);
         }
 
-        // Validation
-        if (!drone.isAvailable()) {
+        // Validation: Optimizer locks drones as RESERVED and orders as SOLVING
+        if (drone.getStatus() != DroneStatus.IDLE && drone.getStatus() != DroneStatus.RESERVED) {
             throw new BusinessRejectionException(
                     "Drone " + drone.getId() + " is not available. Status: " + drone.getStatus());
         }
 
-        if (!"PENDING".equals(order.getStatus())) {
+        if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.SOLVING) {
             throw new BusinessRejectionException(
                     "Order "
                             + order.getId()
-                            + " is not in PENDING status. Status: "
+                            + " is not in PENDING or SOLVING status. Status: "
                             + order.getStatus());
         }
 
@@ -73,11 +74,13 @@ public class MissionAssignmentPolicy {
         // Update Drone
         drone.setStatus(DroneStatus.MOVING);
         drone.setCurrentMissionId(missionId);
+        drone.setSolvingSessionId(null); // Clear session ID once assigned
 
         // Update Order
-        order.setStatus("ASSIGNED");
+        order.setStatus(OrderStatus.ASSIGNED);
         order.setAssignedDroneId(drone.getId());
         order.setAssignedMissionId(missionId);
+        order.setSolvingSessionId(null); // Clear session ID once assigned
 
         return new MissionAssignmentResult(mission, drone, order);
     }

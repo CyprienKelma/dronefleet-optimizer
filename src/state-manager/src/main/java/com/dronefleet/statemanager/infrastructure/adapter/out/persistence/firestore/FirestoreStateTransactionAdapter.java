@@ -1,22 +1,33 @@
 package com.dronefleet.statemanager.infrastructure.adapter.out.persistence.firestore;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.QueryDocumentSnapshot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.dronefleet.statemanager.application.config.AppProperties;
 import com.dronefleet.statemanager.domain.model.Drone;
+import com.dronefleet.statemanager.domain.model.DroneStatus;
 import com.dronefleet.statemanager.domain.model.DroneTelemetry;
 import com.dronefleet.statemanager.domain.model.Mission;
+import com.dronefleet.statemanager.domain.model.OptimizationSnapshot;
 import com.dronefleet.statemanager.domain.model.Order;
+import com.dronefleet.statemanager.domain.model.OrderStatus;
+import com.dronefleet.statemanager.domain.model.Warehouse;
 import com.dronefleet.statemanager.domain.port.out.StateTransactionPort;
+import com.dronefleet.statemanager.domain.port.out.WarehouseRepository;
 
 @Slf4j
 @Component
@@ -26,6 +37,7 @@ public class FirestoreStateTransactionAdapter implements StateTransactionPort {
     private final Firestore firestore;
     private final AppProperties appProperties;
     private final FirestoreMapper mapper;
+    private final WarehouseRepository warehouseRepository;
 
     @Override
     public Mission runMissionAssignmentTransaction(
@@ -162,11 +174,125 @@ public class FirestoreStateTransactionAdapter implements StateTransactionPort {
                     }
 
                     if (order.getStatus() == null) {
-                        order.setStatus("PENDING");
+                        order.setStatus(OrderStatus.PENDING);
                     }
 
                     transaction.set(orderRef, mapper.mapFromOrder(order));
                     return null;
                 });
+    }
+
+    @Override
+    public OptimizationSnapshot runSnapshotAcquisitionTransaction(
+            String sessionId, int minBatteryPercent) {
+        // 1. Reads that don't need to be in the transaction or can be done before
+        List<Warehouse> warehouses = warehouseRepository.findAll();
+
+        ApiFuture<OptimizationSnapshot> result =
+                firestore.runTransaction(
+                        transaction -> {
+                            List<Drone> availableDrones = new ArrayList<>();
+                            List<Order> pendingOrders = new ArrayList<>();
+
+                            // 1. Queries (READS)
+                            // We get the snapshots first to know which documents to lock/read in
+                            // the transaction
+                            List<QueryDocumentSnapshot> droneDocs =
+                                    firestore
+                                            .collection(appProperties.getDronesCollection())
+                                            .whereEqualTo("status", DroneStatus.IDLE.name())
+                                            .whereGreaterThanOrEqualTo(
+                                                    "batteryPercentage", (double) minBatteryPercent)
+                                            .get()
+                                            .get()
+                                            .getDocuments();
+
+                            List<QueryDocumentSnapshot> orderDocs =
+                                    firestore
+                                            .collection(appProperties.getOrdersCollection())
+                                            .whereEqualTo("status", OrderStatus.PENDING.name())
+                                            .get()
+                                            .get()
+                                            .getDocuments();
+
+                            // 2. Transactional Reads
+                            // Collect all references to read them atomically
+                            List<DocumentReference> droneRefs =
+                                    droneDocs.stream()
+                                            .map(QueryDocumentSnapshot::getReference)
+                                            .collect(Collectors.toList());
+                            List<DocumentReference> orderRefs =
+                                    orderDocs.stream()
+                                            .map(QueryDocumentSnapshot::getReference)
+                                            .collect(Collectors.toList());
+
+                            List<DocumentReference> allRefs = new ArrayList<>();
+                            allRefs.addAll(droneRefs);
+                            allRefs.addAll(orderRefs);
+
+                            if (allRefs.isEmpty()) {
+                                return OptimizationSnapshot.builder()
+                                        .drones(availableDrones)
+                                        .orders(pendingOrders)
+                                        .warehouses(warehouses)
+                                        .sessionId(sessionId)
+                                        .timestamp(Instant.now())
+                                        .build();
+                            }
+
+                            // Read all documents in one go (ALL READS)
+                            List<DocumentSnapshot> allSnapshots =
+                                    transaction
+                                            .getAll(
+                                                    Objects.requireNonNull(
+                                                            allRefs.toArray(
+                                                                    new DocumentReference[0])))
+                                            .get();
+
+                            // 3. Business Logic & Writes
+                            // Now that all reads are done, we can start the writes
+                            for (DocumentSnapshot snap : allSnapshots) {
+                                if (!snap.exists()) continue;
+
+                                String collectionName = snap.getReference().getParent().getId();
+
+                                if (collectionName.equals(appProperties.getDronesCollection())) {
+                                    Drone drone = mapper.mapToDrone(snap);
+                                    if (drone.getStatus() == DroneStatus.IDLE
+                                            && drone.getBatteryPercentage() >= minBatteryPercent) {
+                                        drone.setStatus(DroneStatus.RESERVED);
+                                        drone.setSolvingSessionId(sessionId);
+                                        transaction.set(
+                                                snap.getReference(), mapper.mapFromDrone(drone));
+                                        availableDrones.add(drone);
+                                    }
+                                } else if (collectionName.equals(
+                                        appProperties.getOrdersCollection())) {
+                                    Order order = mapper.mapToOrder(snap);
+                                    if (order.getStatus() == OrderStatus.PENDING) {
+                                        order.setStatus(OrderStatus.SOLVING);
+                                        order.setSolvingSessionId(sessionId);
+                                        transaction.set(
+                                                snap.getReference(), mapper.mapFromOrder(order));
+                                        pendingOrders.add(order);
+                                    }
+                                }
+                            }
+
+                            return OptimizationSnapshot.builder()
+                                    .drones(availableDrones)
+                                    .orders(pendingOrders)
+                                    .warehouses(warehouses)
+                                    .sessionId(sessionId)
+                                    .timestamp(Instant.now())
+                                    .build();
+                        });
+
+        try {
+            return result.get();
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("Snapshot acquisition transaction failed", e);
+            throw new RuntimeException("Transaction failed", e);
+        }
     }
 }

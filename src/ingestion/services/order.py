@@ -47,22 +47,29 @@ class OrderService:
 
         # 2. Serialize Payload
         # model_dump(mode='json') ensures Enums and Datetimes are serialized to strings
-
         message_payload = order.model_dump(mode="json")
 
         # publish to Event Bus
         try:
             success = self.publisher.publish(self.topic_name, message_payload)
             if not success:
-                logger.error(f"Publisher returned False for order {order.order_id}")
+                logger.error(
+                    "Publisher returned False for order", order_id=order.order_id
+                )
                 raise RuntimeError("Failed to queue the order. Publisher declined.")
 
         except Exception as e:
-            logger.error(f"Exception while publishing order {order.order_id}: {str(e)}")
+            logger.error(
+                "Exception while publishing order",
+                order_id=order.order_id,
+                error=str(e),
+            )
             raise RuntimeError(f"Internal error publishing order: {str(e)}") from e
 
         logger.info(
-            f"Successfully queued order {order.order_id} to topic '{self.topic_name}'"
+            "Successfully queued order",
+            order_id=order.order_id,
+            topic=self.topic_name,
         )
         return order.order_id
 

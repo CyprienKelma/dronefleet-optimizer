@@ -47,11 +47,30 @@ class Settings(BaseSettings):
     )
 
     # Cloud Run URLs
-    state_manager_url: str | None = Field(
-        default=None, description="State Manager Cloud Run URL"
+    state_manager_url: str = Field(
+        default="http://localhost:8080", description="State Manager Cloud Run URL"
     )
     optimizer_url: str | None = Field(
         default=None, description="Optimizer Cloud Run URL"
+    )
+
+    # Pub/Sub Topics
+    pubsub_topic_decisions: str = Field(
+        default="decisions", description="Pub/Sub topic for decisions"
+    )
+
+    # Solver parameters
+    solver_time_limit_seconds: int = Field(
+        default=8, description="Solver time limit in seconds"
+    )
+    min_battery_threshold: int = Field(
+        default=20, description="Minimum battery threshold for optimization"
+    )
+
+    # Drone specs (consumption per km by model)
+    drone_specs: dict[str, dict] = Field(
+        default={"DEFAULT": {"battery_per_km": 1.0, "max_payload_kg": 5.0}},
+        description="Drone specifications by model",
     )
 
     # API Settings (for local)
@@ -104,4 +123,4 @@ class Settings(BaseSettings):
 try:
     settings = Settings()  # get correct env from model_config
 except ValidationError as e:
-    raise SystemExit(f"Config error: {e}")
+    raise SystemExit(f"Config error: {e}") from e

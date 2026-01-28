@@ -14,6 +14,7 @@ import com.dronefleet.statemanager.domain.exception.BusinessRejectionException;
 import com.dronefleet.statemanager.domain.model.Drone;
 import com.dronefleet.statemanager.domain.model.DroneStatus;
 import com.dronefleet.statemanager.domain.model.Order;
+import com.dronefleet.statemanager.domain.model.OrderStatus;
 import com.dronefleet.statemanager.domain.model.Position;
 import com.dronefleet.statemanager.domain.port.out.StateTransactionPort.MissionAssignmentResult;
 
@@ -31,7 +32,7 @@ class MissionAssignmentPolicyTest {
         Drone drone =
                 Drone.builder().id("D1").status(DroneStatus.IDLE).batteryPercentage(100.0).build();
 
-        Order order = Order.builder().id("O1").status("PENDING").build();
+        Order order = Order.builder().id("O1").status(OrderStatus.PENDING).build();
 
         List<Position> route = List.of(new Position(1.0, 1.0));
 
@@ -41,7 +42,7 @@ class MissionAssignmentPolicyTest {
         assertEquals("D1", result.mission().getDroneId());
         assertEquals("O1", result.mission().getOrderId());
         assertEquals(DroneStatus.MOVING, result.updatedDrone().getStatus());
-        assertEquals("ASSIGNED", result.updatedOrder().getStatus());
+        assertEquals(OrderStatus.ASSIGNED, result.updatedOrder().getStatus());
         assertEquals(result.mission().getId(), result.updatedOrder().getAssignedMissionId());
     }
 
@@ -53,7 +54,7 @@ class MissionAssignmentPolicyTest {
         Order order =
                 Order.builder()
                         .id("O1")
-                        .status("ASSIGNED")
+                        .status(OrderStatus.ASSIGNED)
                         .assignedDroneId("D1")
                         .assignedMissionId("M1")
                         .build();
@@ -71,7 +72,7 @@ class MissionAssignmentPolicyTest {
     void shouldRejectIfDroneIsNotAvailable() {
         Drone drone = Drone.builder().id("D1").status(DroneStatus.MOVING).build();
 
-        Order order = Order.builder().id("O1").status("PENDING").build();
+        Order order = Order.builder().id("O1").status(OrderStatus.PENDING).build();
 
         assertThrows(
                 BusinessRejectionException.class,
@@ -86,7 +87,7 @@ class MissionAssignmentPolicyTest {
         Order order =
                 Order.builder()
                         .id("O1")
-                        .status("ASSIGNED")
+                        .status(OrderStatus.ASSIGNED)
                         .assignedDroneId("D2") // assigned to someone else
                         .build();
 

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Repository;
 
 import com.dronefleet.statemanager.application.config.AppProperties;
 import com.dronefleet.statemanager.domain.model.Drone;
+import com.dronefleet.statemanager.domain.model.DroneStatus;
 import com.dronefleet.statemanager.domain.port.out.DroneRepository;
 
 @Slf4j
@@ -56,6 +57,26 @@ public class FirestoreDroneRepository implements DroneRepository {
             return documents.stream().map(mapper::mapToDrone).collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException e) {
             log.error("Error retrieving all drones from Firestore", e);
+            Thread.currentThread().interrupt();
+            return List.of();
+        }
+    }
+
+    @Override
+    public List<Drone> findAvailableForOptimization(int minBatteryPercent) {
+        try {
+            ApiFuture<QuerySnapshot> future =
+                    firestore
+                            .collection(appProperties.getDronesCollection())
+                            .whereEqualTo("status", DroneStatus.IDLE.name())
+                            .whereGreaterThanOrEqualTo(
+                                    "batteryPercentage", (double) minBatteryPercent)
+                            .get();
+            return future.get().getDocuments().stream()
+                    .map(mapper::mapToDrone)
+                    .collect(Collectors.toList());
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("Error retrieving available drones from Firestore", e);
             Thread.currentThread().interrupt();
             return List.of();
         }

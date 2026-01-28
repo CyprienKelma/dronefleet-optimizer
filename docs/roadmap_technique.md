@@ -48,4 +48,3 @@ Ces points sont issus de la discussion sur la crédibilité technique et l'aspec
 *   [ ] **Feature Flipping & A/B Testing**
     *   Implémenter deux stratégies d'optimisation (ex: "Rapide" vs "Économe").
     *   Comparer les métriques business en temps réel.
-

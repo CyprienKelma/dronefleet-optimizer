@@ -10,7 +10,6 @@ import time
 
 from google.api_core.exceptions import AlreadyExists, RetryError, ServiceUnavailable
 from google.cloud import pubsub_v1
-from google.pubsub_v1.types.pubsub import Topic
 
 # Configuration
 PROJECT_ID = os.getenv("PROJECT_ID", "drone-fleet-optimizer-local")
@@ -20,7 +19,7 @@ TOPICS = ["telemetry", "decisions", "orders"]
 SUBSCRIPTIONS = {
     "telemetry": ["telemetry-sub"],
     "decisions": ["decisions-sub"],
-    "orders": ["orders-sub"]
+    "orders": ["orders-sub"],
 }
 
 
