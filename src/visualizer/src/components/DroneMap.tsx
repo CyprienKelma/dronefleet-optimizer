@@ -1,5 +1,5 @@
 import { useStore } from "@nanostores/solid";
-import type { DroneTelemetry } from "@shared/schemas";
+import type { DroneStatus, DroneTelemetry } from "@shared/schemas";
 import maplibregl from "maplibre-gl";
 import {
   type Component,
@@ -18,6 +18,21 @@ import {
 } from "@/stores";
 import { getConfig } from "@/utils/config";
 import DronePopup, { STATUS_COLORS } from "./DronePopup";
+
+/**
+ * Interface for GeoJSON feature properties
+ */
+interface DroneFeatureProperties {
+  drone_id: string;
+  status: DroneStatus;
+  battery_percentage: number;
+  speed_kmh: number;
+  current_mission_id?: string | null;
+  lat: number;
+  lon: number;
+  color: string;
+  timestamp: string;
+}
 
 /**
  * Converts drone list to GeoJSON for MapLibre
@@ -47,7 +62,7 @@ const createGeoJSON = (
           drone.timestamp instanceof Date
             ? drone.timestamp.toISOString()
             : drone.timestamp,
-      },
+      } satisfies DroneFeatureProperties,
     })),
   };
 };
@@ -68,14 +83,9 @@ const DroneMap: Component = () => {
 
   const showPopup = (
     coordinates: [number, number],
-    props: Record<string, unknown>,
+    props: DroneFeatureProperties,
   ) => {
     if (!popup || !map) return;
-
-    // Type guard/assertion for DroneTelemetry properties
-    // In a real app we might want more robust validation here,
-    // but for now we'll cast since we know the source is our own GeoJSON
-    const telemetry = props as unknown as DroneTelemetry;
 
     // Clean up previous popup render
     popupCleanup?.();
@@ -84,17 +94,13 @@ const DroneMap: Component = () => {
     popupCleanup = render(
       () => (
         <DronePopup
-          drone_id={telemetry.drone_id}
-          status={telemetry.status}
-          battery_percentage={telemetry.battery_percentage}
-          speed_kmh={telemetry.speed_kmh}
-          lat={
-            telemetry.position ? telemetry.position.lat : (props.lat as number)
-          }
-          lon={
-            telemetry.position ? telemetry.position.lon : (props.lon as number)
-          }
-          current_mission_id={telemetry.current_mission_id}
+          drone_id={props.drone_id}
+          status={props.status}
+          battery_percentage={props.battery_percentage}
+          speed_kmh={props.speed_kmh}
+          lat={props.lat}
+          lon={props.lon}
+          current_mission_id={props.current_mission_id}
         />
       ),
       container,
@@ -174,7 +180,7 @@ const DroneMap: Component = () => {
         const coordinates = (
           feature.geometry as GeoJSON.Point
         ).coordinates.slice() as [number, number];
-        const props = feature.properties;
+        const props = feature.properties as unknown as DroneFeatureProperties;
         if (!props) return;
 
         showPopup(coordinates, props);
