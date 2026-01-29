@@ -2,11 +2,11 @@ package com.dronefleet.statemanager.domain.port.out;
 
 import java.util.function.Function;
 
-import com.dronefleet.statemanager.domain.model.Drone;
-import com.dronefleet.statemanager.domain.model.DroneTelemetry;
-import com.dronefleet.statemanager.domain.model.Mission;
-import com.dronefleet.statemanager.domain.model.OptimizationSnapshot;
-import com.dronefleet.statemanager.domain.model.Order;
+import com.dronefleet.shared.models.Drone;
+import com.dronefleet.shared.models.DroneTelemetry;
+import com.dronefleet.shared.models.Mission;
+import com.dronefleet.shared.models.OptimizationSnapshot;
+import com.dronefleet.shared.models.Order;
 
 /**
  * Port for atomic state transitions in the domain. This decouples the domain from the underlying

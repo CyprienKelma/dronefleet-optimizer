@@ -1,5 +1,4 @@
 import structlog
-
 from dronefleet_shared.models.order import DeliveryOrder
 
 from ..messaging.factory import PublisherFactory

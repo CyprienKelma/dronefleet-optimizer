@@ -13,8 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import com.dronefleet.shared.models.Order;
 import com.dronefleet.statemanager.application.config.AppProperties;
-import com.dronefleet.statemanager.domain.model.Order;
 import com.dronefleet.statemanager.domain.port.out.OrderRepository;
 
 @Slf4j

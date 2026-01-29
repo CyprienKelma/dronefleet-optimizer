@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.stereotype.Component;
 
+import com.dronefleet.shared.models.Position;
 import com.dronefleet.statemanager.application.dto.MissionAssignmentDto;
-import com.dronefleet.statemanager.domain.model.Position;
 import com.dronefleet.statemanager.domain.port.in.AssignMissionUseCase;
 
 /**

@@ -3,7 +3,7 @@ package com.dronefleet.statemanager.domain.port.out;
 import java.util.List;
 import java.util.Optional;
 
-import com.dronefleet.statemanager.domain.model.Drone;
+import com.dronefleet.shared.models.Drone;
 
 public interface DroneRepository {
 

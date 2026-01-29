@@ -17,15 +17,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.dronefleet.shared.models.Drone;
+import com.dronefleet.shared.models.DroneStatus;
+import com.dronefleet.shared.models.DroneTelemetry;
+import com.dronefleet.shared.models.Mission;
+import com.dronefleet.shared.models.OptimizationSnapshot;
+import com.dronefleet.shared.models.Order;
+import com.dronefleet.shared.models.OrderStatus;
+import com.dronefleet.shared.models.Warehouse;
 import com.dronefleet.statemanager.application.config.AppProperties;
-import com.dronefleet.statemanager.domain.model.Drone;
-import com.dronefleet.statemanager.domain.model.DroneStatus;
-import com.dronefleet.statemanager.domain.model.DroneTelemetry;
-import com.dronefleet.statemanager.domain.model.Mission;
-import com.dronefleet.statemanager.domain.model.OptimizationSnapshot;
-import com.dronefleet.statemanager.domain.model.Order;
-import com.dronefleet.statemanager.domain.model.OrderStatus;
-import com.dronefleet.statemanager.domain.model.Warehouse;
 import com.dronefleet.statemanager.domain.port.out.StateTransactionPort;
 import com.dronefleet.statemanager.domain.port.out.WarehouseRepository;
 
@@ -252,7 +252,9 @@ public class FirestoreStateTransactionAdapter implements StateTransactionPort {
                             // 3. Business Logic & Writes
                             // Now that all reads are done, we can start the writes
                             for (DocumentSnapshot snap : allSnapshots) {
-                                if (!snap.exists()) continue;
+                                if (!snap.exists()) {
+                                    continue;
+                                }
 
                                 String collectionName = snap.getReference().getParent().getId();
 

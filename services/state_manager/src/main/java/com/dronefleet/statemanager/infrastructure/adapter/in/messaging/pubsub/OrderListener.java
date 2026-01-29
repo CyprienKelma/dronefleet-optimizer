@@ -5,10 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.stereotype.Component;
 
+import com.dronefleet.shared.models.Order;
+import com.dronefleet.shared.models.Position;
 import com.dronefleet.statemanager.application.dto.OrderEventDto;
 import com.dronefleet.statemanager.domain.exception.BusinessRejectionException;
-import com.dronefleet.statemanager.domain.model.Order;
-import com.dronefleet.statemanager.domain.model.Position;
 import com.dronefleet.statemanager.domain.port.in.ProcessOrderUseCase;
 
 /** Inbound adapter that listens to Pub/Sub messages for orders and routes them to the domain. */

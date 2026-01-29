@@ -1,6 +1,6 @@
 package com.dronefleet.statemanager.domain.port.in;
 
-import com.dronefleet.statemanager.domain.model.Order;
+import com.dronefleet.shared.models.Order;
 
 public interface ProcessOrderUseCase {
 

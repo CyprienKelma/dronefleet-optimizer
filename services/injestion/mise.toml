@@ -1,8 +1,8 @@
-# ingestion module tasks
+# injestion module tasks
 
 [tasks.dev]
-description = "Run ingestion in development mode"
-run = "uv run fastapi dev main.py"
+description = "Run injestion in development mode"
+run = "uv run fastapi dev src/injestion/main.py"
 env = { ENVIRONMENT = "local" }
 
 [tasks.lint]
@@ -14,6 +14,6 @@ description = "Format Python code with black"
 run = "uv run black ."
 
 [tasks.build]
-description = "Build Docker image for ingestion"
+description = "Build Docker image for injestion"
 dir = "{{env.MISE_PROJECT_ROOT}}"
-run = "docker build -t ingestion:local -f src/ingestion/Dockerfile ."
+run = "docker build -t injestion:local -f services/injestion/Dockerfile ."

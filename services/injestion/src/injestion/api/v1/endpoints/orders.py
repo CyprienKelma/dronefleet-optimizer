@@ -1,9 +1,8 @@
 from functools import lru_cache
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
-
 from dronefleet_shared.models.order import DeliveryOrder
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from ....services.order import OrderService
 

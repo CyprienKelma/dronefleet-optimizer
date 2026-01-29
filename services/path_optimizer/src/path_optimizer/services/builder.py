@@ -2,7 +2,6 @@ import math
 from typing import NamedTuple
 
 import structlog
-
 from src.optimizer.models.snapshot import (
     OptimizationSnapshot,
 )

@@ -1,6 +1,5 @@
-from fastapi import FastAPI
-
 from dronefleet_shared.utils.logging_config import setup_logging
+from fastapi import FastAPI
 
 from .api.v1.endpoints.orders import router as orders_router
 from .api.v1.endpoints.telemetry import router as telemetry_router

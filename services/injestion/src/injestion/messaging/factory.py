@@ -1,5 +1,4 @@
 import structlog
-
 from dronefleet_shared.utils.global_config import settings
 
 from .base_publisher import MessagePublisher

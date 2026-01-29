@@ -6,8 +6,6 @@ from datetime import UTC, datetime
 
 import requests
 import structlog
-
-from dronefleet_shared.utils.logging_config import setup_logging
 from dronefleet_shared.models.order import DeliveryOrder
 from dronefleet_shared.models.product import ProductType
 from dronefleet_shared.models.protocol import DroneStatus, UrgencyLevel
@@ -15,6 +13,7 @@ from dronefleet_shared.models.protocol import DroneStatus, UrgencyLevel
 # Assuming the shared schemas are available in the python path
 # If running via 'uv run', the python path should be set correctly to include src/
 from dronefleet_shared.models.telemetry import DroneTelemetry, GeoPoint
+from dronefleet_shared.utils.logging_config import setup_logging
 
 # Configuration
 TELEMETRY_API_URL = "http://localhost:8000/api/v1/telemetry"

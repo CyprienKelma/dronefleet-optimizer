@@ -1,6 +1,5 @@
 import httpx
 import structlog
-
 from src.optimizer.models.snapshot import OptimizationSnapshot
 from src.shared.configs.global_config import settings
 

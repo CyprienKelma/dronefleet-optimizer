@@ -1,5 +1,4 @@
 import structlog
-
 from src.optimizer.models.decision import MissionAssignment
 from src.optimizer.services.builder import VRPProblem
 from src.shared.schemas.telemetry import GeoPoint

@@ -3,11 +3,11 @@ python = "3.11"
 uv = "0.5.11"
 
 [env]
-PYTHONPATH = "{{config_root}}/../.."
+PYTHONPATH = "{{config_root}}/src"
 
 [tasks.run]
 description = "Run the optimizer"
-run = "uv run python -m optimizer.main"
+run = "uv run python -m path_optimizer.main"
 
 [tasks.lint]
 description = "Run linters"

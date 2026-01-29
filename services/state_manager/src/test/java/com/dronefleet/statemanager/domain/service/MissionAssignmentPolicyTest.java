@@ -10,12 +10,12 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.dronefleet.shared.models.Drone;
+import com.dronefleet.shared.models.DroneStatus;
+import com.dronefleet.shared.models.Order;
+import com.dronefleet.shared.models.OrderStatus;
+import com.dronefleet.shared.models.Position;
 import com.dronefleet.statemanager.domain.exception.BusinessRejectionException;
-import com.dronefleet.statemanager.domain.model.Drone;
-import com.dronefleet.statemanager.domain.model.DroneStatus;
-import com.dronefleet.statemanager.domain.model.Order;
-import com.dronefleet.statemanager.domain.model.OrderStatus;
-import com.dronefleet.statemanager.domain.model.Position;
 import com.dronefleet.statemanager.domain.port.out.StateTransactionPort.MissionAssignmentResult;
 
 class MissionAssignmentPolicyTest {

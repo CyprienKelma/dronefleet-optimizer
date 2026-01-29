@@ -10,13 +10,13 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.DocumentSnapshot;
 import org.springframework.stereotype.Component;
 
-import com.dronefleet.statemanager.domain.model.Drone;
-import com.dronefleet.statemanager.domain.model.DroneStatus;
-import com.dronefleet.statemanager.domain.model.Mission;
-import com.dronefleet.statemanager.domain.model.Order;
-import com.dronefleet.statemanager.domain.model.OrderStatus;
-import com.dronefleet.statemanager.domain.model.Position;
-import com.dronefleet.statemanager.domain.model.Warehouse;
+import com.dronefleet.shared.models.Drone;
+import com.dronefleet.shared.models.DroneStatus;
+import com.dronefleet.shared.models.Mission;
+import com.dronefleet.shared.models.Order;
+import com.dronefleet.shared.models.OrderStatus;
+import com.dronefleet.shared.models.Position;
+import com.dronefleet.shared.models.Warehouse;
 
 /** Shared mapper for converting between Firestore documents and domain objects. */
 @Component
@@ -190,7 +190,9 @@ public class FirestoreMapper {
     // --- Warehouse Mapping ---
 
     public Warehouse mapToWarehouse(DocumentSnapshot doc) {
-        if (!doc.exists()) return null;
+        if (!doc.exists()) {
+            return null;
+        }
 
         return Warehouse.builder()
                 .id(doc.getId())

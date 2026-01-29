@@ -1,5 +1,4 @@
 import structlog
-
 from src.ingestion.messaging.factory import PublisherFactory
 from src.optimizer.models.decision import MissionAssignment
 from src.shared.configs.global_config import settings

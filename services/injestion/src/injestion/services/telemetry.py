@@ -1,5 +1,4 @@
 import structlog
-
 from dronefleet_shared.models.telemetry import DroneTelemetry
 
 from ..messaging.factory import PublisherFactory

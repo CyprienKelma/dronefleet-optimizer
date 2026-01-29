@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.dronefleet.shared.models.OptimizationSnapshot;
 import com.dronefleet.statemanager.application.config.AppProperties;
-import com.dronefleet.statemanager.domain.model.OptimizationSnapshot;
 import com.dronefleet.statemanager.domain.port.in.GetOptimizationSnapshotUseCase;
 import com.dronefleet.statemanager.domain.port.out.StateTransactionPort;
 

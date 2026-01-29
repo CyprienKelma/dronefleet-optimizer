@@ -2,7 +2,7 @@ package com.dronefleet.statemanager.domain.port.out;
 
 import java.util.Optional;
 
-import com.dronefleet.statemanager.domain.model.Mission;
+import com.dronefleet.shared.models.Mission;
 
 public interface MissionRepository {
     void save(Mission mission);

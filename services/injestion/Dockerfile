@@ -12,13 +12,10 @@ ENV ENVIRONMENT=${ENVIRONMENT}
 # Exclude development dependencies from production builds
 ENV UV_NO_DEV=1
 
-# No system dependencies needed
-
 # install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Install dependencies using cache mounts and bind mounts for better performance
-# This keeps dependency files out of the image layer and caches package downloads
+# Install dependencies using cache mounts and bind mounts
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=uv.lock,target=uv.lock \
@@ -26,15 +23,16 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-# allow access to 'shared' modules with data formats
-COPY src /app/src
+# Copy shared code and service code
+COPY shared/python/src/dronefleet_shared /app/dronefleet_shared
+COPY services/injestion/src/injestion /app/injestion
 
-# to get approp env files
-COPY config /app/config
+# Copy config files
+COPY configs /app/configs
 
-# to make imports work
-ENV PYTHONPATH=/app:/app/src
+# Set PYTHONPATH to include /app where packages are located
+ENV PYTHONPATH=/app
 
 EXPOSE 8000
 
-CMD ["uvicorn", "src.ingestion.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "injestion.main:app", "--host", "0.0.0.0", "--port", "8000"]

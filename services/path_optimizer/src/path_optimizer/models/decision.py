@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-
 from src.shared.schemas.telemetry import GeoPoint
 
 

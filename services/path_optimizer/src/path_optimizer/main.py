@@ -1,7 +1,6 @@
 import uuid
 
 import structlog
-
 from src.optimizer.clients.publisher import DecisionPublisher
 from src.optimizer.clients.state_manager import StateManagerClient
 from src.optimizer.services.builder import VRPProblemBuilder

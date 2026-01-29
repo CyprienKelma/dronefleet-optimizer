@@ -1,9 +1,8 @@
 from functools import lru_cache
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
-
 from dronefleet_shared.models.telemetry import DroneTelemetry
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from ....services.telemetry import TelemetryService
 

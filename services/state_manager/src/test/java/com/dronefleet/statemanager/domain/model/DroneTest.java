@@ -7,6 +7,10 @@ import java.time.Instant;
 
 import org.junit.jupiter.api.Test;
 
+import com.dronefleet.shared.models.Drone;
+import com.dronefleet.shared.models.DroneStatus;
+import com.dronefleet.shared.models.Position;
+
 class DroneTest {
 
     @Test

@@ -1,6 +1,6 @@
 package com.dronefleet.statemanager.domain.port.in;
 
-import com.dronefleet.statemanager.domain.model.DroneTelemetry;
+import com.dronefleet.shared.models.DroneTelemetry;
 
 /** Use case interface for updating the state of a drone from telemetry data. */
 public interface UpdateDroneStateUseCase {

@@ -7,13 +7,13 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.dronefleet.shared.models.Drone;
+import com.dronefleet.shared.models.DroneStatus;
+import com.dronefleet.shared.models.Mission;
+import com.dronefleet.shared.models.Order;
+import com.dronefleet.shared.models.OrderStatus;
+import com.dronefleet.shared.models.Position;
 import com.dronefleet.statemanager.domain.exception.BusinessRejectionException;
-import com.dronefleet.statemanager.domain.model.Drone;
-import com.dronefleet.statemanager.domain.model.DroneStatus;
-import com.dronefleet.statemanager.domain.model.Mission;
-import com.dronefleet.statemanager.domain.model.Order;
-import com.dronefleet.statemanager.domain.model.OrderStatus;
-import com.dronefleet.statemanager.domain.model.Position;
 import com.dronefleet.statemanager.domain.port.out.StateTransactionPort.MissionAssignmentResult;
 
 /**

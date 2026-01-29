@@ -2,8 +2,8 @@ package com.dronefleet.statemanager.domain.port.in;
 
 import java.util.List;
 
-import com.dronefleet.statemanager.domain.model.Mission;
-import com.dronefleet.statemanager.domain.model.Position;
+import com.dronefleet.shared.models.Mission;
+import com.dronefleet.shared.models.Position;
 
 public interface AssignMissionUseCase {
     /**
