@@ -4,8 +4,12 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]>=0.126.0",
-    "uvicorn>=0.38.0"
+    "uvicorn>=0.38.0",
+    "dronefleet_shared"
 ]
+
+[tool.uv.sources]
+"dronefleet_shared" = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

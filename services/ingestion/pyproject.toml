@@ -6,8 +6,12 @@ dependencies = [
     "fastapi[standard]>=0.126.0",
     "uvicorn>=0.38.0",
     "google-cloud-pubsub>=2.33.0",
-    "kafka-python>=2.3.0"
+    "kafka-python>=2.3.0",
+    "dronefleet_shared"
 ]
+
+[tool.uv.sources]
+"dronefleet_shared" = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

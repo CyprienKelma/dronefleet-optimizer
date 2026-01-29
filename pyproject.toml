@@ -5,36 +5,25 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi[standard]>=0.126.0",
-    "google-cloud-pubsub>=2.33.0",
-    "google-cloud-firestore>=2.19.0",
-    "kafka-python>=2.3.0",
-    "pydantic-settings>=2.0.0",
-    "uvicorn>=0.38.0",
-    "structlog>=24.1.0",
-    "detect-secrets>=1.5.0",
-    "mypy>=1.19.1",
-    "pre-commit>=4.5.1",
-    "pytest>=9.0.2",
-    "pytest-cov>=7.0.0",
-    "ruff>=0.14.13",
-    "types-requests>=2.32.0",
-    "black>=26.1.0",
-    "ortools>=9.8.3296",
-    "httpx>=0.27.0",
-    "dronefleet_shared",
+  "black>=26.1.0",
+  "detect-secrets>=1.5.0",
+  "dronefleet_shared",
+  "fastapi[standard]>=0.126.0",
+  "google-cloud-firestore>=2.19.0",
+  "google-cloud-pubsub>=2.33.0",
+  "httpx>=0.27.0",
+  "kafka-python>=2.3.0",
+  "mypy>=1.19.1",
+  "ortools>=9.8.3296",
+  "pre-commit>=4.5.1",
+  "pydantic-settings>=2.0.0",
+  "pytest>=9.0.2",
+  "pytest-cov>=7.0.0",
+  "ruff>=0.14.13",
+  "structlog>=24.1.0",
+  "types-requests>=2.32.0",
+  "uvicorn>=0.38.0",
 ]
-
-[tool.uv.workspace]
-members = [
-    "services/ingestion",
-    "services/path_optimizer",
-    "shared/python",
-    "libs/python/*",
-]
-
-[tool.uv.sources]
-dronefleet_shared = { workspace = true }
 
 [tool.mypy]
 python_version = "3.11"
@@ -44,8 +33,8 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
-    "google.*",
-    "kafka.*",
+  "google.*",
+  "kafka.*",
 ]
 ignore_missing_imports = true
 
@@ -59,3 +48,14 @@ ignore = ["B008", "E501"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["shared"]
+
+[tool.uv.workspace]
+members = [
+  "services/ingestion",
+  "services/path_optimizer",
+  "shared/python",
+  "libs/python/*",
+]
+
+[tool.uv.sources]
+dronefleet_shared = { workspace = true }
