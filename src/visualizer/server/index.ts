@@ -68,8 +68,10 @@ function handleSSE(request: Request): Response {
     return new Response("Unauthorized", { status: 401 });
   }
 
+  let controllerRef: ReadableStreamDefaultController;
   const stream = new ReadableStream({
     start(controller) {
+      controllerRef = controller;
       clients.add(controller);
       logger.info({ totalClients: clients.size }, "[SSE] Client connected");
 
@@ -79,8 +81,8 @@ function handleSSE(request: Request): Response {
       );
     },
     cancel() {
-      // Will be cleaned up on next broadcast
-      logger.info("[SSE] Client disconnected");
+      clients.delete(controllerRef);
+      logger.info({ totalClients: clients.size }, "[SSE] Client disconnected");
     },
   });
 
