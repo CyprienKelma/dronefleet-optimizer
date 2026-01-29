@@ -3,7 +3,7 @@ name = "simulators"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
-  "dronefleet_shared",
+  "dronefleet-shared",
   "fastapi[standard]>=0.126.0",
   "uvicorn>=0.38.0",
 ]
@@ -13,4 +13,4 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.uv.sources]
-"dronefleet_shared" = { workspace = true }
+"dronefleet-shared" = { workspace = true }
