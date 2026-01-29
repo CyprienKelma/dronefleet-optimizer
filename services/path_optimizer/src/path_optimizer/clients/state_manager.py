@@ -1,7 +1,8 @@
 import httpx
 import structlog
-from src.optimizer.models.snapshot import OptimizationSnapshot
-from src.shared.configs.global_config import settings
+from dronefleet_shared.utils.global_config import settings
+
+from ..models.snapshot import OptimizationSnapshot
 
 logger = structlog.get_logger(__name__)
 

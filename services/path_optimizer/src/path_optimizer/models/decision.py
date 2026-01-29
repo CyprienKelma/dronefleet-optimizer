@@ -1,5 +1,5 @@
+from dronefleet_shared.models.telemetry import GeoPoint
 from pydantic import BaseModel, Field
-from src.shared.schemas.telemetry import GeoPoint
 
 
 class MissionAssignment(BaseModel):

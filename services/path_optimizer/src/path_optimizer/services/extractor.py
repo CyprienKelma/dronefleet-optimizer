@@ -1,7 +1,8 @@
 import structlog
-from src.optimizer.models.decision import MissionAssignment
-from src.optimizer.services.builder import VRPProblem
-from src.shared.schemas.telemetry import GeoPoint
+from dronefleet_shared.models.telemetry import GeoPoint
+
+from ..models.decision import MissionAssignment
+from .builder import VRPProblem
 
 logger = structlog.get_logger(__name__)
 

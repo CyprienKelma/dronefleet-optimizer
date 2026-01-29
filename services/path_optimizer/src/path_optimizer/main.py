@@ -1,12 +1,13 @@
 import uuid
 
 import structlog
-from src.optimizer.clients.publisher import DecisionPublisher
-from src.optimizer.clients.state_manager import StateManagerClient
-from src.optimizer.services.builder import VRPProblemBuilder
-from src.optimizer.services.extractor import SolutionExtractor
-from src.optimizer.services.solver import VRPSolver
-from src.shared.configs.logging_config import setup_logging
+from dronefleet_shared.utils.logging_config import setup_logging
+
+from .clients.publisher import DecisionPublisher
+from .clients.state_manager import StateManagerClient
+from .services.builder import VRPProblemBuilder
+from .services.extractor import SolutionExtractor
+from .services.solver import VRPSolver
 
 # Initialize logging
 setup_logging()

@@ -1,7 +1,8 @@
 import structlog
-from src.ingestion.messaging.factory import PublisherFactory
-from src.optimizer.models.decision import MissionAssignment
-from src.shared.configs.global_config import settings
+from dronefleet_messaging.factory import PublisherFactory
+from dronefleet_shared.utils.global_config import settings
+
+from ..models.decision import MissionAssignment
 
 logger = structlog.get_logger(__name__)
 

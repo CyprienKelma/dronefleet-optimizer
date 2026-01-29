@@ -1,7 +1,8 @@
 import structlog
+from dronefleet_shared.utils.global_config import settings
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
-from src.optimizer.services.builder import VRPProblem
-from src.shared.configs.global_config import settings
+
+from .builder import VRPProblem
 
 logger = structlog.get_logger(__name__)
 

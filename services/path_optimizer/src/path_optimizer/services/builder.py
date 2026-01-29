@@ -2,7 +2,8 @@ import math
 from typing import NamedTuple
 
 import structlog
-from src.optimizer.models.snapshot import (
+
+from ..models.snapshot import (
     OptimizationSnapshot,
 )
 
@@ -55,7 +56,9 @@ class VRPProblemBuilder:
         nodes = []
         # Add warehouse (depot)
         if not self.warehouses:
-            raise ValueError("Cannot build VRPProblem: no warehouses available in snapshot")
+            raise ValueError(
+                "Cannot build VRPProblem: no warehouses available in snapshot"
+            )
         nodes.append((self.warehouses[0].position.lat, self.warehouses[0].position.lon))
 
         pickups_deliveries = []

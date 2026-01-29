@@ -1,7 +1,7 @@
 from datetime import datetime
 
+from dronefleet_shared.models.telemetry import GeoPoint
 from pydantic import BaseModel
-from src.shared.schemas.telemetry import GeoPoint
 
 
 class DroneSnapshot(BaseModel):
