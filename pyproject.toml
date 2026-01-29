@@ -22,6 +22,7 @@ dependencies = [
     "black>=26.1.0",
     "ortools>=9.8.3296",
     "httpx>=0.27.0",
+    "dronefleet_shared",
 ]
 
 [tool.uv.workspace]
@@ -29,8 +30,11 @@ members = [
     "services/ingestion",
     "services/path_optimizer",
     "shared/python",
-    "libs/python/*"
+    "libs/python/*",
 ]
+
+[tool.uv.sources]
+dronefleet_shared = { workspace = true }
 
 [tool.mypy]
 python_version = "3.11"
