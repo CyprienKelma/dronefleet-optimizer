@@ -23,7 +23,7 @@ services:
     image: ghcr.io/astral-sh/uv:python3.11-alpine
     working_dir: /app
     volumes:
-      - ./create_topics.py:/app/create_topics.py
+      - ./scripts/create_topics.py:/app/create_topics.py
     environment:
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
       PROJECT_ID: drone-fleet-optimizer-local
@@ -37,7 +37,7 @@ services:
   ingestion:
     build:
       context: ../../
-      dockerfile: src/ingestion/Dockerfile
+      dockerfile: services/ingestion/Dockerfile
     environment:
       # env variable that determines which .env file to load
       # global_config.py will read this and load config/dev.env
@@ -58,13 +58,11 @@ services:
       - "8000:8000"
     networks:
       - drone-network
-    profiles:
-      - full
 
   state-manager:
     build:
-      context: ../../src/state-manager
-      dockerfile: Dockerfile
+      context: ../../
+      dockerfile: services/state_manager/Dockerfile
     environment:
       SPRING_PROFILES_ACTIVE: local
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
@@ -96,10 +94,10 @@ services:
     networks:
       - drone-network
 
-  optimizer:
+  path-optimizer:
     build:
       context: ../../
-      dockerfile: src/optimizer/Dockerfile
+      dockerfile: services/path_optimizer/Dockerfile
     environment:
       ENVIRONMENT: local
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
@@ -111,8 +109,27 @@ services:
         condition: service_completed_successfully
     networks:
       - drone-network
-    profiles:
-      - full
+
+  visualizer:
+    build:
+      context: ../../
+      dockerfile: services/visualizer/Dockerfile
+    environment:
+      PORT: 3001
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      PROJECT_ID: drone-fleet-optimizer-local
+      # Frontend needs to know where to connect for SSE
+      VITE_API_URL: http://localhost:3001
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    depends_on:
+      pubsub-init:
+        condition: service_completed_successfully
+      pubsub-emulator:
+        condition: service_healthy
+    networks:
+      - drone-network
 
 networks:
   drone-network:

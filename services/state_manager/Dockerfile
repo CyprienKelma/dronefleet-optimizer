@@ -2,20 +2,21 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 
-# Copy Gradle wrapper and dependencies
+# Copy Gradle wrapper and root configuration
 COPY gradle gradle
 COPY gradlew .
 COPY build.gradle .
 COPY settings.gradle .
 
-# Download dependencies (cached layer)
-RUN ./gradlew dependencies --no-daemon
+# Copy shared/libs dependencies if any (based on settings.gradle)
+COPY shared/java shared/java
+COPY libs/java libs/java
 
-# Copy source code
-COPY src src
+# Copy service code
+COPY services/state_manager services/state_manager
 
 # Build application
-RUN ./gradlew bootJar --no-daemon
+RUN ./gradlew :services:state_manager:bootJar --no-daemon
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
@@ -26,7 +27,7 @@ RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
 # Copy JAR from build stage
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY --from=build /app/services/state_manager/build/libs/*.jar app.jar
 
 # Expose port (Cloud Run uses PORT env var, default 8080)
 EXPOSE 8080

@@ -2,22 +2,25 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install uv for fast dependency management
-RUN pip install uv
+# install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Copy project files
-COPY pyproject.toml uv.lock ./
+# Exclude development dependencies from production builds
+ENV UV_NO_DEV=1
 
-# Install dependencies using uv
-RUN uv sync --frozen
+# Install dependencies using cache mounts and bind mounts
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    uv sync --frozen --no-cache --no-install-project
 
-# Copy source code
-COPY src/shared ./src/shared
-COPY src/optimizer ./src/optimizer
-COPY src/ingestion ./src/ingestion
+ENV PATH="/app/.venv/bin:$PATH"
 
-# Set Python path to include src
-ENV PYTHONPATH=/app/src
+# Copy shared code and service code
+COPY shared/python/src/dronefleet_shared /app/dronefleet_shared
+COPY services/path_optimizer/src/path_optimizer /app/path_optimizer
 
-# Entry point
-CMD ["uv", "run", "python", "-m", "optimizer.main"]
+# Set PYTHONPATH to include /app where packages are located
+ENV PYTHONPATH=/app
+
+CMD ["python", "-m", "path_optimizer.main"]
