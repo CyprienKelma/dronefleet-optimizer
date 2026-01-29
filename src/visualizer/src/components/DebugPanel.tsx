@@ -37,7 +37,7 @@ const DebugPanel: Component = () => {
 
   return (
     <div class="fixed top-[10px] left-[10px] z-[1000] font-mono text-[11px]">
-      <div class="bg-[#1a1a1a]/95 border border-[#2a2a2a] rounded-lg overflow-hidden min-width-[280px] max-width-[350px] shadow-lg">
+      <div class="bg-[#1a1a1a]/95 border border-[#2a2a2a] rounded-lg overflow-hidden min-w-[280px] max-w-[350px] shadow-lg">
         <button
           type="button"
           class="w-full flex items-center justify-between p-2 px-3 bg-[#1f1f1f] border-b border-[#2a2a2a] cursor-pointer select-none hover:bg-[#252525] focus:outline-none focus:ring-1 focus:ring-[#4ecdc4]"
