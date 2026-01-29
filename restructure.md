@@ -53,8 +53,8 @@
     Dockerfile
     mise.toml
   
-  /injestion
-    /src/injestion # <--- HINT: Named python package dir
+  /ingestion
+    /src/ingestion # <--- HINT: Named python package dir
       ...
     pyproject.toml
     config.yml

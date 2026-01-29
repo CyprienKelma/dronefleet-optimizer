@@ -25,7 +25,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy shared code and service code
 COPY shared/python/src/dronefleet_shared /app/dronefleet_shared
-COPY services/injestion/src/injestion /app/injestion
+COPY services/ingestion/src/ingestion /app/ingestion
 
 # Copy config files
 COPY configs /app/configs
@@ -35,4 +35,4 @@ ENV PYTHONPATH=/app
 
 EXPOSE 8000
 
-CMD ["uvicorn", "injestion.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "ingestion.main:app", "--host", "0.0.0.0", "--port", "8000"]

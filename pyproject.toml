@@ -26,7 +26,7 @@ dependencies = [
 
 [tool.uv.workspace]
 members = [
-    "services/injestion",
+    "services/ingestion",
     "services/path_optimizer",
     "shared/python",
     "libs/python/*"
