@@ -1,7 +1,6 @@
 import structlog
+from dronefleet_messaging.factory import PublisherFactory
 from dronefleet_shared.models.order import DeliveryOrder
-
-from ..messaging.factory import PublisherFactory
 
 # Configure logging
 logger = structlog.get_logger(__name__)

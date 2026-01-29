@@ -3,16 +3,18 @@ name = "ingestion"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi[standard]>=0.126.0",
-    "uvicorn>=0.38.0",
-    "google-cloud-pubsub>=2.33.0",
-    "kafka-python>=2.3.0",
-    "dronefleet_shared"
+  "dronefleet-messaging",
+  "dronefleet-shared",
+  "fastapi[standard]>=0.126.0",
+  "google-cloud-pubsub>=2.33.0",
+  "kafka-python>=2.3.0",
+  "uvicorn>=0.38.0"
 ]
-
-[tool.uv.sources]
-"dronefleet_shared" = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.uv.sources]
+dronefleet-shared = { workspace = true }
+dronefleet-messaging = { workspace = true }

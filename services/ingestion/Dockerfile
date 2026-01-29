@@ -20,12 +20,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=shared/python,target=shared/python \
+    --mount=type=bind,source=libs/python/messaging,target=libs/python/messaging \
     uv sync --frozen --no-cache --no-install-project
 
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy shared code and service code
 COPY shared/python/src/dronefleet_shared /app/dronefleet_shared
+COPY libs/python/messaging/src/dronefleet_messaging /app/dronefleet_messaging
 COPY services/ingestion/src/ingestion /app/ingestion
 
 # Copy config files
