@@ -22,10 +22,10 @@
     "types": ["vite/client", "bun-types"],
     "paths": {
       "@/*": ["./src/*"],
-      "@shared/*": ["./shared/*"]
+      "@shared/*": ["./shared/*"],
     },
-    "baseUrl": "."
+    "baseUrl": ".",
   },
-  "include": ["src/**/*.ts", "vite.config.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*.ts", "server/**/*.ts", "vite.config.ts"],
+  "exclude": ["node_modules", "dist"],
 }
