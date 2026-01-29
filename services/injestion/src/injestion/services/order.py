@@ -1,6 +1,6 @@
 import structlog
 
-from myorg_shared.models.order import DeliveryOrder
+from dronefleet_shared.models.order import DeliveryOrder
 
 from ..messaging.factory import PublisherFactory
 

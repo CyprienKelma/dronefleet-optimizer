@@ -3,6 +3,7 @@ plugins {
 }
 
 subprojects {
+    group = "com.dronefleet"
     repositories {
         mavenCentral()
     }

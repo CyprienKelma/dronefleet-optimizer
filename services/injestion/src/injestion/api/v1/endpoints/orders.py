@@ -3,7 +3,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from myorg_shared.models.order import DeliveryOrder
+from dronefleet_shared.models.order import DeliveryOrder
 
 from ....services.order import OrderService
 

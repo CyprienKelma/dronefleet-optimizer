@@ -3,7 +3,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from myorg_shared.models.telemetry import DroneTelemetry
+from dronefleet_shared.models.telemetry import DroneTelemetry
 
 from ....services.telemetry import TelemetryService
 

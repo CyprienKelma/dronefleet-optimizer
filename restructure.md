@@ -37,7 +37,7 @@
     mise.toml
   
   /state_manager
-    /src/main/java/com/myorg/statemanager  # <--- HINT: Directory depth must match package declaration
+    /src/main/java/com/dronefleet/statemanager  # <--- HINT: Directory depth must match package declaration
       Application.java
       ...
     build.gradle
@@ -85,7 +85,7 @@
   /java
     build.gradle
     mise.toml
-    /src/main/java/com/myorg/shared # <--- HINT: Namespace your shared code to avoid collisions
+    /src/main/java/com/dronefleet/shared # <--- HINT: Namespace your shared code to avoid collisions
       /models
         Drone.java
       /utils
@@ -93,7 +93,7 @@
   /python
     pyproject.toml
     mise.toml
-    /src/myorg_shared # <--- HINT: CRITICAL: Do not put files directly in src/. Use a unique package name folder.
+    /src/dronefleet_shared # <--- HINT: CRITICAL: Do not put files directly in src/. Use a unique package name folder.
       __init__.py
       /models
         drone.py
@@ -114,37 +114,37 @@
     /logging 
       build.gradle
       mise.toml
-      /src/main/java/com/myorg/lib/logging # <--- HINT: Full package path
+      /src/main/java/com/dronefleet/lib/logging # <--- HINT: Full package path
         LogWrapper.java
     /config 
       build.gradle
       mise.toml
-      /src/main/java/com/myorg/lib/config
+      /src/main/java/com/dronefleet/lib/config
         ConfigLoader.java
 
   /python
     /logging 
       pyproject.toml
       mise.toml
-      /src/myorg_logging # <--- HINT: Allows `from myorg_logging import logger`
+      /src/dronefleet_logging # <--- HINT: Allows `from dronefleet_logging import logger`
         __init__.py
         wrapper.py
     /config
       pyproject.toml
       mise.toml
-      /src/myorg_config # <--- HINT: Allows `from myorg_config import loader`
+      /src/dronefleet_config # <--- HINT: Allows `from dronefleet_config import loader`
         __init__.py
         loader.py
 
   /ts
     /logging 
-      package.json # <--- HINT: Name this "@myorg/logging" in package.json
+      package.json # <--- HINT: Name this "@dronefleet/logging" in package.json
       tsconfig.json
       mise.toml
       /src
         index.ts
     /config 
-      package.json # <--- HINT: Name this "@myorg/config"
+      package.json # <--- HINT: Name this "@dronefleet/config"
       tsconfig.json
       mise.toml
       /src

@@ -1,6 +1,6 @@
 import structlog
 
-from myorg_shared.utils.global_config import settings
+from dronefleet_shared.utils.global_config import settings
 
 from .base_publisher import MessagePublisher
 from .publisher.kafka_publisher import KafkaPublisher
