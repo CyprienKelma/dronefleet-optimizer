@@ -1,4 +1,4 @@
-import { type Component, onMount, Show } from "solid-js";
+import { type Component, onCleanup, onMount, Show } from "solid-js";
 import { render } from "solid-js/web";
 import ConfigPanel from "./components/ConfigPanel";
 import DebugPanel from "./components/DebugPanel";
@@ -33,6 +33,11 @@ const App: Component = () => {
 
     stream.start();
     logEvent("info", "Application initialized");
+
+    onCleanup(() => {
+      stream.stop();
+      logEvent("info", "Telemetry stream stopped on unmount");
+    });
   });
 
   return (
