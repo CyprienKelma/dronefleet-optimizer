@@ -12,6 +12,7 @@ ENV UV_NO_DEV=1
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=shared/python,target=shared/python \
     uv sync --frozen --no-cache --no-install-project
 
 ENV PATH="/app/.venv/bin:$PATH"
