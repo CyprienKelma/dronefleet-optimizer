@@ -1,0 +1,139 @@
+services:
+  # To run emulator only :
+  # docker compose up -d pubsub-emulator firestore-emulator pubsub-init
+  # To run all docker-compose :
+  # docker compose --profile full up --build
+  # TODO : Need to add profiles: full to proper component
+
+  pubsub-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: gcloud beta emulators pubsub start --project=drone-fleet-optimizer-local --host-port=0.0.0.0:8085
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - drone-network
+
+  # Ephemeral service to configure topics on emulator start
+  pubsub-init:
+    image: ghcr.io/astral-sh/uv:python3.11-alpine
+    working_dir: /app
+    volumes:
+      - ./scripts/create_topics.py:/app/create_topics.py
+    environment:
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      PROJECT_ID: drone-fleet-optimizer-local
+    command: uv run /app/create_topics.py
+    depends_on:
+      pubsub-emulator:
+        condition: service_healthy
+    networks:
+      - drone-network
+
+  ingestion:
+    build:
+      context: ../../
+      dockerfile: services/ingestion/Dockerfile
+    environment:
+      # env variable that determines which .env file to load
+      # global_config.py will read this and load config/dev.env
+      ENVIRONMENT: local
+
+      # pub/sub emulator config
+      # the Google SDK ignores real GCP auth with this variable
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+
+      # DEPLOYMENT_STRATEGY and other config values are loaded from
+      # config/dev.env via pydantic_settings in global_config.py
+    depends_on:
+      pubsub-init:
+        condition: service_completed_successfully
+      pubsub-emulator:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    networks:
+      - drone-network
+
+  state-manager:
+    build:
+      context: ../../
+      dockerfile: services/state_manager/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      FIRESTORE_EMULATOR_HOST: firestore-emulator:8080
+      SPRING_CLOUD_GCP_PROJECT_ID: drone-fleet-optimizer-local
+      PROJECT_ID: drone-fleet-optimizer-local
+    ports:
+      - "8081:8080"
+    depends_on:
+      pubsub-init:
+        condition: service_completed_successfully
+      pubsub-emulator:
+        condition: service_healthy
+      firestore-emulator:
+        condition: service_healthy
+    networks:
+      - drone-network
+
+  firestore-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: gcloud beta emulators firestore start --host-port=0.0.0.0:8080
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - drone-network
+
+  path-optimizer:
+    build:
+      context: ../../
+      dockerfile: services/path_optimizer/Dockerfile
+    environment:
+      ENVIRONMENT: local
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      STATE_MANAGER_URL: http://state-manager:8080
+    depends_on:
+      state-manager:
+        condition: service_started
+      pubsub-init:
+        condition: service_completed_successfully
+    networks:
+      - drone-network
+
+  visualizer:
+    build:
+      context: ../../
+      dockerfile: services/visualizer/Dockerfile
+    environment:
+      PORT: 3001
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      PUBSUB_PROJECT_ID: drone-fleet-optimizer-local
+      PROJECT_ID: drone-fleet-optimizer-local
+      # Disable GCE metadata lookup for local dev
+      GCE_METADATA_HOST: 127.0.0.1
+      # Frontend needs to know where to connect for SSE
+      VITE_API_URL: http://localhost:3001
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    depends_on:
+      pubsub-init:
+        condition: service_completed_successfully
+      pubsub-emulator:
+        condition: service_healthy
+    networks:
+      - drone-network
+
+networks:
+  drone-network:
+    driver: bridge

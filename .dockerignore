@@ -1,3 +1,14 @@
+# Node/Bun dependencies
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.output/
+.bun/
+bun.lock*
+pnpm-lock.yaml
+package-lock.json
+
 # Prevent local virtual environment from being included
 .venv/
 venv/

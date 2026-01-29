@@ -2,8 +2,10 @@ experimental_monorepo_root = true
 
 [monorepo]
 config_roots = [
-  "infrastructure/*/",
-  "src/*/",
+  "infra/*/",
+  "services/*/",
+  "shared/*/",
+  "libs/*/*",
 ]
 
 [settings]
@@ -20,6 +22,7 @@ gcloud = "latest"
 ## linters
 prettier = "latest"
 node = "latest"
+gradle = "8.5"
 
 [env]
 MISE_PROJECT_ROOT = "{{config_root}}"
@@ -68,11 +71,9 @@ depends = ["test:unit", "test:integration", "test:e2e"]
 [tasks."lint:all"]
 description = "Run all linters across the monorepo"
 depends = [
-  "//src/ingestion:lint",
-  "//src/simulator:lint",
-  "//src/state-manager:lint",
-  "//src/visualizer:lint",
-  "//infrastructure/on_cloud:lint",
+  "//services/ingestion:lint",
+  "//services/path_optimizer:lint",
+  "//services/state_manager:lint",
 ]
 run = { task = "//...:lint" }
 

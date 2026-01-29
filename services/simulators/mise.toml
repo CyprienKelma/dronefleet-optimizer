@@ -1,0 +1,9 @@
+# simulator module tasks
+
+[tasks.run]
+description = "Run the drone simulator"
+run = "uv run python -m simulators.main"
+
+[tasks.lint]
+description = "Lint Python code with ruff and mypy"
+run = ["uv run ruff check .", "uv run mypy ."]

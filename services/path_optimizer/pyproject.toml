@@ -1,0 +1,24 @@
+[project]
+name = "path_optimizer"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "dronefleet-config",
+  "dronefleet-logging",
+  "dronefleet-messaging",
+  "dronefleet-shared",
+  "fastapi[standard]>=0.126.0",
+  "google-cloud-firestore>=2.19.0",
+  "ortools>=9.8.3296",
+  "uvicorn>=0.38.0"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+dronefleet-shared = { workspace = true }
+dronefleet-config = { workspace = true }
+dronefleet-logging = { workspace = true }
+dronefleet-messaging = { workspace = true }

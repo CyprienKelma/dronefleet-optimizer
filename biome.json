@@ -37,6 +37,9 @@
         "noUnusedImports": "error",
         "noUnusedVariables": "error"
       },
+      "suspicious": {
+        "noUnknownAtRules": "off"
+      },
       "style": {
         "noNonNullAssertion": "warn",
         "useBlockStatements": "off"

@@ -1,0 +1,15 @@
+[project]
+name = "dronefleet-config"
+version = "0.1.0"
+description = "Shared configuration library for DroneFleet"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic-settings>=2.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dronefleet_config"]

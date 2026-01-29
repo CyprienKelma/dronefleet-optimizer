@@ -1,0 +1,28 @@
+# state-manager module tasks (Java/Gradle)
+
+[tasks.dev]
+description = "Run state-manager in development mode"
+run = "./gradlew bootRun"
+env = { ENVIRONMENT = "local" }
+
+[tasks.lint]
+description = "Run checkstyle and spotless check on Java code"
+run = [
+    "{{env.MISE_PROJECT_ROOT}}/gradlew :services:state_manager:checkstyleMain",
+    "{{env.MISE_PROJECT_ROOT}}/gradlew :services:state_manager:spotlessCheck"
+]
+
+[tasks.format]
+description = "Format Java code using Spotless"
+run = "{{env.MISE_PROJECT_ROOT}}/gradlew :services:state_manager:spotlessApply"
+
+[tasks.build]
+description = "Build state-manager and Docker image"
+run = [
+    "{{env.MISE_PROJECT_ROOT}}/gradlew :services:state_manager:build",
+    "docker build -t state-manager:local .",
+]
+
+[tasks.test]
+description = "Run Gradle tests"
+run = "{{env.MISE_PROJECT_ROOT}}/gradlew :services:state_manager:test"
