@@ -99,8 +99,22 @@ export function loadConfig(): AppConfig {
     adminToken: getConfigValue("admin_token", DEFAULT_CONFIG.adminToken),
     mapStyleUrl: getConfigValue("map_style_url", DEFAULT_CONFIG.mapStyleUrl),
     mapCenter: getConfigValue("map_center", DEFAULT_CONFIG.mapCenter, (v) => {
-      const [lng, lat] = v.split(",").map(Number);
-      return [lng, lat] as [number, number];
+      const parts = v.split(",");
+      if (parts.length !== 2) return DEFAULT_CONFIG.mapCenter;
+      const lng = Number.parseFloat(parts[0]);
+      const lat = Number.parseFloat(parts[1]);
+
+      const isValid =
+        !Number.isNaN(lng) &&
+        !Number.isNaN(lat) &&
+        lng >= -180 &&
+        lng <= 180 &&
+        lat >= -90 &&
+        lat <= 90;
+
+      return isValid
+        ? ([lng, lat] as [number, number])
+        : DEFAULT_CONFIG.mapCenter;
     }),
     mapZoom: getConfigValue("map_zoom", DEFAULT_CONFIG.mapZoom, Number),
     debugMode: getConfigValue("debug", DEFAULT_CONFIG.debugMode, (v) =>

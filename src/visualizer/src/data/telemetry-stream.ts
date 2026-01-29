@@ -61,9 +61,14 @@ export class TelemetryStream {
     logEvent("info", `Connecting to telemetry stream: ${this.endpoint}`);
 
     const config = getConfig();
-    const ssebridgeHost = config.sseBridgeHost || window.location.origin;
-    // const url = new URL(this.endpoint, ssebridgeHost); //window.location.origin);
-    const url = new URL(this.endpoint, `http://${ssebridgeHost}`);
+    const ssebridgeHost = config.sseBridgeHost || window.location.host;
+
+    // Ensure host has a protocol for URL constructor, defaulting to current location's protocol
+    const base = ssebridgeHost.includes("://")
+      ? ssebridgeHost
+      : `${window.location.protocol}//${ssebridgeHost}`;
+
+    const url = new URL(this.endpoint, base);
 
     // Add auth token if available
     if (config.adminToken) {
