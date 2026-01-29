@@ -1,0 +1,8 @@
+{
+  "name": "dronefleet-optimizer",
+  "private": true,
+  "scripts": {
+    "test": "echo 'Run tests via mise'",
+    "build": "echo 'Run build via mise'"
+  }
+}

@@ -1,0 +1,14 @@
+[project]
+name = "path_optimizer"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.126.0",
+    "uvicorn>=0.38.0",
+    "ortools>=9.8.3296",
+    "google-cloud-firestore>=2.19.0"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

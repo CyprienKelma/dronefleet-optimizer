@@ -1,0 +1,12 @@
+[project]
+name = "simulators"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.126.0",
+    "uvicorn>=0.38.0"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

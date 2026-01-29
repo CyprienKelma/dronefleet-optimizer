@@ -1,0 +1,6 @@
+rootProject.name = 'dronefleet-optimizer'
+
+include 'services:state_manager'
+include 'shared:java'
+include 'libs:java:logging'
+include 'libs:java:config'
