@@ -24,12 +24,12 @@ node = "latest"
 [env]
 MISE_PROJECT_ROOT = "{{config_root}}"
 # Default to local development
-ENVIRONMENT = "local"
 DEPLOYMENT_STRATEGY = "on_cloud"
 PROJECT_ID = "drone-fleet-optimizer-local"
 PYTHONPATH = "src"
 # Automatic virtualenv activation
 _.python.venv = { path = ".venv", create = true }
+_.file = [{ path = ".env" }, "config/{{env.ENVIRONMENT}}.env"]
 # Local emulators
 PUBSUB_EMULATOR_HOST = "localhost:8085"
 FIRESTORE_EMULATOR_HOST = "localhost:8080"
@@ -67,8 +67,15 @@ depends = ["test:unit", "test:integration", "test:e2e"]
 # --- Lint Aggregator ---
 [tasks."lint:all"]
 description = "Run all linters across the monorepo"
-run = {task = "//...:lint"}
+depends = [
+  "//src/ingestion:lint",
+  "//src/simulator:lint",
+  "//src/state-manager:lint",
+  "//src/visualizer:lint",
+  "//infrastructure/on_cloud:lint",
+]
+run = { task = "//...:lint" }
 
 [tasks."format:all"]
 description = "Run all formatters across the monorepo"
-run = {task = "//...:format"}
+run = { task = "//...:format" }
