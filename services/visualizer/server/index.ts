@@ -5,8 +5,7 @@
  * Run with: bun run server/index.ts
  */
 
-import type { DroneTelemetry } from "@shared/schemas";
-import type { Server } from "bun";
+import type { DroneTelemetry } from "@dronefleet/shared";
 import { startInstrumentation } from "./instrumentation";
 import { logger } from "./logger";
 import { getPubSubClient } from "./pubsub-client";
@@ -116,7 +115,7 @@ function handleHealth(): Response {
 /**
  * Main request handler
  */
-function handleRequest(request: Request, _server: Server): Response {
+function handleRequest(request: Request, _server: any): Response {
   const url = new URL(request.url);
 
   // Handle CORS preflight
@@ -146,9 +145,9 @@ pubsubClient.start().catch((err) => {
   // Continue running server even if Pub/Sub fails (so health check works)
 });
 
-const server = Bun.serve({
+const server: any = Bun.serve({
   port: PORT,
-  fetch: handleRequest,
+  fetch: (request) => handleRequest(request, server),
 });
 
 logger.info(

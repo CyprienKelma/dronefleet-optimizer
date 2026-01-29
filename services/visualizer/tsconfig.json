@@ -22,6 +22,7 @@
     "types": ["vite/client", "bun-types"],
     "paths": {
       "@/*": ["./src/*"],
+      "@dronefleet/shared": ["../../shared/ts/src"],
       "@shared/*": ["./shared/*"]
     },
     "baseUrl": "."

@@ -1,4 +1,4 @@
-import type { DroneStatus } from "@shared/schemas";
+import type { DroneStatus } from "@dronefleet/shared";
 import { type Component, Show } from "solid-js";
 
 export const STATUS_COLORS: Record<DroneStatus, string> = {

@@ -1,5 +1,5 @@
+import { type DroneTelemetry, safeParseTelemetry } from "@dronefleet/shared";
 import { type Message, PubSub, type Subscription } from "@google-cloud/pubsub";
-import { type DroneTelemetry, safeParseTelemetry } from "@shared/schemas";
 import { logger } from "./logger";
 
 /**
@@ -41,11 +41,22 @@ export class PubSubClient {
     const projectId =
       options.projectId ||
       process.env.PUBSUB_PROJECT_ID ||
+      process.env.PROJECT_ID ||
       "drone-fleet-optimizer-local";
 
-    this.pubsub = new PubSub({
-      projectId,
-    });
+    const clientConfig: any = { projectId };
+
+    // Explicitly configure emulator if host is provided
+    if (process.env.PUBSUB_EMULATOR_HOST) {
+      clientConfig.apiEndpoint = process.env.PUBSUB_EMULATOR_HOST;
+      // Also disable auth for emulator to avoid metadata lookup warnings
+      clientConfig.credentials = {
+        client_email: "dummy@example.com",
+        private_key: "dummy",
+      };
+    }
+
+    this.pubsub = new PubSub(clientConfig);
 
     this.subscriptionName =
       options.subscriptionName ||

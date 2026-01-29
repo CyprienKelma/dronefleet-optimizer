@@ -9,10 +9,10 @@ const sdk = new NodeSDK({
       _spans: unknown,
       resultCallback: (result: { code: number }) => void,
     ) {
-      // For now, we'll just log traces to debug if needed,
-      // or implement a real exporter like OTLP later.
-      // This placeholder prevents errors if no exporter is configured.
       resultCallback({ code: 0 });
+    }
+    shutdown(): Promise<void> {
+      return Promise.resolve();
     }
   })(),
   instrumentations: [getNodeAutoInstrumentations()],

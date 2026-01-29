@@ -1,4 +1,4 @@
-import { type DroneTelemetry, safeParseTelemetry } from "@shared/schemas";
+import { type DroneTelemetry, safeParseTelemetry } from "@dronefleet/shared";
 import {
   $userConfig,
   logEvent,
@@ -118,7 +118,7 @@ export class TelemetryStream {
       if (!result.success) {
         recordMessageFailed(`Validation failed: ${result.error.message}`);
         logEvent("error", "Telemetry validation failed", {
-          errors: result.error.errors,
+          errors: result.error.issues,
         });
         return;
       }

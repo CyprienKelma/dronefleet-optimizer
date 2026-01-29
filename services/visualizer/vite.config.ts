@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
+      "@dronefleet/shared": resolve(__dirname, "../../shared/ts/src"),
       "@shared": resolve(__dirname, "./shared"),
     },
   },

@@ -1,6 +1,7 @@
 {
   "name": "dronefleet-optimizer",
   "private": true,
+  "workspaces": ["services/*", "shared/ts", "libs/ts/*"],
   "scripts": {
     "test": "echo 'Run tests via mise'",
     "build": "echo 'Run build via mise'"

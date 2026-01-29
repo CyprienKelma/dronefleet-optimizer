@@ -117,7 +117,10 @@ services:
     environment:
       PORT: 3001
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      PUBSUB_PROJECT_ID: drone-fleet-optimizer-local
       PROJECT_ID: drone-fleet-optimizer-local
+      # Disable GCE metadata lookup for local dev
+      GCE_METADATA_HOST: 127.0.0.1
       # Frontend needs to know where to connect for SSE
       VITE_API_URL: http://localhost:3001
     ports:
