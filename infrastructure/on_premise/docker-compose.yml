@@ -18,8 +18,7 @@ services:
     networks:
       - drone-network
 
-  # Ephemeral service to configure topics on emulator start because GCP
-  # emulators don't save topics and content when container is turned off
+  # Ephemeral service to configure topics on emulator start
   pubsub-init:
     image: ghcr.io/astral-sh/uv:python3.11-alpine
     working_dir: /app
@@ -71,6 +70,9 @@ services:
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
       FIRESTORE_EMULATOR_HOST: firestore-emulator:8080
       SPRING_CLOUD_GCP_PROJECT_ID: drone-fleet-optimizer-local
+      PROJECT_ID: drone-fleet-optimizer-local
+    ports:
+      - "8081:8080"
     depends_on:
       pubsub-init:
         condition: service_completed_successfully
@@ -93,6 +95,24 @@ services:
       retries: 5
     networks:
       - drone-network
+
+  optimizer:
+    build:
+      context: ../../
+      dockerfile: src/optimizer/Dockerfile
+    environment:
+      ENVIRONMENT: local
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      STATE_MANAGER_URL: http://state-manager:8080
+    depends_on:
+      state-manager:
+        condition: service_started
+      pubsub-init:
+        condition: service_completed_successfully
+    networks:
+      - drone-network
+    profiles:
+      - full
 
 networks:
   drone-network:

@@ -29,4 +29,4 @@ class MissionOrder(BaseModel):
     sequence: list[MissionAction]
 
     # For tracking
-    request_ids_covered: list[str]  # Which packages does this mission handle
+    order_ids_covered: list[str]  # Which packages does this mission handle

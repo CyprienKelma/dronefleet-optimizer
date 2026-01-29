@@ -19,6 +19,7 @@ terraform = "1.9.0"
 gcloud = "latest"
 ## linters
 prettier = "latest"
+node = "latest"
 
 [env]
 MISE_PROJECT_ROOT = "{{config_root}}"
@@ -74,3 +75,8 @@ depends = [
   "//src/visualizer:lint",
   "//infrastructure/on_cloud:lint",
 ]
+run = {task = "//...:lint"}
+
+[tasks."format:all"]
+description = "Run all formatters across the monorepo"
+run = {task = "//...:format"}

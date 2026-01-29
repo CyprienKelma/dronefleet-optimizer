@@ -1,6 +1,6 @@
 import structlog
 
-from shared.schemas.request import DeliveryRequest
+from shared.schemas.order import DeliveryOrder
 
 from ..messaging.factory import PublisherFactory
 
@@ -8,9 +8,9 @@ from ..messaging.factory import PublisherFactory
 logger = structlog.get_logger(__name__)
 
 
-class RequestService:
+class OrderService:
     """
-    Service responsible for handling delivery requests, validating them,
+    Service responsible for handling delivery orders, validating them,
     and publishing them to the message broker.
     """
 
@@ -18,25 +18,27 @@ class RequestService:
         # Initialize the publisher via the factory pattern
         # This decouples the service from the specific broker (Kafka vs PubSub)
         self.publisher = PublisherFactory.get_publisher()
-        self.topic_name = "requests"  # Topic name as defined in the architecture
 
-    def process_order(self, request: DeliveryRequest) -> str:
+        self.topic_name = "orders"  # Topic name as defined in the architecture
+
+    def process_order(self, order: DeliveryOrder) -> str:
         """
-        Validates and publishes a delivery request.
+        Validates and publishes a delivery order.
 
         Args:
-            request (DeliveryRequest): The validated Pydantic model of the request.
+            order (DeliveryOrder): The validated Pydantic model of the order.
 
         Returns:
-            str: The request_id if successful.
+            str: The order_id if successful.
 
         Raises:
             RuntimeError: If publishing to the message broker fails.
         """
+
         logger.info(
             "Processing delivery request",
-            request_id=request.request_id,
-            priority=request.priority,
+            request_id=order.order_id,
+            priority=order.priority,
         )
 
         # 1. Additional Business Validation (if any)
@@ -45,31 +47,31 @@ class RequestService:
 
         # 2. Serialize Payload
         # model_dump(mode='json') ensures Enums and Datetimes are serialized to strings
-        message_payload = request.model_dump(mode="json")
+        message_payload = order.model_dump(mode="json")
 
         # publish to Event Bus
         try:
             success = self.publisher.publish(self.topic_name, message_payload)
             if not success:
                 logger.error(
-                    "Publisher returned False for order", request_id=request.request_id
+                    "Publisher returned False for order", order_id=order.order_id
                 )
                 raise RuntimeError("Failed to queue the order. Publisher declined.")
 
         except Exception as e:
             logger.error(
                 "Exception while publishing order",
-                request_id=request.request_id,
+                order_id=order.order_id,
                 error=str(e),
             )
             raise RuntimeError(f"Internal error publishing order: {str(e)}") from e
 
         logger.info(
             "Successfully queued order",
-            request_id=request.request_id,
+            order_id=order.order_id,
             topic=self.topic_name,
         )
-        return request.request_id
+        return order.order_id
 
     def shutdown(self):
         """Cleanup resources."""

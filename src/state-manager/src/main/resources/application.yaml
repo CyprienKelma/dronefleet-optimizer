@@ -1,4 +1,4 @@
-# ConfigurConfigation commune à tous les environnements
+# Configuration commune à tous les environnements
 
 spring:
   application:
@@ -52,3 +52,8 @@ app:
   state-manager:
     batch-write-interval: 5000  # 5 secondes (write-behind pattern)
     max-batch-size: 100
+    drones-collection: ${FIRESTORE_COLLECTION_DRONES:drones}
+    orders-collection: ${FIRESTORE_COLLECTION_ORDERS:orders}
+    missions-collection: ${FIRESTORE_COLLECTION_MISSIONS:missions}
+    warehouses-collection: ${FIRESTORE_COLLECTION_WAREHOUSES:warehouses}
+    min-battery-for-optimization: ${MIN_BATTERY_OPTIMIZATION:20}
