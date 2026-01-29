@@ -29,11 +29,10 @@ PROJECT_ID = "drone-fleet-optimizer-local"
 PYTHONPATH = "src"
 # Automatic virtualenv activation
 _.python.venv = { path = ".venv", create = true }
+_.file = [{ path = ".env" }, "config/{{env.ENVIRONMENT}}.env"]
 # Local emulators
 PUBSUB_EMULATOR_HOST = "localhost:8085"
 FIRESTORE_EMULATOR_HOST = "localhost:8080"
-
-_.file = [{path= ".env"},"config/{{env.ENVIRONMENT}}.env"]
 
 # --- Project Setup ---
 [tasks.init]
@@ -75,8 +74,8 @@ depends = [
   "//src/visualizer:lint",
   "//infrastructure/on_cloud:lint",
 ]
-run = {task = "//...:lint"}
+run = { task = "//...:lint" }
 
 [tasks."format:all"]
 description = "Run all formatters across the monorepo"
-run = {task = "//...:format"}
+run = { task = "//...:format" }

@@ -23,7 +23,7 @@ const DronePopup: Component<DronePopupProps> = (props) => {
   const statusColor = () => STATUS_COLORS[props.status] || "#888";
 
   return (
-    <div class="font-mono text-xs min-w-[200px] p-3 bg-[#1a1a1a] color-[#e0e0e0] border border-[#2a2a2a] rounded-lg">
+    <div class="font-mono text-xs min-w-[200px] p-3 bg-[#1a1a1a] text-[#e0e0e0] border border-[#2a2a2a] rounded-lg">
       <div class="font-bold text-sm mb-2 text-[#4ecdc4]">{props.drone_id}</div>
 
       <div class="flex justify-between py-0.5">
