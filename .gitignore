@@ -652,3 +652,4 @@ gradle-app.setting
 *.hprof
 
 # End of https://www.toptal.com/developers/gitignore/api/java,node,linux,macos,python,windows,intellij,terraform,gradle,eclipse
+.btca

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://btca.dev/btca.schema.json",
+  "resources": [
+    {
+      "name": "fastapi",
+      "type": "git",
+      "url": "https://github.com/fastapi/fastapi",
+      "branch": "master",
+      "searchPath": "docs/en/docs",
+      "specialNotes": "FastAPI framework documentation."
+    },
+    {
+      "name": "springBoot",
+      "type": "git",
+      "url": "https://github.com/spring-projects/spring-boot",
+      "branch": "main",
+      "searchPath": "spring-boot-project/spring-boot-docs",
+      "specialNotes": "Spring Boot core documentation."
+    },
+    {
+      "name": "springCloudGcp",
+      "type": "git",
+      "url": "https://github.com/GoogleCloudPlatform/spring-cloud-gcp",
+      "branch": "main",
+      "searchPath": "docs",
+      "specialNotes": "Documentation for Spring Cloud GCP integrations (Pub/Sub, Firestore)."
+    },
+    {
+      "name": "pydantic",
+      "type": "git",
+      "url": "https://github.com/pydantic/pydantic",
+      "branch": "main",
+      "searchPath": "docs",
+      "specialNotes": "Pydantic v2 documentation."
+    },
+    {
+      "name": "googleCloudPython",
+      "type": "git",
+      "url": "https://github.com/googleapis/google-cloud-python",
+      "branch": "main",
+      "specialNotes": "Google Cloud Python client libraries. Focus on Firestore and Pub/Sub sub-packages."
+    },
+    {
+      "name": "orTools",
+      "type": "git",
+      "url": "https://github.com/google/or-tools",
+      "branch": "stable",
+      "searchPath": "docs",
+      "specialNotes": "Google OR-Tools optimization library documentation."
+    },
+    {
+      "name": "biome",
+      "type": "git",
+      "url": "https://github.com/biomejs/biome",
+      "branch": "main",
+      "searchPath": "website/src/content/docs",
+      "specialNotes": "Biome linting and formatting documentation."
+    },
+    {
+      "name": "uv",
+      "type": "git",
+      "url": "https://github.com/astral-sh/uv",
+      "branch": "main",
+      "searchPath": "docs",
+      "specialNotes": "uv package manager documentation."
+    },
+    {
+      "name": "mise",
+      "type": "git",
+      "url": "https://github.com/jdx/mise",
+      "branch": "main",
+      "searchPath": "docs",
+      "specialNotes": "mise tool manager documentation."
+    },
+    {
+      "name": "mkdocsMaterial",
+      "type": "git",
+      "url": "https://github.com/squidfunk/mkdocs-material",
+      "branch": "master",
+      "searchPath": "docs",
+      "specialNotes": "MkDocs Material theme documentation."
+    }
+  ],
+
+  "model": "github-copilot/gemini-3-flash-preview",
+  "provider": "opencode",
+  "providerTimeoutMs": 300000
+}
