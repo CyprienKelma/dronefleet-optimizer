@@ -6,13 +6,12 @@ from datetime import UTC, datetime
 
 import requests
 import structlog
-from dronefleet_shared.models.order import DeliveryOrder
-from dronefleet_shared.models.product import ProductType
-from dronefleet_shared.models.protocol import DroneStatus, UrgencyLevel
+from dronefleet_shared.models.order import Order
+from dronefleet_shared.models.protocol import DroneStatus, OrderPriority, ProductType
 
 # Assuming the shared schemas are available in the python path
 # If running via 'uv run', the python path should be set correctly to include src/
-from dronefleet_shared.models.telemetry import DroneTelemetry, GeoPoint
+from dronefleet_shared.models.telemetry import DroneTelemetry, Position
 from dronefleet_shared.utils.logging_config import setup_logging
 
 # Configuration
@@ -80,7 +79,7 @@ class SimulatedDrone:
         return DroneTelemetry(
             drone_id=self.drone_id,
             timestamp=datetime.now(UTC),
-            position=GeoPoint(lat=self.lat, lon=self.lon),
+            position=Position(lat=self.lat, lon=self.lon),
             battery_percentage=round(self.battery, 2),
             speed_kmh=round(self.speed, 2),
             status=self.status,
@@ -90,7 +89,7 @@ class SimulatedDrone:
 
 class SimulatedOrderGenerator:
     @staticmethod
-    def generate_random_order() -> DeliveryOrder:
+    def generate_random_order() -> Order:
         # Generate coordinates within Paris area
         # (±0.06 to ±0.2 for realistic but distinct locations)
         pickup_lat = PARIS_LAT + random.uniform(-0.1, 0.1)
@@ -101,7 +100,7 @@ class SimulatedOrderGenerator:
         delivery_lat = pickup_lat + random.uniform(-0.05, 0.05)
         delivery_lon = pickup_lon + random.uniform(-0.05, 0.05)
 
-        priority = random.choice(list(UrgencyLevel))
+        priority = random.choice(list(OrderPriority))
         product_type = random.choice(list(ProductType))
 
         contents_map = {
@@ -114,11 +113,12 @@ class SimulatedOrderGenerator:
 
         content = random.choice(contents_map.get(product_type, ["Medical Supplies"]))
 
-        return DeliveryOrder(
+        return Order(
+            id=str(uuid.uuid4()),
             priority=priority,
-            pickup_location=GeoPoint(lat=pickup_lat, lon=pickup_lon),
-            dropoff_location=GeoPoint(lat=delivery_lat, lon=delivery_lon),
-            product_type=product_type,
+            pickup_location=Position(lat=pickup_lat, lon=pickup_lon),
+            delivery_location=Position(lat=delivery_lat, lon=delivery_lon),
+            product_type=product_type.value,
             package_weight_kg=round(random.uniform(0.2, 5.0), 2),
             content_description=content,
             requires_cold_chain=(
@@ -180,11 +180,11 @@ def main():
                 payload = order.model_dump(mode="json")
                 response = requests.post(ORDERS_API_URL, json=payload, timeout=0.5)
                 if response.status_code == 201:
-                    logger.info("Successfully pushed order", order_id=order.order_id)
+                    logger.info("Successfully pushed order", order_id=order.id)
                 else:
                     logger.warning(
                         "Failed to push order",
-                        order_id=order.order_id,
+                        order_id=order.id,
                         status_code=response.status_code,
                     )
             except requests.exceptions.RequestException as e:

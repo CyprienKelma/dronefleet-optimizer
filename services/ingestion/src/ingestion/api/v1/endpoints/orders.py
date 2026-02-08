@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Any
 
-from dronefleet_shared.models.order import DeliveryOrder
+from dronefleet_shared.models.order import Order
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from ....services.order import OrderService
@@ -16,7 +16,7 @@ def get_service() -> OrderService:
 
 @router.post("/orders", status_code=status.HTTP_201_CREATED)
 async def create_order(
-    order: DeliveryOrder, service: OrderService = Depends(get_service)
+    order: Order, service: OrderService = Depends(get_service)
 ) -> dict[str, Any]:
     """
     Ingest a new delivery order.

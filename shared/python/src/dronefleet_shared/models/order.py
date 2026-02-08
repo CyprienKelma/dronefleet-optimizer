@@ -1,48 +1,39 @@
-import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from .product import ProductType
-from .protocol import UrgencyLevel
-from .telemetry import GeoPoint
-
-"""
-Simulator -> Ingestion API -> Queue
-"""
+from .protocol import OrderPriority, OrderStatus
+from .telemetry import Position
 
 
-class DeliveryOrder(BaseModel):
-    order_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+class Order(BaseModel):
+    id: str
+    pickup_location: Position
+    delivery_location: Position
+    status: OrderStatus = OrderStatus.PENDING
+    priority: OrderPriority = OrderPriority.STANDARD
+    product_type: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    priority: UrgencyLevel
+    assigned_drone_id: str | None = None
+    assigned_mission_id: str | None = None
+    solving_session_id: str | None = None
 
-    # Locations
-    pickup_location: GeoPoint  # Where to pick up the package (e.g., Central warehouse)
-    dropoff_location: GeoPoint  # Where to deliver (e.g., South Hospital)
-
-    # Package Details
-    product_type: ProductType
-    package_weight_kg: float = Field(
-        ..., gt=0, description="Total weight including packaging"
-    )
-    content_description: str  # "Covid Vaccines", "O+ Blood"
-
-    # Constraints
-    requires_cold_chain: bool = False
-
-    # Metadata
-    requester_id: str | None = None  # Who asked for this (Doctor ID, Hospital ID)
+    @property
+    def max_delivery_time_minutes(self) -> int:
+        """Calculate deadline based on priority (minutes from creation)."""
+        if self.priority == OrderPriority.CRITICAL:
+            return 15
+        elif self.priority == OrderPriority.HIGH:
+            return 30
+        return 60
 
     class Config:
         json_schema_extra = {
             "example": {
-                "priority": "HIGH",
+                "id": "ORDER-01",
                 "pickup_location": {"lat": 48.85, "lon": 2.35},
-                "dropoff_location": {"lat": 48.90, "lon": 2.40},
+                "delivery_location": {"lat": 48.90, "lon": 2.40},
                 "product_type": "BLOOD",
-                "package_weight_kg": 1.2,
-                "content_description": "O- Negative Blood Bags",
-                "requires_cold_chain": True,
+                "priority": "HIGH",
             }
         }
