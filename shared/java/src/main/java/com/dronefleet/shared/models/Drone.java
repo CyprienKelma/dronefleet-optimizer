@@ -26,8 +26,25 @@ public class Drone {
     private String solvingSessionId;
     private String homeDepotId;
 
+    // Battery calculation metadata
+    private int batteryCapacityMah;
+    private double consumptionPerKm; // % per km
+    private int maxFlightTimeMinutes;
+
     public boolean isAvailable() {
         return status == DroneStatus.IDLE && batteryPercentage > 20.0;
+    }
+
+    /**
+     * Calculate if drone can complete a route and return home.
+     * @param routeDistanceKm Total distance of planned route in km
+     * @param safetyMargin Safety margin percentage (ex: 1.2 = 20% margin)
+     * @return true if battery sufficient
+     */
+    public boolean canCompleteRoute(double routeDistanceKm, double safetyMargin) {
+        double estimatedConsumption = routeDistanceKm * consumptionPerKm * safetyMargin;
+        double remainingAfterRoute = batteryPercentage - estimatedConsumption;
+        return remainingAfterRoute >= 20.0; // Min 20% reserve
     }
 
     // Business rule: Update telemetry and handle low battery status
