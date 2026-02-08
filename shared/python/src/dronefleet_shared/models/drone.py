@@ -22,6 +22,8 @@ class Drone(BaseModel):
 
     # Battery specs
     battery_capacity_mah: int = Field(..., gt=0)
+    consumption_per_km: float = Field(default=2.5, description="% per km")
+    max_flight_time_minutes: int = Field(default=30)
     current_battery_cycles: int = 0
 
     # Current State (Snapshot) - Part of entity definition in some contexts

@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from .protocol import ActionType
+from .protocol import WaypointType
 from .telemetry import GeoPoint
 
 """
@@ -11,22 +11,23 @@ OR Optimizer -> Queue -> State Manager -> Drones
 """
 
 
-class MissionAction(BaseModel):
-    action_type: ActionType
-    target_location: GeoPoint | None = (
-        None  # Null if the action is just "CHARGE" in place
-    )
-    estimated_duration_seconds: int
+class Waypoint(BaseModel):
+    type: WaypointType
+    position: GeoPoint
+    related_order_id: str | None = None
+    related_warehouse_id: str | None = None
 
 
 class MissionOrder(BaseModel):
     mission_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     drone_id: str
-    assigned_at: datetime
+    assigned_at: datetime = Field(default_factory=datetime.utcnow)
 
     # Ordered list of things to do
-    # Example: [FLY_TO(Warehouse), PICKUP, FLY_TO(Hospital), DROPOFF]
-    sequence: list[MissionAction]
+    route: list[Waypoint]
 
     # For tracking
-    order_ids_covered: list[str]  # Which packages does this mission handle
+    order_ids: list[str]  # Which packages does this mission handle
+
+    estimated_battery_consumption: float | None = None
+    estimated_duration_minutes: float | None = None

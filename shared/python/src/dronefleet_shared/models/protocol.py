@@ -34,3 +34,10 @@ class ActionType(str, Enum):
     PICKUP = "PICKUP"  # Load a package
     DROPOFF = "DROPOFF"  # Deliver a package
     CHARGE = "CHARGE"  # Recharge
+
+
+class WaypointType(str, Enum):
+    DEPOT_START = "DEPOT_START"
+    WAREHOUSE_PICKUP = "WAREHOUSE_PICKUP"
+    HOSPITAL_DELIVERY = "HOSPITAL_DELIVERY"
+    DEPOT_RETURN = "DEPOT_RETURN"
