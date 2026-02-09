@@ -45,9 +45,7 @@ public class OrderListener {
                                             .setLat(dto.dropoffLocation().lat())
                                             .setLon(dto.dropoffLocation().lon())
                                             .build())
-                            .setPriority(
-                                    OrderPriority.valueOf(
-                                            "ORDER_PRIORITY_" + dto.priority().toUpperCase()))
+                            .setPriority(parsePriority(dto.priority()))
                             .setProductType(dto.productType() != null ? dto.productType() : "");
 
             if (dto.createdAt() != null) {
@@ -68,6 +66,18 @@ public class OrderListener {
                     e.getMessage(),
                     e);
             throw new RuntimeException("Error processing message", e);
+        }
+    }
+
+    private OrderPriority parsePriority(String priority) {
+        if (priority == null) {
+            return OrderPriority.ORDER_PRIORITY_STANDARD;
+        }
+        try {
+            return OrderPriority.valueOf("ORDER_PRIORITY_" + priority.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown priority '{}', defaulting to STANDARD", priority);
+            return OrderPriority.ORDER_PRIORITY_STANDARD;
         }
     }
 }

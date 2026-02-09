@@ -64,25 +64,36 @@ public class MissionAssignmentPolicy {
         List<Waypoint> waypoints =
                 dto.route().stream()
                         .map(
-                                w ->
-                                        Waypoint.newBuilder()
-                                                .setType(WaypointType.valueOf(w.type()))
-                                                .setPosition(
-                                                        com.dronefleet.shared.models.Position
-                                                                .newBuilder()
-                                                                .setLat(w.position().lat())
-                                                                .setLon(w.position().lon())
-                                                                .build())
-                                                .setRelatedOrderId(
-                                                        w.relatedOrderId() != null
-                                                                ? w.relatedOrderId()
-                                                                : "")
-                                                .setRelatedWarehouseId(
-                                                        w.relatedWarehouseId() != null
-                                                                ? w.relatedWarehouseId()
-                                                                : "")
-                                                .build())
+                                w -> {
+                                    WaypointType waypointType;
+                                    try {
+                                        waypointType = WaypointType.valueOf(w.type());
+                                    } catch (IllegalArgumentException | NullPointerException ex) {
+                                        throw new BusinessRejectionException(
+                                                "Invalid WaypointType: " + w.type());
+                                    }
+                                    return Waypoint.newBuilder()
+                                            .setType(waypointType)
+                                            .setPosition(
+                                                    com.dronefleet.shared.models.Position
+                                                            .newBuilder()
+                                                            .setLat(w.position().lat())
+                                                            .setLon(w.position().lon())
+                                                            .build())
+                                            .setRelatedOrderId(
+                                                    w.relatedOrderId() != null
+                                                            ? w.relatedOrderId()
+                                                            : "")
+                                            .setRelatedWarehouseId(
+                                                    w.relatedWarehouseId() != null
+                                                            ? w.relatedWarehouseId()
+                                                            : "")
+                                            .build();
+                                })
                         .collect(Collectors.toList());
+
+        // use same current instant time to avoid mismatched time :
+        Instant now = Instant.now();
 
         final Mission mission =
                 Mission.newBuilder()
@@ -94,8 +105,8 @@ public class MissionAssignmentPolicy {
                         .setStatus("ACTIVE")
                         .setStartTime(
                                 com.google.protobuf.Timestamp.newBuilder()
-                                        .setSeconds(Instant.now().getEpochSecond())
-                                        .setNanos(Instant.now().getNano())
+                                        .setSeconds(now.getEpochSecond())
+                                        .setNanos(now.getNano())
                                         .build())
                         .setEstimatedBatteryConsumption(dto.estimatedBatteryConsumption())
                         .setEstimatedDurationMinutes(dto.estimatedDurationMinutes())

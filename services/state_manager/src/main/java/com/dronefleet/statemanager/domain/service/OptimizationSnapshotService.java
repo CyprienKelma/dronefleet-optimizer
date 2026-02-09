@@ -49,12 +49,13 @@ public class OptimizationSnapshotService implements GetOptimizationSnapshotUseCa
 
         List<Warehouse> warehouses = warehouseRepository.findAll();
 
+        Instant now = Instant.now();
         return OptimizationSnapshot.newBuilder()
                 .setSessionId(sessionId)
                 .setTimestamp(
                         com.google.protobuf.Timestamp.newBuilder()
-                                .setSeconds(Instant.now().getEpochSecond())
-                                .setNanos(Instant.now().getNano())
+                                .setSeconds(now.getEpochSecond())
+                                .setNanos(now.getNano())
                                 .build())
                 .addAllDrones(idleDrones)
                 .setDepot(depot)

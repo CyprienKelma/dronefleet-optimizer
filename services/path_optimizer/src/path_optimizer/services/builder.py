@@ -9,9 +9,9 @@ logger = structlog.get_logger(__name__)
 
 def get_max_delivery_time_minutes(priority: OrderPriority) -> int:
     """Calculate deadline based on priority (minutes from creation)."""
-    if priority == OrderPriority.CRITICAL:
+    if priority == OrderPriority.ORDER_PRIORITY_CRITICAL:
         return 15
-    elif priority == OrderPriority.HIGH:
+    elif priority == OrderPriority.ORDER_PRIORITY_HIGH:
         return 30
     return 60
 

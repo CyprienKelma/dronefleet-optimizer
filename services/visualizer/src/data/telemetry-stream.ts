@@ -113,7 +113,28 @@ export class TelemetryStream {
         return;
       }
 
-      const telemetry = DroneTelemetry.fromJSON(rawData);
+      // Convert snake_case keys from ingestion into camelCase expected by ts-proto fromJSON
+      const snakeToCamel = (key: string): string =>
+        key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
+
+      const toCamelCaseKeys = (value: unknown): unknown => {
+        if (Array.isArray(value)) {
+          return value.map((item) => toCamelCaseKeys(item));
+        }
+        if (value && typeof value === "object" && value !== null) {
+          const obj = value as Record<string, unknown>;
+          const result: Record<string, unknown> = {};
+          for (const [key, val] of Object.entries(obj)) {
+            const newKey = snakeToCamel(key);
+            result[newKey] = toCamelCaseKeys(val);
+          }
+          return result;
+        }
+        return value;
+      };
+
+      const camelCasedData = toCamelCaseKeys(rawData);
+      const telemetry = DroneTelemetry.fromJSON(camelCasedData);
 
       recordMessageProcessed();
 
