@@ -32,3 +32,13 @@ repos:
     hooks:
       - id: terraform_fmt
       - id: terraform_validate
+
+  # Protobuf schema sync check
+  - repo: local
+    hooks:
+      - id: proto-sync-check
+        name: Check proto-generated models are up to date
+        entry: bash -c 'cd shared/proto && mise exec -- buf generate && git diff --exit-code -- ../java/src/main/java/com/dronefleet/shared/models/ ../python/src/dronefleet_shared/models/ ../ts/src/schemas/'
+        language: system
+        files: '\.(proto|java|py|ts)$'
+        pass_filenames: false

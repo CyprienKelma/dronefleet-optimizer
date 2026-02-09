@@ -23,7 +23,7 @@ run = "bun run vite preview"
 
 [tasks.lint]
 description = "Lint TypeScript code with biome"
-run = "bunx @biomejs/biome check --write ."
+run = "bun x @biomejs/biome check --write ."
 
 [tasks.typecheck]
 description = "Run TypeScript type checking"
