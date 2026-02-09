@@ -22,7 +22,18 @@ jobs:
         with:
           input: shared/proto
 
+      - name: Check if base branch has proto files
+        id: base-protos
+        run: |
+          git fetch origin main --depth=1 2>/dev/null || true
+          if git ls-tree -r origin/main --name-only 2>/dev/null | grep -q '\.proto$'; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check for breaking changes
+        if: steps.base-protos.outputs.exists == 'true'
         uses: bufbuild/buf-breaking-action@v1
         with:
           input: shared/proto
@@ -37,6 +48,6 @@ jobs:
             ../python/src/dronefleet_shared/models/ \
             ../ts/src/schemas/; then
             echo "ERROR: Generated models are out of date."
-            echo "Run 'mise run proto:generate' and commit the result."
+            echo "Run 'mise run //shared/proto:generate' and commit the result."
             exit 1
           fi
