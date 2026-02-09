@@ -27,8 +27,9 @@ async def ingest_telemetry(
     """
     try:
         # Map Schema to Shared Model
-        telemetry_data = telemetry_in.model_dump()
-        telemetry = DroneTelemetry(**telemetry_data)
+        # Use mode="json" to ensure datetimes are serialized to strings for betterproto
+        telemetry_data = telemetry_in.model_dump(mode="json")
+        telemetry = DroneTelemetry().from_dict(telemetry_data)
 
         service.process_telemetry(telemetry)
         return {"status": "ACK", "drone_id": telemetry.drone_id}

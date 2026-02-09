@@ -28,8 +28,9 @@ async def create_order(
     """
     try:
         # Map Schema to Shared Model
-        order_data = order_in.model_dump()
-        order = Order(**order_data)
+        # Use mode="json" to ensure datetimes are serialized to strings for betterproto
+        order_data = order_in.model_dump(mode="json")
+        order = Order().from_dict(order_data)
 
         order_id = service.process_order(order)
         return {

@@ -1,6 +1,7 @@
 import structlog
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
-from src.path_optimizer.services.builder import VRPProblem
+
+from .builder import VRPProblem
 
 logger = structlog.get_logger(__name__)
 

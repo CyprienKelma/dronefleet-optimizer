@@ -34,16 +34,37 @@ public class OrderListener {
             // mapping DTO -> domain model (Immutable Builder)
             Order.Builder builder =
                     Order.newBuilder()
-                            .setId(dto.orderId())
+                            .setId(
+                                    dto.orderId() != null
+                                            ? dto.orderId()
+                                            : "ORDER-"
+                                                    + java.util
+                                                            .UUID
+                                                            .randomUUID()
+                                                            .toString()
+                                                            .substring(0, 8)
+                                                            .toUpperCase())
                             .setPickupLocation(
                                     Position.newBuilder()
-                                            .setLat(dto.pickupLocation().lat())
-                                            .setLon(dto.pickupLocation().lon())
+                                            .setLat(
+                                                    dto.pickupLocation() != null
+                                                            ? dto.pickupLocation().lat()
+                                                            : 0.0)
+                                            .setLon(
+                                                    dto.pickupLocation() != null
+                                                            ? dto.pickupLocation().lon()
+                                                            : 0.0)
                                             .build())
                             .setDeliveryLocation(
                                     Position.newBuilder()
-                                            .setLat(dto.dropoffLocation().lat())
-                                            .setLon(dto.dropoffLocation().lon())
+                                            .setLat(
+                                                    dto.dropoffLocation() != null
+                                                            ? dto.dropoffLocation().lat()
+                                                            : 0.0)
+                                            .setLon(
+                                                    dto.dropoffLocation() != null
+                                                            ? dto.dropoffLocation().lon()
+                                                            : 0.0)
                                             .build())
                             .setPriority(parsePriority(dto.priority()))
                             .setProductType(dto.productType() != null ? dto.productType() : "");
@@ -70,11 +91,15 @@ public class OrderListener {
     }
 
     private OrderPriority parsePriority(String priority) {
-        if (priority == null) {
+        if (priority == null || priority.isEmpty()) {
             return OrderPriority.ORDER_PRIORITY_STANDARD;
         }
         try {
-            return OrderPriority.valueOf("ORDER_PRIORITY_" + priority.toUpperCase());
+            String priorityStr = priority.toUpperCase();
+            if (!priorityStr.startsWith("ORDER_PRIORITY_")) {
+                priorityStr = "ORDER_PRIORITY_" + priorityStr;
+            }
+            return OrderPriority.valueOf(priorityStr);
         } catch (IllegalArgumentException e) {
             log.warn("Unknown priority '{}', defaulting to STANDARD", priority);
             return OrderPriority.ORDER_PRIORITY_STANDARD;

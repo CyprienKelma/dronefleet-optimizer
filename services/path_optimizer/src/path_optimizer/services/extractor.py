@@ -1,6 +1,7 @@
 import structlog
 from dronefleet_shared.models import MissionAssignment, Position, Waypoint
-from src.path_optimizer.services.builder import VRPProblem
+
+from .builder import VRPProblem
 
 logger = structlog.get_logger(__name__)
 

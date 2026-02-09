@@ -39,16 +39,28 @@ public class TelemetryListener {
             // mapping DTO -> domain model (Immutable Builder)
             DroneTelemetry droneDomainModel =
                     DroneTelemetry.newBuilder()
-                            .setDroneId(dto.droneId())
+                            .setDroneId(dto.droneId() != null ? dto.droneId() : "UNKNOWN")
                             .setTimestamp(
-                                    com.google.protobuf.Timestamp.newBuilder()
-                                            .setSeconds(dto.timestamp().toEpochSecond())
-                                            .setNanos(dto.timestamp().getNano())
-                                            .build())
+                                    dto.timestamp() != null
+                                            ? com.google.protobuf.Timestamp.newBuilder()
+                                                    .setSeconds(dto.timestamp().toEpochSecond())
+                                                    .setNanos(dto.timestamp().getNano())
+                                                    .build()
+                                            : com.google.protobuf.Timestamp.newBuilder()
+                                                    .setSeconds(
+                                                            java.time.Instant.now()
+                                                                    .getEpochSecond())
+                                                    .build())
                             .setPosition(
                                     Position.newBuilder()
-                                            .setLat(dto.position().lat())
-                                            .setLon(dto.position().lon())
+                                            .setLat(
+                                                    dto.position() != null
+                                                            ? dto.position().lat()
+                                                            : 0.0)
+                                            .setLon(
+                                                    dto.position() != null
+                                                            ? dto.position().lon()
+                                                            : 0.0)
                                             .build())
                             .setBatteryPercentage(dto.batteryPercentage())
                             .setSpeedKmh(dto.speedKmh())

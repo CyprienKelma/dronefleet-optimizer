@@ -11,6 +11,7 @@ from dronefleet_shared.models import (
     DroneTelemetry,
     Order,
     OrderPriority,
+    OrderStatus,
     Position,
     ProductType,
 )
@@ -40,7 +41,7 @@ class SimulatedDrone:
         self.lon = PARIS_LON + (random.uniform(-0.05, 0.05))
         self.battery = random.uniform(70.0, 100.0)
         self.speed = 0.0
-        self.status = DroneStatus.IDLE
+        self.status = DroneStatus.DRONE_STATUS_IDLE
         self.mission_id = None
 
         # Movement vector (simple random walk)
@@ -50,7 +51,7 @@ class SimulatedDrone:
     def update(self):
         """Update drone state for the next time step."""
         # Update position
-        if self.status in [DroneStatus.MOVING, DroneStatus.DELIVERING]:
+        if self.status in [DroneStatus.DRONE_STATUS_MOVING, DroneStatus.DRONE_STATUS_DELIVERING]:
             self.lat += self.lat_velocity
             self.lon += self.lon_velocity
             self.speed = random.uniform(30.0, 60.0)  # km/h
@@ -61,21 +62,21 @@ class SimulatedDrone:
 
         # Simple state machine simulation
         # 10% chance to start moving if IDLE
-        if self.status == DroneStatus.IDLE and random.random() < 0.1:
-            self.status = DroneStatus.MOVING
+        if self.status == DroneStatus.DRONE_STATUS_IDLE and random.random() < 0.1:
+            self.status = DroneStatus.DRONE_STATUS_MOVING
             self.lat_velocity = random.uniform(-0.0005, 0.0005)
             self.lon_velocity = random.uniform(-0.0005, 0.0005)
             self.mission_id = str(uuid.uuid4())
 
         # 5% chance to stop if MOVING
-        elif self.status == DroneStatus.MOVING and random.random() < 0.05:
-            self.status = DroneStatus.IDLE
+        elif self.status == DroneStatus.DRONE_STATUS_MOVING and random.random() < 0.05:
+            self.status = DroneStatus.DRONE_STATUS_IDLE
             self.mission_id = None
 
         # Clamp battery
         if self.battery < 0:
             self.battery = 0
-            self.status = DroneStatus.IDLE
+            self.status = DroneStatus.DRONE_STATUS_IDLE
 
     def get_telemetry(self) -> DroneTelemetry:
         return DroneTelemetry(
@@ -105,29 +106,24 @@ class SimulatedOrderGenerator:
         priority = random.choice(list(OrderPriority))
         product_type = random.choice(list(ProductType))
 
-        contents_map = {
-            ProductType.BLOOD: ["O- Negative Blood Bags", "A+ Plasma", "Platelets"],
-            ProductType.MEDICINE: ["Antibiotics", "Insulin", "Painkillers"],
-            ProductType.VACCINE: ["Covid Vaccines", "Flu Vaccines"],
-            ProductType.ORGAN: ["Kidney", "Heart", "Liver"],
-            ProductType.MEDICAL_DEVICE: ["Defibrillator", "EPIPen", "First Aid Kit"],
-        }
+        # contents_map = {
+        #     ProductType.PRODUCT_TYPE_BLOOD: ["O- Negative Blood Bags", "A+ Plasma", "Platelets"],
+        #     ProductType.PRODUCT_TYPE_MEDICINE: ["Antibiotics", "Insulin", "Painkillers"],
+        #     ProductType.PRODUCT_TYPE_VACCINE: ["Covid Vaccines", "Flu Vaccines"],
+        #     ProductType.PRODUCT_TYPE_ORGAN: ["Kidney", "Heart", "Liver"],
+        #     ProductType.PRODUCT_TYPE_MEDICAL_DEVICE: ["Defibrillator", "EPIPen", "First Aid Kit"],
+        # }
 
-        content = random.choice(contents_map.get(product_type, ["Medical Supplies"]))
+        # content = random.choice(contents_map.get(product_type, ["Medical Supplies"]))
 
         return Order(
             id=str(uuid.uuid4()),
             priority=priority,
             pickup_location=Position(lat=pickup_lat, lon=pickup_lon),
             delivery_location=Position(lat=delivery_lat, lon=delivery_lon),
-            product_type=product_type.value,
-            package_weight_kg=round(random.uniform(0.2, 5.0), 2),
-            content_description=content,
-            requires_cold_chain=(
-                product_type
-                in [ProductType.VACCINE, ProductType.BLOOD, ProductType.ORGAN]
-            ),
-            requester_id=f"HOSP-{random.randint(1, 100):03d}",
+            product_type=product_type.name,
+            status=OrderStatus.ORDER_STATUS_PENDING,
+            created_at=datetime.now(UTC),
         )
 
 
@@ -157,13 +153,19 @@ def main():
             telemetry = drone.get_telemetry()
 
             try:
-                payload = telemetry.model_dump(mode="json")
+                payload = telemetry.to_dict()
+                # Betterproto to_dict doesn't serialize datetime to string by default
+                if isinstance(payload.get("timestamp"), datetime):
+                    payload["timestamp"] = payload["timestamp"].isoformat()
+
                 response = requests.post(TELEMETRY_API_URL, json=payload, timeout=0.5)
                 if response.status_code != 202:
                     logger.warning(
                         "Failed to push telemetry",
                         drone_id=drone.drone_id,
                         status_code=response.status_code,
+                        error=response.text,
+                        payload=payload,
                     )
 
             except requests.exceptions.RequestException as e:
@@ -174,12 +176,16 @@ def main():
             order = SimulatedOrderGenerator.generate_random_order()
             logger.info(
                 "Generating new random order",
-                order_id=order.order_id,
+                order_id=order.id,
                 priority=order.priority,
             )
 
             try:
-                payload = order.model_dump(mode="json")
+                payload = order.to_dict()
+                # Serialize any datetime fields if present (created_at might be None or datetime)
+                if isinstance(payload.get("created_at"), datetime):
+                    payload["created_at"] = payload["created_at"].isoformat()
+
                 response = requests.post(ORDERS_API_URL, json=payload, timeout=0.5)
                 if response.status_code == 201:
                     logger.info("Successfully pushed order", order_id=order.id)
