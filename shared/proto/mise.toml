@@ -1,0 +1,21 @@
+# protobuf schema tasks (buf)
+
+[tasks.lint]
+description = "Lint protobuf definitions"
+run = "buf lint"
+
+[tasks.format]
+description = "Format protobuf files"
+run = "buf format -w"
+
+[tasks.generate]
+description = "Generate model code from proto definitions into shared/*/models/"
+run = "buf generate"
+
+[tasks.breaking]
+description = "Check for breaking schema changes against main branch"
+run = "buf breaking --against '../../.git#branch=main,subdir=shared/proto'"
+
+[tasks.check]
+description = "Full proto validation (lint + breaking + generate)"
+depends = ["lint", "breaking", "generate"]

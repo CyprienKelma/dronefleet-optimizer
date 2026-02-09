@@ -1,7 +1,8 @@
 from functools import lru_cache
 from typing import Any
 
-from dronefleet_shared.models.telemetry import DroneTelemetry
+from dronefleet_shared.models import DroneTelemetry
+from dronefleet_shared.schemas import DroneTelemetrySchema
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from ....services.telemetry import TelemetryService
@@ -16,7 +17,7 @@ def get_service() -> TelemetryService:
 
 @router.post("/telemetry", status_code=status.HTTP_202_ACCEPTED)
 async def ingest_telemetry(
-    telemetry: DroneTelemetry, service: TelemetryService = Depends(get_service)
+    telemetry_in: DroneTelemetrySchema, service: TelemetryService = Depends(get_service)
 ) -> dict[str, Any]:
     """
     Ingest high-frequency drone telemetry.
@@ -25,6 +26,10 @@ async def ingest_telemetry(
     - Pushes to 'telemetry' topic (fire and forget pattern mostly)
     """
     try:
+        # Map Schema to Shared Model
+        telemetry_data = telemetry_in.model_dump()
+        telemetry = DroneTelemetry(**telemetry_data)
+
         service.process_telemetry(telemetry)
         return {"status": "ACK", "drone_id": telemetry.drone_id}
     except Exception as e:

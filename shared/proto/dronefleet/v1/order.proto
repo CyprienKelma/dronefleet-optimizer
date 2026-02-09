@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package dronefleet.v1;
+
+import "dronefleet/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+message Order {
+  string id = 1;
+  Position pickup_location = 2;
+  Position delivery_location = 3;
+  OrderStatus status = 4;
+  OrderPriority priority = 5;
+  string product_type = 6;
+  google.protobuf.Timestamp created_at = 7;
+  string assigned_drone_id = 8;
+  string assigned_mission_id = 9;
+  string solving_session_id = 10;
+}

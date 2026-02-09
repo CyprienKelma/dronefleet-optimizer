@@ -5,12 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.stereotype.Component;
 
-import com.dronefleet.shared.models.DroneStatus;
 import com.dronefleet.shared.models.DroneTelemetry;
 import com.dronefleet.shared.models.Position;
 import com.dronefleet.statemanager.application.dto.TelemetryEventDto;
 import com.dronefleet.statemanager.domain.exception.BusinessRejectionException;
 import com.dronefleet.statemanager.domain.port.in.UpdateDroneStateUseCase;
+import com.dronefleet.statemanager.domain.service.DronePolicy;
 
 /** Inbound adapter that listens to Pub/Sub messages and routes them to the domain. */
 @Slf4j
@@ -19,11 +19,15 @@ public class TelemetryListener {
 
     private final UpdateDroneStateUseCase updateDroneStateUseCase;
     private final ObjectMapper objectMapper;
+    private final DronePolicy dronePolicy;
 
     public TelemetryListener(
-            UpdateDroneStateUseCase updateDroneStateUseCase, ObjectMapper objectMapper) {
+            UpdateDroneStateUseCase updateDroneStateUseCase,
+            ObjectMapper objectMapper,
+            DronePolicy dronePolicy) {
         this.updateDroneStateUseCase = updateDroneStateUseCase;
         this.objectMapper = objectMapper;
+        this.dronePolicy = dronePolicy;
     }
 
     @ServiceActivator(inputChannel = "telemetryInputChannel")
@@ -32,16 +36,26 @@ public class TelemetryListener {
             log.debug("Received telemetry payload: {}", payload);
             TelemetryEventDto dto = objectMapper.readValue(payload, TelemetryEventDto.class);
 
-            // mapping DTO -> domain model
+            // mapping DTO -> domain model (Immutable Builder)
             DroneTelemetry droneDomainModel =
-                    new DroneTelemetry(
-                            dto.droneId(),
-                            dto.timestamp(),
-                            new Position(dto.position().lat(), dto.position().lon()),
-                            dto.batteryPercentage(),
-                            dto.speedKmh(),
-                            DroneStatus.parseStatus(dto.status()),
-                            dto.currentMissionId());
+                    DroneTelemetry.newBuilder()
+                            .setDroneId(dto.droneId())
+                            .setTimestamp(
+                                    com.google.protobuf.Timestamp.newBuilder()
+                                            .setSeconds(dto.timestamp().toEpochSecond())
+                                            .setNanos(dto.timestamp().getNano())
+                                            .build())
+                            .setPosition(
+                                    Position.newBuilder()
+                                            .setLat(dto.position().lat())
+                                            .setLon(dto.position().lon())
+                                            .build())
+                            .setBatteryPercentage(dto.batteryPercentage())
+                            .setSpeedKmh(dto.speedKmh())
+                            .setStatus(dronePolicy.parseStatus(dto.status()))
+                            .setCurrentMissionId(
+                                    dto.currentMissionId() != null ? dto.currentMissionId() : "")
+                            .build();
 
             updateDroneStateUseCase.handleTelemetry(droneDomainModel);
         } catch (BusinessRejectionException e) {

@@ -21,5 +21,7 @@ public class AppProperties {
 
     private String warehousesCollection;
 
+    private String depotsCollection;
+
     private int minBatteryForOptimization = 20;
 }

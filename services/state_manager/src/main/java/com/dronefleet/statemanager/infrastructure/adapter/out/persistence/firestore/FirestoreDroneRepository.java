@@ -68,7 +68,7 @@ public class FirestoreDroneRepository implements DroneRepository {
             ApiFuture<QuerySnapshot> future =
                     firestore
                             .collection(appProperties.getDronesCollection())
-                            .whereEqualTo("status", DroneStatus.IDLE.name())
+                            .whereEqualTo("status", DroneStatus.DRONE_STATUS_IDLE.name())
                             .whereGreaterThanOrEqualTo(
                                     "batteryPercentage", (double) minBatteryPercent)
                             .get();

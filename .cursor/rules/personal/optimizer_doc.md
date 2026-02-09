@@ -317,7 +317,7 @@ Architecture proposée pour structurer géographiquement le système.
 *   **Données chaudes (Telemetry, Orders, Missions)** -> **Pub/Sub**
 *   **Données froides/Réf (Regions, Depots, Warehouses, Drones)** -> **REST API**
 
-## 7. Structure à adopter pour l'Optimizer
+## 7. Structure à adopter pour l'Optimizers
 
 ```
 src/optimizer/
@@ -351,6 +351,7 @@ src/ingestion/api/v1/
 │       ├── depots.py     # GET/POST/PUT/DELETE /admin/depots
 │       ├── warehouses.py # GET/POST/PUT/DELETE /admin/warehouses
 │       └── drones.py     # GET/POST/PUT /admin/drones (register drone)
+
 ````
 
 
@@ -364,7 +365,7 @@ src/ingestion/api/v1/
 
 
 ## Schéma logique :
-```mermaid
+````mermaid
 sequenceDiagram
     participant Scheduler as Cloud Scheduler (10s)
     participant Optimizer as Optimizer (Python)
@@ -382,4 +383,4 @@ sequenceDiagram
     PubSub->>SM: DecisionListener receives MissionAssignment
     SM->>Firestore: Transaction: Create mission, update drone/order status
     SM->>Firestore: Rollback RESERVED->IDLE, SOLVING->PENDING
-```
+````

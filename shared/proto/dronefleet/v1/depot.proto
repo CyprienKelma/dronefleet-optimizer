@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package dronefleet.v1;
+
+import "dronefleet/v1/common.proto";
+
+message Depot {
+  string id = 1;
+  string name = 2;
+  Position position = 3;
+  int32 capacity = 4;
+  int32 charging_slots = 5;
+}

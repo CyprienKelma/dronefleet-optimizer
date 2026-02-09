@@ -1,4 +1,4 @@
-import { type DroneTelemetry, safeParseTelemetry } from "@dronefleet/shared";
+import { DroneStatus, DroneTelemetry } from "@dronefleet/shared";
 import {
   $userConfig,
   logEvent,
@@ -113,20 +113,12 @@ export class TelemetryStream {
         return;
       }
 
-      const result = safeParseTelemetry(rawData);
-
-      if (!result.success) {
-        recordMessageFailed(`Validation failed: ${result.error.message}`);
-        logEvent("error", "Telemetry validation failed", {
-          errors: result.error.issues,
-        });
-        return;
-      }
+      const telemetry = DroneTelemetry.fromJSON(rawData);
 
       recordMessageProcessed();
 
       if (this.onMessage) {
-        this.onMessage(result.data);
+        this.onMessage(telemetry);
       }
     } catch (error) {
       const errorMessage =
@@ -197,9 +189,13 @@ export class TelemetryStream {
       };
     }
 
-    const statuses: Array<
-      "IDLE" | "MOVING" | "DELIVERING" | "CHARGING" | "MAINTENANCE"
-    > = ["IDLE", "MOVING", "DELIVERING", "CHARGING", "MAINTENANCE"];
+    const statuses: DroneStatus[] = [
+      DroneStatus.DRONE_STATUS_IDLE,
+      DroneStatus.DRONE_STATUS_MOVING,
+      DroneStatus.DRONE_STATUS_DELIVERING,
+      DroneStatus.DRONE_STATUS_CHARGING,
+      DroneStatus.DRONE_STATUS_MAINTENANCE,
+    ];
 
     // Emit telemetry updates every second
     this.mockInterval = setInterval(() => {
@@ -230,7 +226,7 @@ export class TelemetryStream {
         current_mission_id:
           Math.random() > 0.5
             ? `MISSION-${Math.floor(Math.random() * 1000)}`
-            : null,
+            : "",
       };
 
       recordMessageReceived();

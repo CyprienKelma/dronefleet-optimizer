@@ -21,4 +21,4 @@ class StateManagerClient:
         response.raise_for_status()
 
         snapshot_data = response.json()
-        return OptimizationSnapshot.model_validate(snapshot_data)
+        return OptimizationSnapshot().from_dict(snapshot_data)

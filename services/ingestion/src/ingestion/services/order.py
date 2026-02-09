@@ -1,6 +1,6 @@
 import structlog
 from dronefleet_messaging.factory import PublisherFactory
-from dronefleet_shared.models.order import Order
+from dronefleet_shared.models import Order
 
 # Configure logging
 logger = structlog.get_logger(__name__)
@@ -44,8 +44,8 @@ class OrderService:
         # For now, Pydantic schema validation is considered sufficient for ingestion.
 
         # 2. Serialize Payload
-        # model_dump(mode='json') ensures Enums and Datetimes are serialized to strings
-        message_payload = order.model_dump(mode="json")
+        # to_dict() ensures Enums and Datetimes are serialized correctly for JSON
+        message_payload = order.to_dict()
 
         # publish to Event Bus
         try:

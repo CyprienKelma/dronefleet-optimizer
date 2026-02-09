@@ -1,11 +1,11 @@
-arguments=--init-script /home/bafbi/.local/share/opencode/bin/jdtls/config_linux/org.eclipse.osgi/58/0/.cp/gradle/init/init.gradle
-auto.sync=false
+arguments=--init-script /var/folders/rb/lqnd157d6tv4bxtg214sv2xc0000gn/T/db3b08fc4a9ef609cb16b96b200fa13e563f396e9bb1ed0905fdab7bc3bc513b.gradle --init-script /var/folders/rb/lqnd157d6tv4bxtg214sv2xc0000gn/T/52cde0cfcf3e28b8b7510e992210d9614505e0911af0c190bd590d7158574963.gradle
+auto.sync=true
 build.scans.enabled=false
 connection.gradle.distribution=GRADLE_DISTRIBUTION(VERSION(8.9))
-connection.project.dir=../../services/state_manager
+connection.project.dir=
 eclipse.preferences.version=1
 gradle.user.home=
-java.home=/home/bafbi/.local/share/mise/installs/java/temurin-21.0.10+7.0.LTS
+java.home=/opt/homebrew/Cellar/openjdk/25.0.1/libexec/openjdk.jdk/Contents/Home
 jvm.arguments=
 offline.mode=false
 override.workspace.settings=true

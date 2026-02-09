@@ -3,7 +3,9 @@ package com.dronefleet.statemanager.domain.service;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +14,9 @@ import com.dronefleet.shared.models.DroneStatus;
 import com.dronefleet.shared.models.Mission;
 import com.dronefleet.shared.models.Order;
 import com.dronefleet.shared.models.OrderStatus;
-import com.dronefleet.shared.models.Position;
+import com.dronefleet.shared.models.Waypoint;
+import com.dronefleet.shared.models.WaypointType;
+import com.dronefleet.statemanager.application.dto.MissionAssignmentDto;
 import com.dronefleet.statemanager.domain.exception.BusinessRejectionException;
 import com.dronefleet.statemanager.domain.port.out.StateTransactionPort.MissionAssignmentResult;
 
@@ -22,66 +26,100 @@ import com.dronefleet.statemanager.domain.port.out.StateTransactionPort.MissionA
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class MissionAssignmentPolicy {
 
+    private final DronePolicy dronePolicy;
+
     /**
-     * Executes the business logic for assigning a drone to an order.
+     * Executes the business logic for assigning a drone to multiple orders.
      *
      * @param drone current drone state from repository (inside transaction)
-     * @param order current order state from repository (inside transaction)
-     * @param route planned route
+     * @param orders current orders state from repository (inside transaction)
+     * @param dto the mission assignment details from optimizer
      * @return the result containing the new mission and updated entities
      */
     public MissionAssignmentResult computeAssignment(
-            Drone drone, Order order, List<Position> route) {
-        // Idempotency check: if order is already assigned to this drone, return current state
-        if (order.getStatus() == OrderStatus.ASSIGNED
-                && drone.getId().equals(order.getAssignedDroneId())) {
-            log.info(
-                    "Order {} already assigned to drone {}. Skipping mission creation"
-                            + " (idempotent).",
-                    order.getId(),
-                    drone.getId());
-            return new MissionAssignmentResult(null, drone, order);
-        }
+            Drone drone, List<Order> orders, MissionAssignmentDto dto) {
 
-        // Validation: Optimizer locks drones as RESERVED and orders as SOLVING
-        if (drone.getStatus() != DroneStatus.IDLE && drone.getStatus() != DroneStatus.RESERVED) {
+        // Validation
+        if (!dronePolicy.canAcceptMission(drone.getStatus())) {
             throw new BusinessRejectionException(
                     "Drone " + drone.getId() + " is not available. Status: " + drone.getStatus());
         }
 
-        if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.SOLVING) {
-            throw new BusinessRejectionException(
-                    "Order "
-                            + order.getId()
-                            + " is not in PENDING or SOLVING status. Status: "
-                            + order.getStatus());
+        for (Order order : orders) {
+            if (order.getStatus() != OrderStatus.ORDER_STATUS_PENDING) {
+                throw new BusinessRejectionException(
+                        "Order "
+                                + order.getId()
+                                + " is not in PENDING status. Status: "
+                                + order.getStatus());
+            }
         }
 
         // Create Mission
         final String missionId = UUID.randomUUID().toString();
+
+        List<Waypoint> waypoints =
+                dto.route().stream()
+                        .map(
+                                w ->
+                                        Waypoint.newBuilder()
+                                                .setType(WaypointType.valueOf(w.type()))
+                                                .setPosition(
+                                                        com.dronefleet.shared.models.Position
+                                                                .newBuilder()
+                                                                .setLat(w.position().lat())
+                                                                .setLon(w.position().lon())
+                                                                .build())
+                                                .setRelatedOrderId(
+                                                        w.relatedOrderId() != null
+                                                                ? w.relatedOrderId()
+                                                                : "")
+                                                .setRelatedWarehouseId(
+                                                        w.relatedWarehouseId() != null
+                                                                ? w.relatedWarehouseId()
+                                                                : "")
+                                                .build())
+                        .collect(Collectors.toList());
+
         final Mission mission =
-                Mission.builder()
-                        .id(missionId)
-                        .droneId(drone.getId())
-                        .orderId(order.getId())
-                        .route(route)
-                        .status("ACTIVE")
-                        .startTime(Instant.now())
+                Mission.newBuilder()
+                        .setId(missionId)
+                        .setDroneId(drone.getId())
+                        .addAllOrderIds(
+                                orders.stream().map(Order::getId).collect(Collectors.toList()))
+                        .addAllRoute(waypoints)
+                        .setStatus("ACTIVE")
+                        .setStartTime(
+                                com.google.protobuf.Timestamp.newBuilder()
+                                        .setSeconds(Instant.now().getEpochSecond())
+                                        .setNanos(Instant.now().getNano())
+                                        .build())
+                        .setEstimatedBatteryConsumption(dto.estimatedBatteryConsumption())
+                        .setEstimatedDurationMinutes(dto.estimatedDurationMinutes())
                         .build();
 
-        // Update Drone
-        drone.setStatus(DroneStatus.MOVING);
-        drone.setCurrentMissionId(missionId);
-        drone.setSolvingSessionId(null); // Clear session ID once assigned
+        // Update Drone (Immutable)
+        Drone updatedDrone =
+                drone.toBuilder()
+                        .setStatus(DroneStatus.DRONE_STATUS_MOVING)
+                        .setCurrentMissionId(missionId)
+                        .build();
 
-        // Update Order
-        order.setStatus(OrderStatus.ASSIGNED);
-        order.setAssignedDroneId(drone.getId());
-        order.setAssignedMissionId(missionId);
-        order.setSolvingSessionId(null); // Clear session ID once assigned
+        // Update Orders (Immutable)
+        List<Order> updatedOrders =
+                orders.stream()
+                        .map(
+                                order ->
+                                        order.toBuilder()
+                                                .setStatus(OrderStatus.ORDER_STATUS_ASSIGNED)
+                                                .setAssignedDroneId(drone.getId())
+                                                .setAssignedMissionId(missionId)
+                                                .build())
+                        .collect(Collectors.toList());
 
-        return new MissionAssignmentResult(mission, drone, order);
+        return new MissionAssignmentResult(mission, updatedDrone, updatedOrders);
     }
 }

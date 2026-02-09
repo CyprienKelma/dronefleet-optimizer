@@ -1,6 +1,6 @@
 import structlog
 from dronefleet_messaging.factory import PublisherFactory
-from dronefleet_shared.models.telemetry import DroneTelemetry
+from dronefleet_shared.models import DroneTelemetry
 
 # Configure logging
 logger = structlog.get_logger(__name__)
@@ -30,7 +30,7 @@ class TelemetryService:
             RuntimeError: If publishing fails.
         """
         # Serialize Payload
-        message_payload = telemetry.model_dump(mode="json")
+        message_payload = telemetry.to_dict()
 
         # publish to Event Bus
         try:

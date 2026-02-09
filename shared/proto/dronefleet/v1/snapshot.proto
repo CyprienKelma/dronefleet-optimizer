@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package dronefleet.v1;
+
+import "dronefleet/v1/depot.proto";
+import "dronefleet/v1/drone.proto";
+import "dronefleet/v1/order.proto";
+import "dronefleet/v1/warehouse.proto";
+import "google/protobuf/timestamp.proto";
+
+message OptimizationSnapshot {
+  string session_id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  Depot depot = 3;
+  repeated Drone drones = 4;
+  repeated Order orders = 5;
+  repeated Warehouse warehouses = 6;
+}

@@ -26,7 +26,7 @@ public class DroneStateService implements UpdateDroneStateUseCase {
      */
     @Override
     public void handleTelemetry(DroneTelemetry telemetry) {
-        log.info("Requesting atomic telemetry update for drone {}", telemetry.droneId());
+        log.info("Requesting atomic telemetry update for drone {}", telemetry.getDroneId());
         transactionPort.runTelemetryUpdateTransaction(telemetry);
     }
 }

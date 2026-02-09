@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package dronefleet.v1;
+
+import "dronefleet/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+message Waypoint {
+  WaypointType type = 1;
+  Position position = 2;
+  string related_order_id = 3;
+  string related_warehouse_id = 4;
+}
+
+message Mission {
+  string id = 1;
+  string drone_id = 2;
+  repeated string order_ids = 3;
+  repeated Waypoint route = 4;
+  string status = 5; // ACTIVE, COMPLETED, FAILED
+  google.protobuf.Timestamp start_time = 6;
+  google.protobuf.Timestamp end_time = 7;
+  double estimated_battery_consumption = 8;
+  double estimated_duration_minutes = 9;
+}
+
+message MissionAssignment {
+  string drone_id = 1;
+  repeated string order_ids = 2;
+  repeated Waypoint route = 3;
+  double estimated_battery_consumption = 4;
+  double estimated_duration_minutes = 5;
+}
