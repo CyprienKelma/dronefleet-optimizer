@@ -1,6 +1,6 @@
 import structlog
 from dronefleet_messaging.factory import PublisherFactory
-from dronefleet_shared.models.order import DeliveryOrder
+from dronefleet_shared.models.order import Order
 
 # Configure logging
 logger = structlog.get_logger(__name__)
@@ -19,12 +19,12 @@ class OrderService:
 
         self.topic_name = "orders"  # Topic name as defined in the architecture
 
-    def process_order(self, order: DeliveryOrder) -> str:
+    def process_order(self, order: Order) -> str:
         """
         Validates and publishes a delivery order.
 
         Args:
-            order (DeliveryOrder): The validated Pydantic model of the order.
+            order (Order): The validated Pydantic model of the order.
 
         Returns:
             str: The order_id if successful.
@@ -35,7 +35,7 @@ class OrderService:
 
         logger.info(
             "Processing delivery request",
-            request_id=order.order_id,
+            request_id=order.id,
             priority=order.priority,
         )
 
@@ -51,25 +51,23 @@ class OrderService:
         try:
             success = self.publisher.publish(self.topic_name, message_payload)
             if not success:
-                logger.error(
-                    "Publisher returned False for order", order_id=order.order_id
-                )
+                logger.error("Publisher returned False for order", order_id=order.id)
                 raise RuntimeError("Failed to queue the order. Publisher declined.")
 
         except Exception as e:
             logger.error(
                 "Exception while publishing order",
-                order_id=order.order_id,
+                order_id=order.id,
                 error=str(e),
             )
             raise RuntimeError(f"Internal error publishing order: {str(e)}") from e
 
         logger.info(
             "Successfully queued order",
-            order_id=order.order_id,
+            order_id=order.id,
             topic=self.topic_name,
         )
-        return order.order_id
+        return order.id
 
     def shutdown(self):
         """Cleanup resources."""

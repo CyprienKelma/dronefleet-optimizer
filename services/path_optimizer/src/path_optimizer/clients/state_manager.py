@@ -1,8 +1,7 @@
 import httpx
 import structlog
+from dronefleet_shared.models import OptimizationSnapshot
 from dronefleet_shared.utils.global_config import settings
-
-from ..models.snapshot import OptimizationSnapshot
 
 logger = structlog.get_logger(__name__)
 
@@ -12,10 +11,10 @@ class StateManagerClient:
         self.base_url = base_url or settings.state_manager_url
         self.client = httpx.Client(timeout=30.0)
 
-    def acquire_snapshot(self, session_id: str) -> OptimizationSnapshot:
+    def get_snapshot(self, session_id: str) -> OptimizationSnapshot:
         url = f"{self.base_url}/api/v1/optimizer/snapshot"
         logger.info(
-            "Acquiring snapshot from State Manager", url=url, session_id=session_id
+            "Getting snapshot from State Manager", url=url, session_id=session_id
         )
 
         response = self.client.get(url, params={"sessionId": session_id})

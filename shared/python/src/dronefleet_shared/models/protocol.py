@@ -12,6 +12,9 @@ class DroneStatus(str, Enum):
     DELIVERING = "DELIVERING"  # Dropping/loading
     CHARGING = "CHARGING"  # Charging
     MAINTENANCE = "MAINTENANCE"  # Out of service
+    PROBLEM = "PROBLEM"
+    EMERGENCY = "EMERGENCY"
+    UNKNOWN = "UNKNOWN"
 
 
 class OrderStatus(str, Enum):
@@ -23,10 +26,18 @@ class OrderStatus(str, Enum):
     CANCELLED = "CANCELLED"  # Aborted
 
 
-class UrgencyLevel(str, Enum):
+class OrderPriority(str, Enum):
     STANDARD = "STANDARD"
     HIGH = "HIGH"  # Blood, Organs -> Absolute priority
     CRITICAL = "CRITICAL"  # Vital prognosis (Takes precedence over everything)
+
+
+class ProductType(str, Enum):
+    MEDICINE = "MEDICINE"  # Standard pills, syrups
+    VACCINE = "VACCINE"  # Requires cold chain
+    BLOOD = "BLOOD"  # Critical, time-sensitive, temp sensitive
+    ORGAN = "ORGAN"  # Extremely critical, strict handling
+    MEDICAL_DEVICE = "MEDICAL_DEVICE"  # Defibrillators, EPIPens, Kits
 
 
 class ActionType(str, Enum):
@@ -34,3 +45,10 @@ class ActionType(str, Enum):
     PICKUP = "PICKUP"  # Load a package
     DROPOFF = "DROPOFF"  # Deliver a package
     CHARGE = "CHARGE"  # Recharge
+
+
+class WaypointType(str, Enum):
+    DEPOT_START = "DEPOT_START"
+    WAREHOUSE_PICKUP = "WAREHOUSE_PICKUP"
+    HOSPITAL_DELIVERY = "HOSPITAL_DELIVERY"
+    DEPOT_RETURN = "DEPOT_RETURN"

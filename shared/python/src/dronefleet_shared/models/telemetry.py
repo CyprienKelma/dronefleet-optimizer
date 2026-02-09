@@ -9,7 +9,7 @@ Drones on flight -> Ingestion API -> Queue
 """
 
 
-class GeoPoint(BaseModel):
+class Position(BaseModel):
     lat: float = Field(..., ge=-90, le=90)  # Auto validation: Lat between -90 and 90
     lon: float = Field(..., ge=-180, le=180)
 
@@ -17,7 +17,7 @@ class GeoPoint(BaseModel):
 class DroneTelemetry(BaseModel):
     drone_id: str
     timestamp: datetime  # Exact time of the measurement
-    position: GeoPoint
+    position: Position
     battery_percentage: float = Field(..., ge=0, le=100)
     speed_kmh: float
     status: DroneStatus

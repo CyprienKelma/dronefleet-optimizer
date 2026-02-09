@@ -1,0 +1,42 @@
+name: CI - Proto Schema Validation
+
+on:
+  pull_request:
+    paths:
+      - "shared/**"
+  push:
+    branches: [main, develop]
+    paths:
+      - "shared/**"
+
+jobs:
+  proto-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: bufbuild/buf-setup-action@v1
+
+      - name: Lint proto definitions
+        uses: bufbuild/buf-lint-action@v1
+        with:
+          input: shared/proto
+
+      - name: Check for breaking changes
+        uses: bufbuild/buf-breaking-action@v1
+        with:
+          input: shared/proto
+          against: "https://github.com/${{ github.repository }}.git#branch=main,subdir=shared/proto"
+
+      - name: Verify generated code is up to date
+        working-directory: shared/proto
+        run: |
+          buf generate
+          if ! git diff --exit-code -- \
+            ../java/src/main/java/com/dronefleet/shared/models/ \
+            ../python/src/dronefleet_shared/models/ \
+            ../ts/src/schemas/; then
+            echo "ERROR: Generated models are out of date."
+            echo "Run 'mise run proto:generate' and commit the result."
+            exit 1
+          fi

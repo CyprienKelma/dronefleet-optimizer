@@ -2,38 +2,56 @@ import math
 from typing import NamedTuple
 
 import structlog
-
-from ..models.snapshot import (
-    OptimizationSnapshot,
-)
+from dronefleet_shared.models import OptimizationSnapshot
 
 logger = structlog.get_logger(__name__)
 
 
 class VRPProblem(NamedTuple):
-    distance_matrix: list[list[int]]
-    pickups_deliveries: list[tuple[int, int]]
-    num_vehicles: int
-    depot: int
-    vehicle_capacities: list[int]
+    """Complete VRP problem definition."""
+
+    distance_matrix: list[list[int]]  # meters
+    time_matrix: list[list[int]]  # seconds
+
+    # Nodes structure
+    depot_node: int  # Index 0
+    warehouse_nodes: list[int]  # Indices 1..N
+    delivery_nodes: list[int]  # Indices N+1..M
     node_locations: list[tuple[float, float]]
+
+    # Pickups & Deliveries with warehouse choices
+    # Each order can be picked up from MULTIPLE compatible warehouses
+    pickups_deliveries: list[tuple[list[int], int]]  # ([pickup_options], delivery_node)
+
+    # Constraints
+    num_vehicles: int
+    vehicle_capacities: list[int]  # Always [1,1,1,...] but kept for clarity
+    initial_battery_pct: list[float]  # Starting battery per drone
+    time_windows: list[tuple[int, int]]  # (earliest, latest) in seconds
+
+    # Metadata for solution extraction
     drone_ids: list[str]
     order_ids: list[str]
-    node_to_order_id: dict[int, str]
+    warehouse_ids: list[str]
+    delivery_node_to_order_id: dict[int, str]
+    warehouse_node_to_warehouse_id: dict[int, str]
 
 
 class VRPProblemBuilder:
+    """Build VRP problem from optimization snapshot."""
+
     def __init__(self, snapshot: OptimizationSnapshot):
         self.snapshot = snapshot
         self.drones = snapshot.drones
         self.orders = snapshot.orders
         self.warehouses = snapshot.warehouses
+        self.depot = snapshot.depot
 
     def _haversine_distance(
         self, p1: tuple[float, float], p2: tuple[float, float]
     ) -> int:
-        """Calculate distance in meters between two points."""
-        R = 6371000  # Radius of earth in meters
+        """Calculate distance in meters."""
+        R = 6371000
         lat1, lon1 = math.radians(p1[0]), math.radians(p1[1])
         lat2, lon2 = math.radians(p2[0]), math.radians(p2[1])
 
@@ -47,55 +65,97 @@ class VRPProblemBuilder:
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
         return int(R * c)
 
+    def _travel_time_seconds(self, distance_m: int) -> int:
+        """Calculate travel time assuming 50 km/h = 13.89 m/s."""
+        DRONE_SPEED_MS = 13.89  # meters per second
+        return int(distance_m / DRONE_SPEED_MS)
+
     def build(self) -> VRPProblem:
-        # nodes: [warehouse_0, ..., pickup_0, delivery_0, pickup_1, delivery_1, ...]
-        # For simplicity, we assume one warehouse for now (the first one)
-        # OR-Tools VRP often uses a single depot for all vehicles.
+        """Build complete VRP problem with multi-warehouse support."""
 
-        depot_node = 0
-        nodes = []
-        # Add warehouse (depot)
         if not self.warehouses:
-            raise ValueError(
-                "Cannot build VRPProblem: no warehouses available in snapshot"
-            )
-        nodes.append((self.warehouses[0].position.lat, self.warehouses[0].position.lon))
+            raise ValueError("No warehouses available in snapshot")
 
+        nodes = []
+
+        # Node 0: Depot (unique)
+        depot_node = 0
+        nodes.append((self.depot.position.lat, self.depot.position.lon))
+
+        # Nodes 1..N: Warehouses
+        warehouse_nodes = []
+        warehouse_node_to_id = {}
+        for wh in self.warehouses:
+            wh_idx = len(nodes)
+            warehouse_nodes.append(wh_idx)
+            warehouse_node_to_id[wh_idx] = wh.id
+            nodes.append((wh.position.lat, wh.position.lon))
+
+        # Nodes N+1..M: Delivery locations (hospitals)
+        delivery_nodes = []
+        delivery_node_to_order_id = {}
         pickups_deliveries = []
-        node_to_order_id = {}
-        order_ids = []
+        # Default: no constraints for depot/warehouses (use large value)
+        time_windows = [(0, 180 * 60)] * (len(warehouse_nodes) + 1)
 
         for order in self.orders:
-            pickup_idx = len(nodes)
-            nodes.append((order.pickup_location.lat, order.pickup_location.lon))
             delivery_idx = len(nodes)
+            delivery_nodes.append(delivery_idx)
+            delivery_node_to_order_id[delivery_idx] = order.id
             nodes.append((order.delivery_location.lat, order.delivery_location.lon))
 
-            pickups_deliveries.append((pickup_idx, delivery_idx))
-            node_to_order_id[pickup_idx] = order.id
-            node_to_order_id[delivery_idx] = order.id
-            order_ids.append(order.id)
+            # Time window for this delivery
+            deadline_seconds = order.max_delivery_time_minutes * 60
+            time_windows.append((0, deadline_seconds))
+
+            # Find compatible warehouses for this order
+            compatible_warehouse_nodes = [
+                wh_idx
+                for wh_idx, wh in zip(warehouse_nodes, self.warehouses, strict=False)
+                if order.product_type in wh.authorized_product_types
+            ]
+
+            if not compatible_warehouse_nodes:
+                logger.warning(
+                    f"No compatible warehouse for order {order.id} product {order.product_type}"
+                )
+                continue
+
+            # Add pickup-delivery pair with multiple pickup options
+            pickups_deliveries.append((compatible_warehouse_nodes, delivery_idx))
 
         # Build distance matrix
         num_nodes = len(nodes)
         distance_matrix = [[0] * num_nodes for _ in range(num_nodes)]
+        time_matrix = [[0] * num_nodes for _ in range(num_nodes)]
+
         for i in range(num_nodes):
             for j in range(num_nodes):
-                if i == j:
-                    distance_matrix[i][j] = 0
-                else:
-                    distance_matrix[i][j] = self._haversine_distance(nodes[i], nodes[j])
+                if i != j:
+                    dist = self._haversine_distance(nodes[i], nodes[j])
+                    distance_matrix[i][j] = dist
+                    time_matrix[i][j] = self._travel_time_seconds(dist)
 
-        logger.debug("Distance matrix rendered", matrix=distance_matrix)
+        logger.info(
+            f"VRP Problem built: {len(self.drones)} drones, "
+            f"{len(self.orders)} orders, {len(self.warehouses)} warehouses"
+        )
 
         return VRPProblem(
             distance_matrix=distance_matrix,
+            time_matrix=time_matrix,
+            depot_node=depot_node,
+            warehouse_nodes=warehouse_nodes,
+            delivery_nodes=delivery_nodes,
+            node_locations=nodes,
             pickups_deliveries=pickups_deliveries,
             num_vehicles=len(self.drones),
-            depot=depot_node,
-            vehicle_capacities=[1] * len(self.drones),  # Each drone carries 1 order
-            node_locations=nodes,
+            vehicle_capacities=[1] * len(self.drones),
+            initial_battery_pct=[d.battery_percentage for d in self.drones],
+            time_windows=time_windows,
             drone_ids=[d.id for d in self.drones],
-            order_ids=order_ids,
-            node_to_order_id=node_to_order_id,
+            order_ids=[o.id for o in self.orders],
+            warehouse_ids=[wh.id for wh in self.warehouses],
+            delivery_node_to_order_id=delivery_node_to_order_id,
+            warehouse_node_to_warehouse_id=warehouse_node_to_id,
         )

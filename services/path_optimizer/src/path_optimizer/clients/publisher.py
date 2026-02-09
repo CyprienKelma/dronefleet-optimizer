@@ -1,8 +1,7 @@
 import structlog
 from dronefleet_messaging.factory import PublisherFactory
+from dronefleet_shared.models import MissionAssignment
 from dronefleet_shared.utils.global_config import settings
-
-from ..models.decision import MissionAssignment
 
 logger = structlog.get_logger(__name__)
 
@@ -16,7 +15,7 @@ class DecisionPublisher:
         logger.info(
             "Publishing mission assignment",
             drone_id=assignment.drone_id,
-            order_id=assignment.order_id,
+            order_ids=assignment.order_ids,
         )
 
         # Pass a dictionary, not JSON string, because the publisher will do json.dumps()

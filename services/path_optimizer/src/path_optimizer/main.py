@@ -21,7 +21,7 @@ def run_optimization():
     try:
         # acquire snapshot of data
         sm_client = StateManagerClient()
-        snapshot_data = sm_client.acquire_snapshot(session_id)
+        snapshot_data = sm_client.get_snapshot(session_id)
 
         if not snapshot_data.drones:
             logger.info("No available drones for optimization", session_id=session_id)

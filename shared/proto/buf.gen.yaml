@@ -1,0 +1,25 @@
+version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: java_package
+      value: com.dronefleet.shared.models
+    - file_option: java_multiple_files
+      value: true
+plugins:
+  # Java: generates into shared/java models package directly
+  - remote: buf.build/protocolbuffers/java:v25.1
+    out: ../java/src/main/java
+
+  # Python: generates betterproto dataclasses into models/ directly
+  - remote: buf.build/community/danielgtaylor-betterproto
+    out: ../python/src/dronefleet_shared/models
+
+  # TypeScript: generates interfaces into schemas/ directly
+  - remote: buf.build/community/stephenh-ts-proto
+    out: ../ts/src/schemas
+    opt:
+      - esModuleInterop=true
+      - outputEncodeMethods=false
+      - outputJsonMethods=true
+      - snakeToCamel=false

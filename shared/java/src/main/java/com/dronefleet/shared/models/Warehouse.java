@@ -17,4 +17,11 @@ public class Warehouse {
     private Position position;
     private List<String> authorizedProductTypes;
     private boolean isColdStorageCapable;
+
+    /**
+     * Check if warehouse can fulfill order product type.
+     */
+    public boolean canFulfillOrder(Order order) {
+        return authorizedProductTypes != null && authorizedProductTypes.contains(order.getProductType());
+    }
 }

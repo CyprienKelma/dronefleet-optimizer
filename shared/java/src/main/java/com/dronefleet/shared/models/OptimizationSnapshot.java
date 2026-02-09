@@ -9,9 +9,10 @@ import lombok.Value;
 @Value
 @Builder
 public class OptimizationSnapshot {
-    List<Drone> drones;
-    List<Order> orders;
-    List<Warehouse> warehouses;
-    String sessionId;
-    Instant timestamp;
+    private List<Drone> drones;
+    private List<Order> orders;
+    private List<Warehouse> warehouses;
+    private Depot depot;
+    private String sessionId;
+    private Instant timestamp;
 }

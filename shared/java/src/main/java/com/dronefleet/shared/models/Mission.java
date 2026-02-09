@@ -15,9 +15,29 @@ import lombok.NoArgsConstructor;
 public class Mission {
     private String id;
     private String droneId;
-    private String orderId;
-    private List<Position> route;
+    private List<String> orderIds;
+    private List<Waypoint> route;
     private String status; // ACTIVE, COMPLETED, FAILED
     private Instant startTime;
     private Instant endTime;
+    private Double estimatedBatteryConsumption;
+    private Double estimatedDurationMinutes;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Waypoint {
+        private WaypointType type;
+        private Position position;
+        private String relatedOrderId;
+        private String relatedWarehouseId;
+    }
+
+    public enum WaypointType {
+        DEPOT_START,
+        WAREHOUSE_PICKUP,
+        HOSPITAL_DELIVERY,
+        DEPOT_RETURN
+    }
 }
