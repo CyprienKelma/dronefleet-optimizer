@@ -33,7 +33,7 @@ PROJECT_ID = "drone-fleet-optimizer-local"
 PYTHONPATH = "src"
 # Automatic virtualenv activation
 _.python.venv = { path = ".venv", create = true }
-_.file = [{ path = ".env" }, "config/{{env.ENVIRONMENT}}.env"]
+_.file = [{ path = ".env" }, "configs/{{env.ENVIRONMENT}}.env"]
 # Local emulators
 PUBSUB_EMULATOR_HOST = "localhost:8085"
 FIRESTORE_EMULATOR_HOST = "localhost:8080"

@@ -1,18 +1,18 @@
 # on_premise infrastructure tasks (Docker Compose for local emulators)
 
 [tasks.up]
-description = "Start local emulators (Pub/Sub, Firestore)"
+description = "Start local services (Pub/Sub, Firestore)"
 usage = '''
 flag "--build" help="Build images before starting containers" default=#false
 '''
 run = "docker compose -f docker-compose.yml up -d ${usage_build:+--build}"
 
 [tasks.down]
-description = "Stop local emulators"
+description = "Stop local services"
 run = "docker compose -f docker-compose.yml down"
 
 [tasks.logs]
-description = "Show logs from local emulators"
+description = "Show logs from local services"
 run = "docker compose -f docker-compose.yml logs -f"
 
 [tasks.compose]
