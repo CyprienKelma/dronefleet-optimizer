@@ -44,7 +44,11 @@ export class PubSubClient {
       process.env.PROJECT_ID ||
       "drone-fleet-optimizer-local";
 
-    const clientConfig: any = { projectId };
+    const clientConfig: {
+      projectId: string;
+      apiEndpoint?: string;
+      credentials?: { client_email: string; private_key: string };
+    } = { projectId };
 
     // Explicitly configure emulator if host is provided
     if (process.env.PUBSUB_EMULATOR_HOST) {
@@ -52,7 +56,7 @@ export class PubSubClient {
       // Also disable auth for emulator to avoid metadata lookup warnings
       clientConfig.credentials = {
         client_email: "dummy@example.com",
-        private_key: "dummy",
+        private_key: "dummy", // pragma: allowlist secret
       };
     }
 

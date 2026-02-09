@@ -65,7 +65,19 @@ Le code doit être agnostique de l'infrastructure via des interfaces.
 ```text
 drone-fleet-optimizer/
 .
-├── config
+├── AGENTS.md
+├── biome.json
+├── btca.config.jsonc
+├── build
+│   ├── classes
+│   │   └── java
+│   │       ├── main
+│   │       └── test
+│   └── resources
+│       ├── main
+│       └── test
+├── build.gradle
+├── configs
 │   ├── dev.env
 │   ├── local.env
 │   └── prod.env
@@ -74,113 +86,510 @@ drone-fleet-optimizer/
 │   │   ├── global_architecture_png.png
 │   │   └── global_architecture.svg
 │   └── roadmap_technique.md
-├── hello.py
-├── infrastructure
-│   ├── on_cloud
-│   │   └── terraform
-│   │       ├── environments
-│   │       │   ├── dev
-│   │       │   │   ├── backend.tf
-│   │       │   │   ├── main.tf
-│   │       │   │   ├── terraform.tfvars
-│   │       │   │   └── variables.tf
-│   │       │   └── prod
-│   │       │       ├── backend.tf
-│   │       │       ├── main.tf
-│   │       │       ├── terraform.tfvars
-│   │       │       └── variables.tf
-│   │       └── modules
-│   │           ├── cloud-run
-│   │           │   └── main.tf
-│   │           ├── firestore
-│   │           ├── iam
-│   │           │   └── main.tf
-│   │           └── pubsub
-│   │               ├── main.tf
-│   │               ├── outputs.tf
-│   │               └── variables.tf
-│   └── on_premise
-│       ├── create_topics.py
-│       ├── debug_pubsub.py
-│       └── docker-compose.yml
+├── gradle
+│   └── wrapper
+│       ├── gradle-wrapper.jar
+│       └── gradle-wrapper.properties
+├── gradlew
+├── gradlew.bat
+├── infra
+│   ├── local
+│   │   ├── docker-compose.yml
+│   │   ├── mise.toml
+│   │   └── scripts
+│   │       ├── create_topics.py
+│   │       ├── debug_pubsub.py
+│   │       └── pubsub_tool.py
+│   ├── scripts
+│   │   ├── test_firestore.py
+│   │   └── test_optimizer.py
+│   └── terraform
+│       ├── environments
+│       │   ├── dev
+│       │   │   ├── backend.tf
+│       │   │   ├── main.tf
+│       │   │   └── variables.tf
+│       │   └── prod
+│       │       ├── backend.tf
+│       │       ├── main.tf
+│       │       └── variables.tf
+│       └── modules
+│           ├── cloud-run
+│           │   └── main.tf
+│           ├── firestore
+│           │   └── main.tf
+│           ├── iam
+│           │   ├── main.tf
+│           │   └── variables.tf
+│           └── pubsub
+│               ├── main.tf
+│               ├── outputs.tf
+│               └── variables.tf
+├── libs
+│   ├── java
+│   │   ├── config
+│   │   │   ├── build
+│   │   │   │   ├── classes
+│   │   │   │   │   └── java
+│   │   │   │   │       ├── main
+│   │   │   │   │       └── test
+│   │   │   │   └── resources
+│   │   │   │       ├── main
+│   │   │   │       └── test
+│   │   │   └── build.gradle
+│   │   └── logging
+│   │       ├── build
+│   │       │   ├── classes
+│   │       │   │   └── java
+│   │       │   │       ├── main
+│   │       │   │       └── test
+│   │       │   └── resources
+│   │       │       ├── main
+│   │       │       └── test
+│   │       └── build.gradle
+│   ├── python
+│   │   ├── config
+│   │   │   └── pyproject.toml
+│   │   ├── logging
+│   │   │   └── pyproject.toml
+│   │   └── messaging
+│   │       ├── pyproject.toml
+│   │       └── src
+│   │           └── dronefleet_messaging
+│   │               ├── __init__.py
+│   │               ├── base_publisher.py
+│   │               ├── factory.py
+│   │               └── publisher
+│   │                   ├── __init__.py
+│   │                   ├── kafka_publisher.py
+│   │                   └── pubsub_publisher.py
+│   └── ts
+│       ├── config
+│       │   └── package.json
+│       └── logging
+│           └── package.json
 ├── LICENSE
 ├── mise.toml
-├── pubsub_tool.py
+├── package.json
+├── pnpm-workspace.yaml
 ├── pyproject.toml
 ├── README.md
-├── src
+├── restructure.md
+├── services
 │   ├── ingestion
-│   │   ├── __init__.py
-│   │   ├── __pycache__
-│   │   │   ├── __init__.cpython-311.pyc
-│   │   │   └── main.cpython-311.pyc
-│   │   ├── api
-│   │   │   ├── __init__.py
-│   │   │   ├── __pycache__
-│   │   │   │   └── __init__.cpython-311.pyc
-│   │   │   ├── tests
-│   │   │   └── v1
-│   │   │       ├── __init__.py
-│   │   │       ├── __pycache__
-│   │   │       │   └── __init__.cpython-311.pyc
-│   │   │       └── endpoints
-│   │   │           ├── __init__.py
-│   │   │           ├── __pycache__
-│   │   │           │   ├── __init__.cpython-311.pyc
-│   │   │           │   ├── orders.cpython-311.pyc
-│   │   │           │   ├── position.cpython-311.pyc
-│   │   │           │   ├── states.cpython-311.pyc
-│   │   │           │   └── telemetry.cpython-311.pyc
-│   │   │           ├── orders.py
-│   │   │           ├── states.py
-│   │   │           └── telemetry.py
 │   │   ├── Dockerfile
-│   │   ├── main.py
-│   │   ├── messaging
-│   │   │   ├── __init__.py
-│   │   │   ├── __pycache__
-│   │   │   │   ├── __init__.cpython-311.pyc
-│   │   │   │   ├── base_publisher.cpython-311.pyc
-│   │   │   │   └── factory.cpython-311.pyc
-│   │   │   ├── base_publisher.py
-│   │   │   ├── factory.py
-│   │   │   └── publisher
-│   │   │       ├── __pycache__
-│   │   │       │   ├── kafka_publisher.cpython-311.pyc
-│   │   │       │   └── pubsub_publisher.cpython-311.pyc
-│   │   │       ├── kafka_publisher.py
-│   │   │       └── pubsub_publisher.py
+│   │   ├── mise.toml
+│   │   ├── pyproject.toml
 │   │   ├── README.md
-│   │   └── services
-│   │       ├── __init__.py
-│   │       ├── __pycache__
-│   │       │   ├── __init__.cpython-311.pyc
-│   │       │   ├── request.cpython-311.pyc
-│   │       │   └── telemetry.cpython-311.pyc
-│   │       ├── archives.py
-│   │       ├── request.py
-│   │       ├── states.py
-│   │       └── telemetry.py
-│   ├── shared
-│   │   ├── configs
-│   │   │   └── global_config.py
-│   │   └── schemas
-│   │       ├── __init__.py
-│   │       ├── __pycache__
-│   │       │   ├── __init__.cpython-311.pyc
-│   │       │   ├── product.cpython-311.pyc
-│   │       │   ├── protocol.cpython-311.pyc
-│   │       │   ├── request.cpython-311.pyc
-│   │       │   └── telemetry.cpython-311.pyc
-│   │       ├── drones.py
-│   │       ├── mission.py
-│   │       ├── product.py
-│   │       ├── protocol.py
-│   │       ├── request.py
-│   │       ├── telemetry.py
-│   │       └── warehouses.py
-│   └── simulator
-│       └── main.py
+│   │   └── src
+│   │       └── ingestion
+│   │           ├── __init__.py
+│   │           ├── api
+│   │           │   ├── __init__.py
+│   │           │   ├── tests
+│   │           │   └── v1
+│   │           │       ├── __init__.py
+│   │           │       └── endpoints
+│   │           │           ├── __init__.py
+│   │           │           ├── orders.py
+│   │           │           └── telemetry.py
+│   │           ├── main.py
+│   │           ├── messaging
+│   │           │   └── __init__.py
+│   │           └── services
+│   │               ├── __init__.py
+│   │               ├── order.py
+│   │               └── telemetry.py
+│   ├── path_optimizer
+│   │   ├── Dockerfile
+│   │   ├── mise.toml
+│   │   ├── pyproject.toml
+│   │   └── src
+│   │       └── path_optimizer
+│   │           ├── __init__.py
+│   │           ├── clients
+│   │           │   ├── __init__.py
+│   │           │   ├── publisher.py
+│   │           │   └── state_manager.py
+│   │           ├── main.py
+│   │           ├── models
+│   │           │   ├── __init__.py
+│   │           │   ├── decision.py
+│   │           │   └── snapshot.py
+│   │           └── services
+│   │               ├── __init__.py
+│   │               ├── builder.py
+│   │               ├── extractor.py
+│   │               └── solver.py
+│   ├── simulators
+│   │   ├── mise.toml
+│   │   ├── pyproject.toml
+│   │   └── src
+│   │       └── simulators
+│   │           ├── __init__.py
+│   │           └── main.py
+│   ├── state_manager
+│   │   ├── bin
+│   │   │   ├── default
+│   │   │   ├── generated-sources
+│   │   │   │   └── annotations
+│   │   │   ├── generated-test-sources
+│   │   │   │   └── annotations
+│   │   │   ├── main
+│   │   │   └── test
+│   │   ├── build
+│   │   │   ├── classes
+│   │   │   │   └── java
+│   │   │   │       ├── main
+│   │   │   │       │   ├── com
+│   │   │   │       │   │   └── dronefleet
+│   │   │   │       │   │       └── statemanager
+│   │   │   │       │   │           ├── application
+│   │   │   │       │   │           │   ├── config
+│   │   │   │       │   │           │   │   ├── AppProperties.class
+│   │   │   │       │   │           │   │   ├── FirestoreConfig.class
+│   │   │   │       │   │           │   │   ├── LocalGcpConfig.class
+│   │   │   │       │   │           │   │   └── PubSubConfig.class
+│   │   │   │       │   │           │   └── dto
+│   │   │   │       │   │           │       ├── MissionAssignmentDto.class
+│   │   │   │       │   │           │       ├── MissionAssignmentDto$GeoPointDto.class
+│   │   │   │       │   │           │       ├── OptimizationSnapshotDto.class
+│   │   │   │       │   │           │       ├── OptimizationSnapshotDto$DroneSnapshotDto.class
+│   │   │   │       │   │           │       ├── OptimizationSnapshotDto$OrderSnapshotDto.class
+│   │   │   │       │   │           │       ├── OptimizationSnapshotDto$PositionDto.class
+│   │   │   │       │   │           │       ├── OptimizationSnapshotDto$WarehouseSnapshotDto.class
+│   │   │   │       │   │           │       ├── OrderEventDto.class
+│   │   │   │       │   │           │       ├── OrderEventDto$GeoPointDto.class
+│   │   │   │       │   │           │       ├── TelemetryEventDto.class
+│   │   │   │       │   │           │       └── TelemetryEventDto$GeoPointDto.class
+│   │   │   │       │   │           ├── domain
+│   │   │   │       │   │           │   ├── exception
+│   │   │   │       │   │           │   │   ├── BusinessRejectionException.class
+│   │   │   │       │   │           │   │   └── DomainException.class
+│   │   │   │       │   │           │   ├── port
+│   │   │   │       │   │           │   │   ├── in
+│   │   │   │       │   │           │   │   │   ├── AssignMissionUseCase.class
+│   │   │   │       │   │           │   │   │   ├── GetFleetSnapshotUseCase.class
+│   │   │   │       │   │           │   │   │   ├── GetOptimizationSnapshotUseCase.class
+│   │   │   │       │   │           │   │   │   ├── ProcessOrderUseCase.class
+│   │   │   │       │   │           │   │   │   └── UpdateDroneStateUseCase.class
+│   │   │   │       │   │           │   │   └── out
+│   │   │   │       │   │           │   │       ├── DroneRepository.class
+│   │   │   │       │   │           │   │       ├── MissionRepository.class
+│   │   │   │       │   │           │   │       ├── OrderRepository.class
+│   │   │   │       │   │           │   │       ├── StateTransactionPort.class
+│   │   │   │       │   │           │   │       ├── StateTransactionPort$DroneOrderContext.class
+│   │   │   │       │   │           │   │       ├── StateTransactionPort$MissionAssignmentResult.class
+│   │   │   │       │   │           │   │       └── WarehouseRepository.class
+│   │   │   │       │   │           │   └── service
+│   │   │   │       │   │           │       ├── DroneStateService.class
+│   │   │   │       │   │           │       ├── MissionAssignmentPolicy.class
+│   │   │   │       │   │           │       ├── MissionCreationService.class
+│   │   │   │       │   │           │       ├── OptimizationSnapshotService.class
+│   │   │   │       │   │           │       └── OrderStateService.class
+│   │   │   │       │   │           ├── infrastructure
+│   │   │   │       │   │           │   └── adapter
+│   │   │   │       │   │           │       ├── in
+│   │   │   │       │   │           │       │   ├── messaging
+│   │   │   │       │   │           │       │   │   └── pubsub
+│   │   │   │       │   │           │       │   │       ├── DecisionListener.class
+│   │   │   │       │   │           │       │   │       ├── OrderListener.class
+│   │   │   │       │   │           │       │   │       └── TelemetryListener.class
+│   │   │   │       │   │           │       │   └── rest
+│   │   │   │       │   │           │       │       └── SampleController.class
+│   │   │   │       │   │           │       └── out
+│   │   │   │       │   │           │           └── persistence
+│   │   │   │       │   │           │               └── firestore
+│   │   │   │       │   │           │                   ├── FirestoreDroneRepository.class
+│   │   │   │       │   │           │                   ├── FirestoreMapper.class
+│   │   │   │       │   │           │                   ├── FirestoreMissionRepository.class
+│   │   │   │       │   │           │                   ├── FirestoreOrderRepository.class
+│   │   │   │       │   │           │                   ├── FirestoreStateTransactionAdapter.class
+│   │   │   │       │   │           │                   └── FirestoreWarehouseRepository.class
+│   │   │   │       │   │           └── StateManagerApplication.class
+│   │   │   │       │   └── META-INF
+│   │   │   │       │       └── spring-configuration-metadata.json
+│   │   │   │       └── test
+│   │   │   │           └── com
+│   │   │   │               └── dronefleet
+│   │   │   │                   └── statemanager
+│   │   │   │                       ├── domain
+│   │   │   │                       │   ├── model
+│   │   │   │                       │   │   └── DroneTest.class
+│   │   │   │                       │   └── service
+│   │   │   │                       │       └── MissionAssignmentPolicyTest.class
+│   │   │   │                       └── StateManagerApplicationTests.class
+│   │   │   ├── generated
+│   │   │   │   └── sources
+│   │   │   │       ├── annotationProcessor
+│   │   │   │       │   └── java
+│   │   │   │       │       ├── main
+│   │   │   │       │       └── test
+│   │   │   │       └── headers
+│   │   │   │           └── java
+│   │   │   │               ├── main
+│   │   │   │               └── test
+│   │   │   ├── resources
+│   │   │   │   ├── main
+│   │   │   │   │   ├── application-dev.yml
+│   │   │   │   │   ├── application-local.yml
+│   │   │   │   │   └── application.yaml
+│   │   │   │   └── test
+│   │   │   └── tmp
+│   │   │       ├── compileJava
+│   │   │       │   └── previous-compilation-data.bin
+│   │   │       └── compileTestJava
+│   │   │           └── previous-compilation-data.bin
+│   │   ├── build.gradle
+│   │   ├── config
+│   │   │   └── checkstyle
+│   │   │       └── checkstyle.xml
+│   │   ├── Dockerfile
+│   │   ├── mise.toml
+│   │   └── src
+│   │       ├── main
+│   │       │   ├── java
+│   │       │   │   └── com
+│   │       │   │       └── dronefleet
+│   │       │   │           └── statemanager
+│   │       │   │               ├── application
+│   │       │   │               │   ├── config
+│   │       │   │               │   │   ├── AppProperties.java
+│   │       │   │               │   │   ├── FirestoreConfig.java
+│   │       │   │               │   │   ├── LocalGcpConfig.java
+│   │       │   │               │   │   └── PubSubConfig.java
+│   │       │   │               │   └── dto
+│   │       │   │               │       ├── MissionAssignmentDto.java
+│   │       │   │               │       ├── OptimizationSnapshotDto.java
+│   │       │   │               │       ├── OrderEventDto.java
+│   │       │   │               │       └── TelemetryEventDto.java
+│   │       │   │               ├── domain
+│   │       │   │               │   ├── exception
+│   │       │   │               │   │   ├── BusinessRejectionException.java
+│   │       │   │               │   │   └── DomainException.java
+│   │       │   │               │   ├── port
+│   │       │   │               │   │   ├── in
+│   │       │   │               │   │   │   ├── AssignMissionUseCase.java
+│   │       │   │               │   │   │   ├── GetFleetSnapshotUseCase.java
+│   │       │   │               │   │   │   ├── GetOptimizationSnapshotUseCase.java
+│   │       │   │               │   │   │   ├── ProcessOrderUseCase.java
+│   │       │   │               │   │   │   └── UpdateDroneStateUseCase.java
+│   │       │   │               │   │   └── out
+│   │       │   │               │   │       ├── DroneRepository.java
+│   │       │   │               │   │       ├── MissionRepository.java
+│   │       │   │               │   │       ├── OrderRepository.java
+│   │       │   │               │   │       ├── StateTransactionPort.java
+│   │       │   │               │   │       └── WarehouseRepository.java
+│   │       │   │               │   └── service
+│   │       │   │               │       ├── DroneStateService.java
+│   │       │   │               │       ├── MissionAssignmentPolicy.java
+│   │       │   │               │       ├── MissionCreationService.java
+│   │       │   │               │       ├── OptimizationSnapshotService.java
+│   │       │   │               │       └── OrderStateService.java
+│   │       │   │               ├── infrastructure
+│   │       │   │               │   └── adapter
+│   │       │   │               │       ├── in
+│   │       │   │               │       │   ├── messaging
+│   │       │   │               │       │   │   └── pubsub
+│   │       │   │               │       │   │       ├── DecisionListener.java
+│   │       │   │               │       │   │       ├── OrderListener.java
+│   │       │   │               │       │   │       └── TelemetryListener.java
+│   │       │   │               │       │   └── rest
+│   │       │   │               │       │       └── SampleController.java
+│   │       │   │               │       └── out
+│   │       │   │               │           └── persistence
+│   │       │   │               │               └── firestore
+│   │       │   │               │                   ├── FirestoreDroneRepository.java
+│   │       │   │               │                   ├── FirestoreMapper.java
+│   │       │   │               │                   ├── FirestoreMissionRepository.java
+│   │       │   │               │                   ├── FirestoreOrderRepository.java
+│   │       │   │               │                   ├── FirestoreStateTransactionAdapter.java
+│   │       │   │               │                   └── FirestoreWarehouseRepository.java
+│   │       │   │               └── StateManagerApplication.java
+│   │       │   └── resources
+│   │       │       ├── application-dev.yml
+│   │       │       ├── application-local.yml
+│   │       │       └── application.yaml
+│   │       └── test
+│   │           └── java
+│   │               └── com
+│   │                   └── dronefleet
+│   │                       └── statemanager
+│   │                           ├── domain
+│   │                           │   ├── model
+│   │                           │   │   └── DroneTest.java
+│   │                           │   └── service
+│   │                           │       └── MissionAssignmentPolicyTest.java
+│   │                           └── StateManagerApplicationTests.java
+│   └── visualizer
+│       ├── bun.lock
+│       ├── Dockerfile
+│       ├── index.html
+│       ├── mise.toml
+│       ├── package-lock.json
+│       ├── package.json
+│       ├── postcss.config.js
+│       ├── server
+│       │   ├── index.ts
+│       │   ├── instrumentation.ts
+│       │   ├── logger.ts
+│       │   └── pubsub-client.ts
+│       ├── src
+│       │   ├── components
+│       │   │   ├── ConfigPanel.tsx
+│       │   │   ├── DebugPanel.tsx
+│       │   │   ├── DroneMap.tsx
+│       │   │   └── DronePopup.tsx
+│       │   ├── data
+│       │   │   ├── index.ts
+│       │   │   └── telemetry-stream.ts
+│       │   ├── index.css
+│       │   ├── main.tsx
+│       │   ├── stores
+│       │   │   ├── debug.ts
+│       │   │   ├── drones.ts
+│       │   │   ├── index.ts
+│       │   │   └── user-config.ts
+│       │   └── utils
+│       │       └── config.ts
+│       ├── tailwind.config.js
+│       ├── tsconfig.json
+│       └── vite.config.ts
+├── settings.gradle
+├── shared
+│   ├── java
+│   │   ├── bin
+│   │   │   ├── default
+│   │   │   ├── generated-sources
+│   │   │   │   └── annotations
+│   │   │   └── main
+│   │   │       └── com
+│   │   │           └── dronefleet
+│   │   │               └── shared
+│   │   │                   └── models
+│   │   │                       ├── Drone.class
+│   │   │                       ├── Drone$DroneBuilder.class
+│   │   │                       ├── DroneStatus.class
+│   │   │                       ├── DroneTelemetry.class
+│   │   │                       ├── Mission.class
+│   │   │                       ├── Mission$MissionBuilder.class
+│   │   │                       ├── OptimizationSnapshot.class
+│   │   │                       ├── OptimizationSnapshot$OptimizationSnapshotBuilder.class
+│   │   │                       ├── Order.class
+│   │   │                       ├── Order$OrderBuilder.class
+│   │   │                       ├── OrderStatus.class
+│   │   │                       ├── Position.class
+│   │   │                       ├── Warehouse.class
+│   │   │                       └── Warehouse$WarehouseBuilder.class
+│   │   ├── build
+│   │   │   ├── classes
+│   │   │   │   └── java
+│   │   │   │       ├── main
+│   │   │   │       │   └── com
+│   │   │   │       │       └── dronefleet
+│   │   │   │       │           └── shared
+│   │   │   │       │               └── models
+│   │   │   │       │                   ├── Drone.class
+│   │   │   │       │                   ├── Drone$DroneBuilder.class
+│   │   │   │       │                   ├── DroneStatus.class
+│   │   │   │       │                   ├── DroneTelemetry.class
+│   │   │   │       │                   ├── Mission.class
+│   │   │   │       │                   ├── Mission$MissionBuilder.class
+│   │   │   │       │                   ├── OptimizationSnapshot.class
+│   │   │   │       │                   ├── OptimizationSnapshot$OptimizationSnapshotBuilder.class
+│   │   │   │       │                   ├── Order.class
+│   │   │   │       │                   ├── Order$OrderBuilder.class
+│   │   │   │       │                   ├── OrderStatus.class
+│   │   │   │       │                   ├── Position.class
+│   │   │   │       │                   ├── Warehouse.class
+│   │   │   │       │                   └── Warehouse$WarehouseBuilder.class
+│   │   │   │       └── test
+│   │   │   ├── generated
+│   │   │   │   └── sources
+│   │   │   │       ├── annotationProcessor
+│   │   │   │       │   └── java
+│   │   │   │       │       └── main
+│   │   │   │       └── headers
+│   │   │   │           └── java
+│   │   │   │               └── main
+│   │   │   ├── lombok
+│   │   │   │   └── effective-config
+│   │   │   │       └── lombok-main.config
+│   │   │   ├── resources
+│   │   │   │   ├── main
+│   │   │   │   └── test
+│   │   │   └── tmp
+│   │   │       └── compileJava
+│   │   │           └── previous-compilation-data.bin
+│   │   ├── build.gradle
+│   │   └── src
+│   │       └── main
+│   │           └── java
+│   │               └── com
+│   │                   └── dronefleet
+│   │                       └── shared
+│   │                           └── models
+│   │                               ├── Drone.java
+│   │                               ├── DroneStatus.java
+│   │                               ├── DroneTelemetry.java
+│   │                               ├── Mission.java
+│   │                               ├── OptimizationSnapshot.java
+│   │                               ├── Order.java
+│   │                               ├── OrderStatus.java
+│   │                               ├── Position.java
+│   │                               └── Warehouse.java
+│   ├── python
+│   │   ├── pyproject.toml
+│   │   └── src
+│   │       └── dronefleet_shared
+│   │           ├── __init__.py
+│   │           ├── __pycache__
+│   │           │   ├── __init__.cpython-311.pyc
+│   │           │   └── __init__.cpython-313.pyc
+│   │           ├── messaging
+│   │           │   └── publisher
+│   │           ├── models
+│   │           │   ├── __init__.py
+│   │           │   ├── __pycache__
+│   │           │   │   ├── __init__.cpython-311.pyc
+│   │           │   │   ├── order.cpython-311.pyc
+│   │           │   │   ├── product.cpython-311.pyc
+│   │           │   │   ├── protocol.cpython-311.pyc
+│   │           │   │   └── telemetry.cpython-311.pyc
+│   │           │   ├── drone.py
+│   │           │   ├── mission.py
+│   │           │   ├── order.py
+│   │           │   ├── product.py
+│   │           │   ├── protocol.py
+│   │           │   ├── telemetry.py
+│   │           │   └── warehouses.py
+│   │           └── utils
+│   │               ├── __init__.py
+│   │               ├── __pycache__
+│   │               │   ├── __init__.cpython-311.pyc
+│   │               │   ├── __init__.cpython-313.pyc
+│   │               │   ├── global_config.cpython-311.pyc
+│   │               │   ├── global_config.cpython-313.pyc
+│   │               │   └── logging_config.cpython-311.pyc
+│   │               ├── global_config.py
+│   │               └── logging_config.py
+│   └── ts
+│       ├── bun.lock
+│       ├── package.json
+│       ├── README.md
+│       ├── src
+│       │   ├── index.ts
+│       │   └── schemas
+│       │       ├── drones.ts
+│       │       ├── index.ts
+│       │       ├── protocol.ts
+│       │       └── telemetry.ts
+│       └── tsconfig.json
+├── tests
+│   ├── e2e
+│   ├── integration
+│   └── unit
+├── tsconfig.base.json
 └── uv.lock
 ```
 

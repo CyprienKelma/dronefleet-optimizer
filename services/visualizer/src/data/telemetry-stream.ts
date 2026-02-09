@@ -1,4 +1,4 @@
-import { type DroneTelemetry, safeParseTelemetry } from "@dronefleet/shared";
+import { DroneStatus, DroneTelemetry } from "@dronefleet/shared";
 import {
   $userConfig,
   logEvent,
@@ -113,20 +113,33 @@ export class TelemetryStream {
         return;
       }
 
-      const result = safeParseTelemetry(rawData);
+      // Convert snake_case keys from ingestion into camelCase expected by ts-proto fromJSON
+      const snakeToCamel = (key: string): string =>
+        key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
 
-      if (!result.success) {
-        recordMessageFailed(`Validation failed: ${result.error.message}`);
-        logEvent("error", "Telemetry validation failed", {
-          errors: result.error.issues,
-        });
-        return;
-      }
+      const toCamelCaseKeys = (value: unknown): unknown => {
+        if (Array.isArray(value)) {
+          return value.map((item) => toCamelCaseKeys(item));
+        }
+        if (value && typeof value === "object" && value !== null) {
+          const obj = value as Record<string, unknown>;
+          const result: Record<string, unknown> = {};
+          for (const [key, val] of Object.entries(obj)) {
+            const newKey = snakeToCamel(key);
+            result[newKey] = toCamelCaseKeys(val);
+          }
+          return result;
+        }
+        return value;
+      };
+
+      const camelCasedData = toCamelCaseKeys(rawData);
+      const telemetry = DroneTelemetry.fromJSON(camelCasedData);
 
       recordMessageProcessed();
 
       if (this.onMessage) {
-        this.onMessage(result.data);
+        this.onMessage(telemetry);
       }
     } catch (error) {
       const errorMessage =
@@ -197,9 +210,13 @@ export class TelemetryStream {
       };
     }
 
-    const statuses: Array<
-      "IDLE" | "MOVING" | "DELIVERING" | "CHARGING" | "MAINTENANCE"
-    > = ["IDLE", "MOVING", "DELIVERING", "CHARGING", "MAINTENANCE"];
+    const statuses: DroneStatus[] = [
+      DroneStatus.DRONE_STATUS_IDLE,
+      DroneStatus.DRONE_STATUS_MOVING,
+      DroneStatus.DRONE_STATUS_DELIVERING,
+      DroneStatus.DRONE_STATUS_CHARGING,
+      DroneStatus.DRONE_STATUS_MAINTENANCE,
+    ];
 
     // Emit telemetry updates every second
     this.mockInterval = setInterval(() => {
@@ -230,7 +247,7 @@ export class TelemetryStream {
         current_mission_id:
           Math.random() > 0.5
             ? `MISSION-${Math.floor(Math.random() * 1000)}`
-            : null,
+            : "",
       };
 
       recordMessageReceived();

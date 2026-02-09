@@ -6,12 +6,14 @@ from datetime import UTC, datetime
 
 import requests
 import structlog
-from dronefleet_shared.models.order import Order
-from dronefleet_shared.models.protocol import DroneStatus, OrderPriority, ProductType
-
-# Assuming the shared schemas are available in the python path
-# If running via 'uv run', the python path should be set correctly to include src/
-from dronefleet_shared.models.telemetry import DroneTelemetry, Position
+from dronefleet_shared.models import (
+    DroneStatus,
+    DroneTelemetry,
+    Order,
+    OrderPriority,
+    Position,
+    ProductType,
+)
 from dronefleet_shared.utils.logging_config import setup_logging
 
 # Configuration

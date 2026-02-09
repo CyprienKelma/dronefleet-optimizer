@@ -81,28 +81,3 @@ run = { task = "//...:lint" }
 [tasks."format:all"]
 description = "Run all formatters across the monorepo"
 run = { task = "//...:format" }
-
-# --- Protobuf Tasks ---
-[tasks."proto:lint"]
-description = "Lint protobuf definitions"
-run = "buf lint"
-dir = "shared/proto"
-
-[tasks."proto:format"]
-description = "Format protobuf files"
-run = "buf format -w"
-dir = "shared/proto"
-
-[tasks."proto:generate"]
-description = "Generate model code from proto definitions into shared/*/models/"
-run = "buf generate"
-dir = "shared/proto"
-
-[tasks."proto:breaking"]
-description = "Check for breaking schema changes against main branch"
-run = "buf breaking --against '../../.git#branch=main,subdir=shared/proto'"
-dir = "shared/proto"
-
-[tasks."proto:check"]
-description = "Full proto validation (lint + breaking + generate)"
-depends = ["proto:lint", "proto:breaking", "proto:generate"]

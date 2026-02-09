@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package dronefleet.v1;
+
+import "dronefleet/v1/common.proto";
+
+message Warehouse {
+  string id = 1;
+  string name = 2;
+  Position position = 3;
+  repeated string authorized_product_types = 4;
+  bool is_cold_storage_capable = 5;
+}

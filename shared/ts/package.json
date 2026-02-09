@@ -4,7 +4,8 @@
   "private": true,
   "main": "src/index.ts",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "ts-proto": "^2.6.1"
   },
   "peerDependencies": {
     "typescript": "^5"

@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package dronefleet.v1;
+
+import "dronefleet/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+message Drone {
+  string id = 1;
+  Position position = 2;
+  double battery_percentage = 3;
+  double speed_kmh = 4;
+  DroneStatus status = 5;
+  string current_mission_id = 6;
+  google.protobuf.Timestamp last_update = 7;
+  string solving_session_id = 8;
+  string home_depot_id = 9;
+  int32 battery_capacity_mah = 10;
+  double consumption_per_km = 11;
+  int32 max_flight_time_minutes = 12;
+}
+
+message DroneTelemetry {
+  string drone_id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  Position position = 3;
+  double battery_percentage = 4;
+  double speed_kmh = 5;
+  DroneStatus status = 6;
+  string current_mission_id = 7;
+}

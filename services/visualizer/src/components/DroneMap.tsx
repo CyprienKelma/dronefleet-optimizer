@@ -1,5 +1,5 @@
-import { useStore } from "@nanostores/solid";
 import type { DroneStatus, DroneTelemetry } from "@dronefleet/shared";
+import { useStore } from "@nanostores/solid";
 import maplibregl from "maplibre-gl";
 import {
   type Component,

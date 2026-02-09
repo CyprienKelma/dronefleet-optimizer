@@ -6,6 +6,7 @@ from google.pubsub_v1.types.pubsub import Subscription, Topic
 # Configuration par défaut (basée sur ton docker-compose)
 PROJECT_ID = "drone-fleet-optimizer-local"
 
+
 def list_resources():
     print(f"Connecting to emulator at {settings.pubsub_emulator_host}...")
     print(f"Project: {PROJECT_ID}")

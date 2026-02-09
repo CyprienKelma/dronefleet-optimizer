@@ -2,9 +2,18 @@ import math
 from typing import NamedTuple
 
 import structlog
-from dronefleet_shared.models import OptimizationSnapshot
+from dronefleet_shared.models import OptimizationSnapshot, OrderPriority
 
 logger = structlog.get_logger(__name__)
+
+
+def get_max_delivery_time_minutes(priority: OrderPriority) -> int:
+    """Calculate deadline based on priority (minutes from creation)."""
+    if priority == OrderPriority.ORDER_PRIORITY_CRITICAL:
+        return 15
+    elif priority == OrderPriority.ORDER_PRIORITY_HIGH:
+        return 30
+    return 60
 
 
 class VRPProblem(NamedTuple):
@@ -105,7 +114,7 @@ class VRPProblemBuilder:
             nodes.append((order.delivery_location.lat, order.delivery_location.lon))
 
             # Time window for this delivery
-            deadline_seconds = order.max_delivery_time_minutes * 60
+            deadline_seconds = get_max_delivery_time_minutes(order.priority) * 60
             time_windows.append((0, deadline_seconds))
 
             # Find compatible warehouses for this order

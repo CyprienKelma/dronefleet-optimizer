@@ -48,12 +48,12 @@ This is a polyglot monorepo managed with **mise**.
 
 ### Python (FastAPI/Services)
 - **Formatting:** Strict adherence to `black` style.
-- **Imports:** 
+- **Imports:**
   1. Standard library.
   2. Third-party packages (FastAPI, Pydantic, etc.).
   3. Local module imports (relative or absolute).
 - **Typing:** Use type hints for all function signatures and variables. Prefer `dict[str, Any]` over generic `dict`.
-- **Naming:** 
+- **Naming:**
   - Functions/Variables: `snake_case`.
   - Classes: `PascalCase`.
 - **Error Handling:** Use `try...except` blocks with specific exceptions. In FastAPI endpoints, raise `HTTPException` with appropriate status codes and descriptive details.
@@ -65,7 +65,7 @@ This is a polyglot monorepo managed with **mise**.
   - `infrastructure.adapter`: External implementations (REST, Persistence, Messaging).
 - **Formatting:** Managed by `spotless`. Always run `spotlessApply` before committing.
 - **Lombok:** Use `@Slf4j`, `@Getter`, `@Setter`, `@AllArgsConstructor`, etc., to reduce boilerplate.
-- **Error Handling:** 
+- **Error Handling:**
   - Throw `DomainException` or `BusinessRejectionException` in the domain layer.
   - Use `@ControllerAdvice` to map exceptions to HTTP responses in the adapter layer.
 

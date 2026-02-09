@@ -3,7 +3,6 @@ package com.dronefleet.statemanager.infrastructure.adapter.out.persistence.fires
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -12,22 +11,20 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.dronefleet.shared.models.Drone;
-import com.dronefleet.shared.models.DroneStatus;
 import com.dronefleet.shared.models.DroneTelemetry;
 import com.dronefleet.shared.models.Mission;
 import com.dronefleet.shared.models.OptimizationSnapshot;
 import com.dronefleet.shared.models.Order;
 import com.dronefleet.shared.models.OrderStatus;
-import com.dronefleet.shared.models.Warehouse;
 import com.dronefleet.statemanager.application.config.AppProperties;
 import com.dronefleet.statemanager.domain.port.out.StateTransactionPort;
 import com.dronefleet.statemanager.domain.port.out.WarehouseRepository;
+import com.dronefleet.statemanager.domain.service.DronePolicy;
 
 @Slf4j
 @Component
@@ -38,12 +35,13 @@ public class FirestoreStateTransactionAdapter implements StateTransactionPort {
     private final AppProperties appProperties;
     private final FirestoreMapper mapper;
     private final WarehouseRepository warehouseRepository;
+    private final DronePolicy dronePolicy;
 
     @Override
     public Mission runMissionAssignmentTransaction(
             String droneId,
-            String orderId,
-            Function<DroneOrderContext, MissionAssignmentResult> assignmentLogic) {
+            List<String> orderIds,
+            Function<DroneOrdersContext, MissionAssignmentResult> assignmentLogic) {
 
         ApiFuture<Mission> result =
                 firestore.runTransaction(
@@ -52,28 +50,46 @@ public class FirestoreStateTransactionAdapter implements StateTransactionPort {
                                     firestore
                                             .collection(appProperties.getDronesCollection())
                                             .document(droneId);
-                            DocumentReference orderRef =
-                                    firestore
-                                            .collection(appProperties.getOrdersCollection())
-                                            .document(orderId);
+
+                            List<DocumentReference> orderRefs =
+                                    orderIds.stream()
+                                            .map(
+                                                    id ->
+                                                            firestore
+                                                                    .collection(
+                                                                            appProperties
+                                                                                    .getOrdersCollection())
+                                                                    .document(id))
+                                            .collect(Collectors.toList());
 
                             // 1. Reads (must come before writes)
                             DocumentSnapshot droneSnap = transaction.get(droneRef).get();
-                            DocumentSnapshot orderSnap = transaction.get(orderRef).get();
+
+                            List<DocumentSnapshot> orderSnaps = new ArrayList<>();
+                            for (DocumentReference ref : orderRefs) {
+                                orderSnaps.add(transaction.get(ref).get());
+                            }
 
                             if (!droneSnap.exists()) {
                                 throw new RuntimeException("Drone not found: " + droneId);
                             }
-                            if (!orderSnap.exists()) {
-                                throw new RuntimeException("Order not found: " + orderId);
+
+                            for (int i = 0; i < orderIds.size(); i++) {
+                                if (!orderSnaps.get(i).exists()) {
+                                    throw new RuntimeException(
+                                            "Order not found: " + orderIds.get(i));
+                                }
                             }
 
                             Drone drone = mapper.mapToDrone(droneSnap);
-                            Order order = mapper.mapToOrder(orderSnap);
+                            List<Order> orders =
+                                    orderSnaps.stream()
+                                            .map(mapper::mapToOrder)
+                                            .collect(Collectors.toList());
 
                             // 2. Business Logic
                             MissionAssignmentResult assignmentResult =
-                                    assignmentLogic.apply(new DroneOrderContext(drone, order));
+                                    assignmentLogic.apply(new DroneOrdersContext(drone, orders));
 
                             // 3. Writes
                             if (assignmentResult.mission() != null) {
@@ -88,8 +104,13 @@ public class FirestoreStateTransactionAdapter implements StateTransactionPort {
 
                             transaction.set(
                                     droneRef, mapper.mapFromDrone(assignmentResult.updatedDrone()));
-                            transaction.set(
-                                    orderRef, mapper.mapFromOrder(assignmentResult.updatedOrder()));
+
+                            for (int i = 0; i < orderRefs.size(); i++) {
+                                transaction.set(
+                                        orderRefs.get(i),
+                                        mapper.mapFromOrder(
+                                                assignmentResult.updatedOrders().get(i)));
+                            }
 
                             return assignmentResult.mission();
                         });
@@ -112,7 +133,7 @@ public class FirestoreStateTransactionAdapter implements StateTransactionPort {
                     DocumentReference droneRef =
                             firestore
                                     .collection(appProperties.getDronesCollection())
-                                    .document(telemetry.droneId());
+                                    .document(telemetry.getDroneId());
                     DocumentSnapshot droneSnap = transaction.get(droneRef).get();
 
                     Drone drone;
@@ -120,32 +141,43 @@ public class FirestoreStateTransactionAdapter implements StateTransactionPort {
                         drone = mapper.mapToDrone(droneSnap);
 
                         // Ordering check: if incoming telemetry is older than last update, skip
-                        if (drone.getLastUpdate() != null
-                                && telemetry
-                                        .timestamp()
-                                        .toInstant()
-                                        .isBefore(drone.getLastUpdate())) {
-                            log.info(
-                                    "Stale telemetry for drone {}. Current: {}, Incoming: {}."
-                                            + " Skipping.",
-                                    drone.getId(),
-                                    drone.getLastUpdate(),
-                                    telemetry.timestamp());
-                            return null;
+                        if (drone.hasLastUpdate()) {
+                            Instant currentLastUpdate =
+                                    Instant.ofEpochSecond(
+                                            drone.getLastUpdate().getSeconds(),
+                                            drone.getLastUpdate().getNanos());
+                            Instant incomingTimestamp =
+                                    Instant.ofEpochSecond(
+                                            telemetry.getTimestamp().getSeconds(),
+                                            telemetry.getTimestamp().getNanos());
+
+                            if (incomingTimestamp.isBefore(currentLastUpdate)) {
+                                log.info(
+                                        "Stale telemetry for drone {}. Current: {}, Incoming: {}."
+                                                + " Skipping.",
+                                        drone.getId(),
+                                        currentLastUpdate,
+                                        incomingTimestamp);
+                                return null;
+                            }
                         }
                     } else {
-                        drone = Drone.builder().id(telemetry.droneId()).build();
+                        drone = Drone.newBuilder().setId(telemetry.getDroneId()).build();
                     }
 
-                    drone.updateTelemetry(
-                            telemetry.position(),
-                            telemetry.batteryPercentage(),
-                            telemetry.speedKmh(),
-                            telemetry.status(),
-                            telemetry.currentMissionId(),
-                            telemetry.timestamp().toInstant());
+                    Drone updatedDrone =
+                            dronePolicy.applyTelemetryUpdate(
+                                    drone,
+                                    telemetry.getPosition(),
+                                    telemetry.getBatteryPercentage(),
+                                    telemetry.getSpeedKmh(),
+                                    telemetry.getStatus(),
+                                    telemetry.getCurrentMissionId(),
+                                    Instant.ofEpochSecond(
+                                            telemetry.getTimestamp().getSeconds(),
+                                            telemetry.getTimestamp().getNanos()));
 
-                    transaction.set(droneRef, mapper.mapFromDrone(drone));
+                    transaction.set(droneRef, mapper.mapFromDrone(updatedDrone));
                     return null;
                 });
     }
@@ -163,8 +195,8 @@ public class FirestoreStateTransactionAdapter implements StateTransactionPort {
                     if (orderSnap.exists()) {
                         Order existing = mapper.mapToOrder(orderSnap);
                         // If order already exists and is not PENDING, we don't want to reset it
-                        if (!"PENDING".equals(existing.getStatus())
-                                && existing.getStatus() != null) {
+                        if (existing.getStatus() != OrderStatus.ORDER_STATUS_PENDING
+                                && existing.getStatus() != OrderStatus.ORDER_STATUS_UNSPECIFIED) {
                             log.info(
                                     "Order {} already exists with status {}. Skipping ingestion.",
                                     order.getId(),
@@ -173,11 +205,15 @@ public class FirestoreStateTransactionAdapter implements StateTransactionPort {
                         }
                     }
 
-                    if (order.getStatus() == null) {
-                        order.setStatus(OrderStatus.PENDING);
+                    Order orderToSave = order;
+                    if (order.getStatus() == OrderStatus.ORDER_STATUS_UNSPECIFIED) {
+                        orderToSave =
+                                order.toBuilder()
+                                        .setStatus(OrderStatus.ORDER_STATUS_PENDING)
+                                        .build();
                     }
 
-                    transaction.set(orderRef, mapper.mapFromOrder(order));
+                    transaction.set(orderRef, mapper.mapFromOrder(orderToSave));
                     return null;
                 });
     }
@@ -185,116 +221,6 @@ public class FirestoreStateTransactionAdapter implements StateTransactionPort {
     @Override
     public OptimizationSnapshot runSnapshotAcquisitionTransaction(
             String sessionId, int minBatteryPercent) {
-        // 1. Reads that don't need to be in the transaction or can be done before
-        List<Warehouse> warehouses = warehouseRepository.findAll();
-
-        ApiFuture<OptimizationSnapshot> result =
-                firestore.runTransaction(
-                        transaction -> {
-                            List<Drone> availableDrones = new ArrayList<>();
-                            List<Order> pendingOrders = new ArrayList<>();
-
-                            // 1. Queries (READS)
-                            // We get the snapshots first to know which documents to lock/read in
-                            // the transaction
-                            List<QueryDocumentSnapshot> droneDocs =
-                                    firestore
-                                            .collection(appProperties.getDronesCollection())
-                                            .whereEqualTo("status", DroneStatus.IDLE.name())
-                                            .whereGreaterThanOrEqualTo(
-                                                    "batteryPercentage", (double) minBatteryPercent)
-                                            .get()
-                                            .get()
-                                            .getDocuments();
-
-                            List<QueryDocumentSnapshot> orderDocs =
-                                    firestore
-                                            .collection(appProperties.getOrdersCollection())
-                                            .whereEqualTo("status", OrderStatus.PENDING.name())
-                                            .get()
-                                            .get()
-                                            .getDocuments();
-
-                            // 2. Transactional Reads
-                            // Collect all references to read them atomically
-                            List<DocumentReference> droneRefs =
-                                    droneDocs.stream()
-                                            .map(QueryDocumentSnapshot::getReference)
-                                            .collect(Collectors.toList());
-                            List<DocumentReference> orderRefs =
-                                    orderDocs.stream()
-                                            .map(QueryDocumentSnapshot::getReference)
-                                            .collect(Collectors.toList());
-
-                            List<DocumentReference> allRefs = new ArrayList<>();
-                            allRefs.addAll(droneRefs);
-                            allRefs.addAll(orderRefs);
-
-                            if (allRefs.isEmpty()) {
-                                return OptimizationSnapshot.builder()
-                                        .drones(availableDrones)
-                                        .orders(pendingOrders)
-                                        .warehouses(warehouses)
-                                        .sessionId(sessionId)
-                                        .timestamp(Instant.now())
-                                        .build();
-                            }
-
-                            // Read all documents in one go (ALL READS)
-                            List<DocumentSnapshot> allSnapshots =
-                                    transaction
-                                            .getAll(
-                                                    Objects.requireNonNull(
-                                                            allRefs.toArray(
-                                                                    new DocumentReference[0])))
-                                            .get();
-
-                            // 3. Business Logic & Writes
-                            // Now that all reads are done, we can start the writes
-                            for (DocumentSnapshot snap : allSnapshots) {
-                                if (!snap.exists()) {
-                                    continue;
-                                }
-
-                                String collectionName = snap.getReference().getParent().getId();
-
-                                if (collectionName.equals(appProperties.getDronesCollection())) {
-                                    Drone drone = mapper.mapToDrone(snap);
-                                    if (drone.getStatus() == DroneStatus.IDLE
-                                            && drone.getBatteryPercentage() >= minBatteryPercent) {
-                                        drone.setStatus(DroneStatus.RESERVED);
-                                        drone.setSolvingSessionId(sessionId);
-                                        transaction.set(
-                                                snap.getReference(), mapper.mapFromDrone(drone));
-                                        availableDrones.add(drone);
-                                    }
-                                } else if (collectionName.equals(
-                                        appProperties.getOrdersCollection())) {
-                                    Order order = mapper.mapToOrder(snap);
-                                    if (order.getStatus() == OrderStatus.PENDING) {
-                                        order.setStatus(OrderStatus.SOLVING);
-                                        order.setSolvingSessionId(sessionId);
-                                        transaction.set(
-                                                snap.getReference(), mapper.mapFromOrder(order));
-                                        pendingOrders.add(order);
-                                    }
-                                }
-                            }
-
-                            return OptimizationSnapshot.builder()
-                                    .drones(availableDrones)
-                                    .orders(pendingOrders)
-                                    .warehouses(warehouses)
-                                    .sessionId(sessionId)
-                                    .timestamp(Instant.now())
-                                    .build();
-                        });
-
-        try {
-            return result.get();
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("Snapshot acquisition transaction failed", e);
-            throw new RuntimeException("Transaction failed", e);
-        }
+        return null;
     }
 }

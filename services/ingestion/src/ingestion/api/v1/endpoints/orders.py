@@ -1,7 +1,8 @@
 from functools import lru_cache
 from typing import Any
 
-from dronefleet_shared.models.order import Order
+from dronefleet_shared.models import Order
+from dronefleet_shared.schemas import OrderSchema
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from ....services.order import OrderService
@@ -16,7 +17,7 @@ def get_service() -> OrderService:
 
 @router.post("/orders", status_code=status.HTTP_201_CREATED)
 async def create_order(
-    order: Order, service: OrderService = Depends(get_service)
+    order_in: OrderSchema, service: OrderService = Depends(get_service)
 ) -> dict[str, Any]:
     """
     Ingest a new delivery order.
@@ -26,6 +27,10 @@ async def create_order(
     - Returns the order ID
     """
     try:
+        # Map Schema to Shared Model
+        order_data = order_in.model_dump()
+        order = Order(**order_data)
+
         order_id = service.process_order(order)
         return {
             "order_id": order_id,

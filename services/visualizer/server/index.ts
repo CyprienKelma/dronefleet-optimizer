@@ -115,7 +115,7 @@ function handleHealth(): Response {
 /**
  * Main request handler
  */
-function handleRequest(request: Request, _server: any): Response {
+function handleRequest(request: Request, _server: unknown): Response {
   const url = new URL(request.url);
 
   // Handle CORS preflight
@@ -145,7 +145,7 @@ pubsubClient.start().catch((err) => {
   // Continue running server even if Pub/Sub fails (so health check works)
 });
 
-const server: any = Bun.serve({
+const server = Bun.serve({
   port: PORT,
   fetch: (request) => handleRequest(request, server),
 });

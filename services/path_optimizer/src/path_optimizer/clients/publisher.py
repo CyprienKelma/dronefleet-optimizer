@@ -19,6 +19,6 @@ class DecisionPublisher:
         )
 
         # Pass a dictionary, not JSON string, because the publisher will do json.dumps()
-        message_dict = assignment.model_dump(by_alias=True)
+        message_dict = assignment.to_dict()
 
         self.publisher.publish(self.topic, message_dict)

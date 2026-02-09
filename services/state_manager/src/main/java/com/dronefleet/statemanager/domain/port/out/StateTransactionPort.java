@@ -1,5 +1,6 @@
 package com.dronefleet.statemanager.domain.port.out;
 
+import java.util.List;
 import java.util.function.Function;
 
 import com.dronefleet.shared.models.Drone;
@@ -14,19 +15,11 @@ import com.dronefleet.shared.models.Order;
  */
 public interface StateTransactionPort {
 
-    /**
-     * Atomically processes a mission assignment.
-     *
-     * @param droneId The ID of the drone to assign.
-     * @param orderId The ID of the order to fulfill.
-     * @param assignmentLogic A function that takes the current drone and order, validates them, and
-     *     returns a mission if valid.
-     * @return The created mission.
-     */
+    /** Atomically processes a mission assignment for multiple orders. */
     Mission runMissionAssignmentTransaction(
             String droneId,
-            String orderId,
-            Function<DroneOrderContext, MissionAssignmentResult> assignmentLogic);
+            List<String> orderIds,
+            Function<DroneOrdersContext, MissionAssignmentResult> assignmentLogic);
 
     /**
      * Atomically updates a drone state from telemetry, handling ordering and race conditions.
@@ -42,11 +35,12 @@ public interface StateTransactionPort {
      */
     void runOrderIngestionTransaction(Order order);
 
-    /** Context for drone and order during a mission assignment transaction. */
-    record DroneOrderContext(Drone drone, Order order) {}
+    /** Context for drone and orders during a mission assignment transaction. */
+    record DroneOrdersContext(Drone drone, List<Order> orders) {}
 
     /** Result of the mission assignment logic. */
-    record MissionAssignmentResult(Mission mission, Drone updatedDrone, Order updatedOrder) {}
+    record MissionAssignmentResult(
+            Mission mission, Drone updatedDrone, List<Order> updatedOrders) {}
 
     OptimizationSnapshot runSnapshotAcquisitionTransaction(String sessionId, int minBatteryPercent);
 }

@@ -35,7 +35,7 @@
     config.yml
     Dockerfile # <--- HINT: Must be built from repo root: `docker build -f services/path_optimizer/Dockerfile .`
     mise.toml
-  
+
   /state_manager
     /src/main/java/com/dronefleet/statemanager  # <--- HINT: Directory depth must match package declaration
       Application.java
@@ -44,7 +44,7 @@
     config.yml
     Dockerfile # <--- HINT: Copy parent 'shared' & 'libs' folders in Dockerfile
     mise.toml
-  
+
   /simulators
     /src/simulators # <--- HINT: Named python package dir
       ...
@@ -52,7 +52,7 @@
     config.yml
     Dockerfile
     mise.toml
-  
+
   /ingestion
     /src/ingestion # <--- HINT: Named python package dir
       ...
@@ -60,7 +60,7 @@
     config.yml
     Dockerfile
     mise.toml
-  
+
   /visualizer
     /src
       index.ts
@@ -70,7 +70,7 @@
     config.yml
     Dockerfile
     mise.toml
-  
+
   /ps_bridge
     /src
       index.ts
@@ -80,7 +80,7 @@
     config.yml
     Dockerfile
     mise.toml
-    
+
 /shared
   /java
     build.gradle
@@ -111,19 +111,19 @@
 
 /libs
   /java
-    /logging 
+    /logging
       build.gradle
       mise.toml
       /src/main/java/com/dronefleet/lib/logging # <--- HINT: Full package path
         LogWrapper.java
-    /config 
+    /config
       build.gradle
       mise.toml
       /src/main/java/com/dronefleet/lib/config
         ConfigLoader.java
 
   /python
-    /logging 
+    /logging
       pyproject.toml
       mise.toml
       /src/dronefleet_logging # <--- HINT: Allows `from dronefleet_logging import logger`
@@ -137,13 +137,13 @@
         loader.py
 
   /ts
-    /logging 
+    /logging
       package.json # <--- HINT: Name this "@dronefleet/logging" in package.json
       tsconfig.json
       mise.toml
       /src
         index.ts
-    /config 
+    /config
       package.json # <--- HINT: Name this "@dronefleet/config"
       tsconfig.json
       mise.toml

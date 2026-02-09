@@ -12,12 +12,14 @@ repos:
     hooks:
       # Prevent committing large files
       - id: check-added-large-files
-        args: ['--maxkb=1000']
+        args: ['--maxkb=2000']
 
       - id: check-json
       - id: check-yaml
       - id: end-of-file-fixer
+        exclude: '^shared/java/src/main/java/com/dronefleet/shared/models/'
       - id: trailing-whitespace
+        exclude: '^shared/java/src/main/java/com/dronefleet/shared/models/'
 
   # Python linting
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -25,6 +27,7 @@ repos:
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
+        exclude: '^shared/python/src/dronefleet_shared/models/dronefleet/'
 
   # Terraform formatting
   - repo: https://github.com/antonbabenko/pre-commit-terraform
@@ -33,12 +36,13 @@ repos:
       - id: terraform_fmt
       - id: terraform_validate
 
+
   # Protobuf schema sync check
   - repo: local
     hooks:
       - id: proto-sync-check
         name: Check proto-generated models are up to date
-        entry: bash -c 'cd shared/proto && mise exec -- buf generate && git diff --exit-code -- ../java/src/main/java/com/dronefleet/shared/models/ ../python/src/dronefleet_shared/models/ ../ts/src/schemas/'
+        entry: bash -c 'mise run //shared/proto:generate && git diff --exit-code -- shared/java/src/main/java/com/dronefleet/shared/models/ shared/python/src/dronefleet_shared/models/ shared/ts/src/schemas/'
         language: system
         files: '\.(proto|java|py|ts)$'
         pass_filenames: false

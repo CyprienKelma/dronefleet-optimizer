@@ -1,14 +1,10 @@
 package com.dronefleet.statemanager.infrastructure.adapter.in.messaging.pubsub;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.stereotype.Component;
 
-import com.dronefleet.shared.models.Position;
 import com.dronefleet.statemanager.application.dto.MissionAssignmentDto;
 import com.dronefleet.statemanager.domain.port.in.AssignMissionUseCase;
 
@@ -34,17 +30,12 @@ public class DecisionListener {
             log.info("Received optimizer decision payload: {}", payload);
             MissionAssignmentDto dto = objectMapper.readValue(payload, MissionAssignmentDto.class);
 
-            List<Position> route =
-                    dto.route().stream()
-                            .map(p -> new Position(p.lat(), p.lon()))
-                            .collect(Collectors.toList());
-
-            assignMissionUseCase.assignMission(dto.droneId(), dto.orderId(), route);
+            assignMissionUseCase.assignMission(dto);
 
             log.info(
-                    "Successfully processed decision for drone {} and order {}",
+                    "Successfully processed decision for drone {} and orders {}",
                     dto.droneId(),
-                    dto.orderId());
+                    dto.orderIds());
         } catch (com.dronefleet.statemanager.domain.exception.BusinessRejectionException e) {
             log.warn("Optimizer decision rejected by business rules: {}", e.getMessage());
             // Business rejection should not be retried as it's a "permanent" failure of this
