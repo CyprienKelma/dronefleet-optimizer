@@ -55,11 +55,13 @@ public class FirestoreMapper {
                 Drone.newBuilder()
                         .setId(doc.getId())
                         .setBatteryPercentage(
-                                doc.getDouble("batteryPercentage") != null
-                                        ? doc.getDouble("batteryPercentage")
+                                doc.get("batteryPercentage") != null
+                                        ? ((Number) doc.get("batteryPercentage")).doubleValue()
                                         : 0.0)
                         .setSpeedKmh(
-                                doc.getDouble("speedKmh") != null ? doc.getDouble("speedKmh") : 0.0)
+                                doc.get("speedKmh") != null
+                                        ? ((Number) doc.get("speedKmh")).doubleValue()
+                                        : 0.0)
                         .setStatus(dronePolicy.parseStatus(doc.getString("status")))
                         .setCurrentMissionId(
                                 doc.getString("currentMissionId") != null
@@ -78,8 +80,8 @@ public class FirestoreMapper {
                                         ? doc.getLong("batteryCapacityMah").intValue()
                                         : 0)
                         .setConsumptionPerKm(
-                                doc.getDouble("consumptionPerKm") != null
-                                        ? doc.getDouble("consumptionPerKm")
+                                doc.get("consumptionPerKm") != null
+                                        ? ((Number) doc.get("consumptionPerKm")).doubleValue()
                                         : 0.0)
                         .setMaxFlightTimeMinutes(
                                 doc.getLong("maxFlightTimeMinutes") != null
@@ -217,12 +219,14 @@ public class FirestoreMapper {
                         .addAllOrderIds((List<String>) doc.get("orderIds"))
                         .setStatus(doc.getString("status") != null ? doc.getString("status") : "")
                         .setEstimatedBatteryConsumption(
-                                doc.getDouble("estimatedBatteryConsumption") != null
-                                        ? doc.getDouble("estimatedBatteryConsumption")
+                                doc.get("estimatedBatteryConsumption") != null
+                                        ? ((Number) doc.get("estimatedBatteryConsumption"))
+                                                .doubleValue()
                                         : 0.0)
                         .setEstimatedDurationMinutes(
-                                doc.getDouble("estimatedDurationMinutes") != null
-                                        ? doc.getDouble("estimatedDurationMinutes")
+                                doc.get("estimatedDurationMinutes") != null
+                                        ? ((Number) doc.get("estimatedDurationMinutes"))
+                                                .doubleValue()
                                         : 0.0);
 
         if (routeMaps != null) {

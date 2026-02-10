@@ -64,6 +64,19 @@ class SolutionExtractor:
 
                 elif node_idx in pickup_set:
                     warehouse_id = problem.pickup_node_to_warehouse_id[node_idx]
+
+                    # Consolidate consecutive pickups at the same warehouse
+                    # to avoid redundant waypoints (e.g., 5 pickups at WH-EAST
+                    # become a single WAREHOUSE_PICKUP waypoint)
+                    if (
+                        waypoints
+                        and waypoints[-1].type
+                        == WaypointType.WAYPOINT_TYPE_WAREHOUSE_PICKUP
+                        and waypoints[-1].related_warehouse_id == warehouse_id
+                    ):
+                        # Skip adding duplicate pickup at same warehouse
+                        continue
+
                     waypoints.append(
                         Waypoint(
                             type=WaypointType.WAYPOINT_TYPE_WAREHOUSE_PICKUP,
@@ -106,5 +119,5 @@ class SolutionExtractor:
                 )
             )
 
-        logger.info("Extracted %d mission assignments", len(assignments))
+        logger.info("Extracted mission assignments", count=len(assignments))
         return assignments

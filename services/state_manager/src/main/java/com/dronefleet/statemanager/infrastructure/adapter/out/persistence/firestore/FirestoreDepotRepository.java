@@ -35,7 +35,7 @@ public class FirestoreDepotRepository implements DepotRepository {
                             .collection(collection)
                             .limit(1)
                             .get()
-                            .get(10, java.util.concurrent.TimeUnit.SECONDS);
+                            .get(30, java.util.concurrent.TimeUnit.SECONDS);
 
             if (!querySnapshot.isEmpty()) {
                 DocumentSnapshot document = querySnapshot.getDocuments().get(0);

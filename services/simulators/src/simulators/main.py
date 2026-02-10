@@ -25,8 +25,11 @@ UPDATE_INTERVAL_SEC = 3.0
 ORDER_PROBABILITY = 0.05  # 5% chance to generate an order per loop iteration
 
 # Center: Paris (Lat: 48.8566, Lon: 2.3522)
+# Keep generated points within ~3-4 km for feasible VRP (battery, time windows).
 PARIS_LAT = 48.8566
 PARIS_LON = 2.3522
+# ~0.03 degrees ~ 3.3 km at Paris latitude
+ZONE_RADIUS = 0.03
 
 # Setup logging
 setup_logging()
@@ -36,9 +39,9 @@ logger = structlog.get_logger(__name__)
 class SimulatedDrone:
     def __init__(self, drone_id: str):
         self.drone_id = drone_id
-        # Start around Paris
-        self.lat = PARIS_LAT + (random.uniform(-0.05, 0.05))
-        self.lon = PARIS_LON + (random.uniform(-0.05, 0.05))
+        # Start around Paris (within zone radius)
+        self.lat = PARIS_LAT + (random.uniform(-ZONE_RADIUS, ZONE_RADIUS))
+        self.lon = PARIS_LON + (random.uniform(-ZONE_RADIUS, ZONE_RADIUS))
         self.battery = random.uniform(70.0, 100.0)
         self.speed = 0.0
         self.status = DroneStatus.DRONE_STATUS_IDLE
@@ -93,15 +96,14 @@ class SimulatedDrone:
 class SimulatedOrderGenerator:
     @staticmethod
     def generate_random_order() -> Order:
-        # Generate coordinates within Paris area
-        # (±0.06 to ±0.2 for realistic but distinct locations)
-        pickup_lat = PARIS_LAT + random.uniform(-0.1, 0.1)
-        pickup_lon = PARIS_LON + random.uniform(-0.1, 0.1)
+        # Generate coordinates within compact zone (~3-4 km) for feasible VRP
+        pickup_lat = PARIS_LAT + random.uniform(-ZONE_RADIUS, ZONE_RADIUS)
+        pickup_lon = PARIS_LON + random.uniform(-ZONE_RADIUS, ZONE_RADIUS)
 
-        # Delivery location close but not too close (between 2km and 15km approx)
-        # 0.01 degree is approx 1.1km
-        delivery_lat = pickup_lat + random.uniform(-0.05, 0.05)
-        delivery_lon = pickup_lon + random.uniform(-0.05, 0.05)
+        # Delivery within ~1-2 km of pickup
+        delivery_offset = 0.015  # ~1.5 km
+        delivery_lat = pickup_lat + random.uniform(-delivery_offset, delivery_offset)
+        delivery_lon = pickup_lon + random.uniform(-delivery_offset, delivery_offset)
 
         priority = random.choice(list(OrderPriority))
         product_type = random.choice(list(ProductType))

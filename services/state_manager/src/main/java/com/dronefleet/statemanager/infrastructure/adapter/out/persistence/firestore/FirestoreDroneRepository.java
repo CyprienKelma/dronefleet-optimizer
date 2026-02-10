@@ -76,7 +76,7 @@ public class FirestoreDroneRepository implements DroneRepository {
                             .whereGreaterThanOrEqualTo(
                                     "batteryPercentage", (double) minBatteryPercent)
                             .get();
-            return future.get(10, java.util.concurrent.TimeUnit.SECONDS).getDocuments().stream()
+            return future.get(30, java.util.concurrent.TimeUnit.SECONDS).getDocuments().stream()
                     .map(mapper::mapToDrone)
                     .collect(Collectors.toList());
         } catch (Exception e) {

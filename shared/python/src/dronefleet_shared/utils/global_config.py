@@ -61,7 +61,7 @@ class Settings(BaseSettings):
 
     # Solver parameters
     solver_time_limit_seconds: int = Field(
-        default=8, description="Solver time limit in seconds"
+        default=180, description="Solver time limit in seconds"
     )
     min_battery_threshold: int = Field(
         default=20, description="Minimum battery threshold for optimization"

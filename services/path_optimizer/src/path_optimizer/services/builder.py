@@ -8,12 +8,18 @@ logger = structlog.get_logger(__name__)
 
 
 def get_max_delivery_time_minutes(priority: OrderPriority) -> int:
-    """Calculate deadline based on priority (minutes from creation)."""
+    """Calculate deadline based on priority (minutes from optimization start).
+
+    Values are chosen to allow feasible routes: depot -> warehouse pickup ->
+    delivery can take 15-25 min for typical distances (5-10 km). Critical
+    gets 30 min to account for travel time; tighter values cause the solver
+    to drop all orders as infeasible.
+    """
     if priority == OrderPriority.ORDER_PRIORITY_CRITICAL:
-        return 15
-    elif priority == OrderPriority.ORDER_PRIORITY_HIGH:
         return 30
-    return 60
+    elif priority == OrderPriority.ORDER_PRIORITY_HIGH:
+        return 60
+    return 120
 
 
 class VRPProblem(NamedTuple):
@@ -174,11 +180,11 @@ class VRPProblemBuilder:
                     time_matrix[i][j] = self._travel_time_seconds(dist)
 
         logger.info(
-            "VRP Problem built: %d drones, %d orders, %d warehouses, %d nodes",
-            len(self.drones),
-            len(order_ids),
-            len(self.warehouses),
-            num_nodes,
+            "VRP Problem built",
+            drones=len(self.drones),
+            orders=len(order_ids),
+            warehouses=len(self.warehouses),
+            nodes=num_nodes,
         )
 
         return VRPProblem(

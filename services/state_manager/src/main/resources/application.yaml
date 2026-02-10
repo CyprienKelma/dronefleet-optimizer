@@ -44,6 +44,7 @@ logging:
     root: ${LOG_LEVEL:INFO}
     '[com.dronefleet.statemanager]': ${LOG_LEVEL:INFO}
     '[com.google.cloud]': WARN
+    '[io.grpc]': WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 

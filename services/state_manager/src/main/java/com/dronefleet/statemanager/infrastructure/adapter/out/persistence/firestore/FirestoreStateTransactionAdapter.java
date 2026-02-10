@@ -128,94 +128,120 @@ public class FirestoreStateTransactionAdapter implements StateTransactionPort {
 
     @Override
     public void runTelemetryUpdateTransaction(DroneTelemetry telemetry) {
-        firestore.runTransaction(
-                transaction -> {
-                    DocumentReference droneRef =
-                            firestore
-                                    .collection(appProperties.getDronesCollection())
-                                    .document(telemetry.getDroneId());
-                    DocumentSnapshot droneSnap = transaction.get(droneRef).get();
+        ApiFuture<Void> result =
+                firestore.runTransaction(
+                        transaction -> {
+                            DocumentReference droneRef =
+                                    firestore
+                                            .collection(appProperties.getDronesCollection())
+                                            .document(telemetry.getDroneId());
+                            DocumentSnapshot droneSnap = transaction.get(droneRef).get();
 
-                    Drone drone;
-                    if (droneSnap.exists()) {
-                        drone = mapper.mapToDrone(droneSnap);
+                            Drone drone;
+                            if (droneSnap.exists()) {
+                                drone = mapper.mapToDrone(droneSnap);
 
-                        // Ordering check: if incoming telemetry is older than last update, skip
-                        if (drone.hasLastUpdate()) {
-                            Instant currentLastUpdate =
-                                    Instant.ofEpochSecond(
-                                            drone.getLastUpdate().getSeconds(),
-                                            drone.getLastUpdate().getNanos());
-                            Instant incomingTimestamp =
-                                    Instant.ofEpochSecond(
-                                            telemetry.getTimestamp().getSeconds(),
-                                            telemetry.getTimestamp().getNanos());
+                                // Ordering check: if incoming telemetry is older than last update,
+                                // skip
+                                if (drone.hasLastUpdate()) {
+                                    Instant currentLastUpdate =
+                                            Instant.ofEpochSecond(
+                                                    drone.getLastUpdate().getSeconds(),
+                                                    drone.getLastUpdate().getNanos());
+                                    Instant incomingTimestamp =
+                                            Instant.ofEpochSecond(
+                                                    telemetry.getTimestamp().getSeconds(),
+                                                    telemetry.getTimestamp().getNanos());
 
-                            if (incomingTimestamp.isBefore(currentLastUpdate)) {
-                                log.info(
-                                        "Stale telemetry for drone {}. Current: {}, Incoming: {}."
-                                                + " Skipping.",
-                                        drone.getId(),
-                                        currentLastUpdate,
-                                        incomingTimestamp);
-                                return null;
+                                    if (incomingTimestamp.isBefore(currentLastUpdate)) {
+                                        log.info(
+                                                "Stale telemetry for drone {}. Current: {},"
+                                                        + " Incoming: {}. Skipping.",
+                                                drone.getId(),
+                                                currentLastUpdate,
+                                                incomingTimestamp);
+                                        return null;
+                                    }
+                                }
+                            } else {
+                                drone = Drone.newBuilder().setId(telemetry.getDroneId()).build();
                             }
-                        }
-                    } else {
-                        drone = Drone.newBuilder().setId(telemetry.getDroneId()).build();
-                    }
 
-                    Drone updatedDrone =
-                            dronePolicy.applyTelemetryUpdate(
-                                    drone,
-                                    telemetry.getPosition(),
-                                    telemetry.getBatteryPercentage(),
-                                    telemetry.getSpeedKmh(),
-                                    telemetry.getStatus(),
-                                    telemetry.getCurrentMissionId(),
-                                    Instant.ofEpochSecond(
-                                            telemetry.getTimestamp().getSeconds(),
-                                            telemetry.getTimestamp().getNanos()));
+                            Drone updatedDrone =
+                                    dronePolicy.applyTelemetryUpdate(
+                                            drone,
+                                            telemetry.getPosition(),
+                                            telemetry.getBatteryPercentage(),
+                                            telemetry.getSpeedKmh(),
+                                            telemetry.getStatus(),
+                                            telemetry.getCurrentMissionId(),
+                                            Instant.ofEpochSecond(
+                                                    telemetry.getTimestamp().getSeconds(),
+                                                    telemetry.getTimestamp().getNanos()));
 
-                    transaction.set(droneRef, mapper.mapFromDrone(updatedDrone));
-                    return null;
-                });
+                            transaction.set(droneRef, mapper.mapFromDrone(updatedDrone));
+                            return null;
+                        });
+
+        try {
+            result.get(30, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.error(
+                    "Telemetry update transaction failed for drone {}", telemetry.getDroneId(), e);
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     @Override
     public void runOrderIngestionTransaction(Order order) {
-        firestore.runTransaction(
-                transaction -> {
-                    DocumentReference orderRef =
-                            firestore
-                                    .collection(appProperties.getOrdersCollection())
-                                    .document(order.getId());
-                    DocumentSnapshot orderSnap = transaction.get(orderRef).get();
+        ApiFuture<Void> result =
+                firestore.runTransaction(
+                        transaction -> {
+                            DocumentReference orderRef =
+                                    firestore
+                                            .collection(appProperties.getOrdersCollection())
+                                            .document(order.getId());
+                            DocumentSnapshot orderSnap = transaction.get(orderRef).get();
 
-                    if (orderSnap.exists()) {
-                        Order existing = mapper.mapToOrder(orderSnap);
-                        // If order already exists and is not PENDING, we don't want to reset it
-                        if (existing.getStatus() != OrderStatus.ORDER_STATUS_PENDING
-                                && existing.getStatus() != OrderStatus.ORDER_STATUS_UNSPECIFIED) {
-                            log.info(
-                                    "Order {} already exists with status {}. Skipping ingestion.",
-                                    order.getId(),
-                                    existing.getStatus());
+                            if (orderSnap.exists()) {
+                                Order existing = mapper.mapToOrder(orderSnap);
+                                // If order already exists and is not PENDING, we don't want to
+                                // reset
+                                // it
+                                if (existing.getStatus() != OrderStatus.ORDER_STATUS_PENDING
+                                        && existing.getStatus()
+                                                != OrderStatus.ORDER_STATUS_UNSPECIFIED) {
+                                    log.info(
+                                            "Order {} already exists with status {}. Skipping"
+                                                    + " ingestion.",
+                                            order.getId(),
+                                            existing.getStatus());
+                                    return null;
+                                }
+                            }
+
+                            Order orderToSave = order;
+                            if (order.getStatus() == OrderStatus.ORDER_STATUS_UNSPECIFIED) {
+                                orderToSave =
+                                        order.toBuilder()
+                                                .setStatus(OrderStatus.ORDER_STATUS_PENDING)
+                                                .build();
+                            }
+
+                            transaction.set(orderRef, mapper.mapFromOrder(orderToSave));
                             return null;
-                        }
-                    }
+                        });
 
-                    Order orderToSave = order;
-                    if (order.getStatus() == OrderStatus.ORDER_STATUS_UNSPECIFIED) {
-                        orderToSave =
-                                order.toBuilder()
-                                        .setStatus(OrderStatus.ORDER_STATUS_PENDING)
-                                        .build();
-                    }
-
-                    transaction.set(orderRef, mapper.mapFromOrder(orderToSave));
-                    return null;
-                });
+        try {
+            result.get(30, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.error("Order ingestion transaction failed for order {}", order.getId(), e);
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     @Override

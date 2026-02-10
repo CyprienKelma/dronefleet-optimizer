@@ -70,7 +70,7 @@ public class FirestoreOrderRepository implements OrderRepository {
                             .collection(collection)
                             .whereEqualTo("status", "ORDER_STATUS_PENDING")
                             .get();
-            return future.get(10, java.util.concurrent.TimeUnit.SECONDS).getDocuments().stream()
+            return future.get(30, java.util.concurrent.TimeUnit.SECONDS).getDocuments().stream()
                     .map(mapper::mapToOrder)
                     .collect(Collectors.toList());
         } catch (Exception e) {

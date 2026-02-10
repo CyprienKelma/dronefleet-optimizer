@@ -102,6 +102,7 @@ services:
       ENVIRONMENT: local
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
       STATE_MANAGER_URL: http://state-manager:8080
+      SOLVER_TIME_LIMIT_SECONDS: 8
     depends_on:
       state-manager:
         condition: service_started
