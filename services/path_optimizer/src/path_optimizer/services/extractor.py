@@ -1,5 +1,10 @@
 import structlog
-from dronefleet_shared.models import MissionAssignment, Position, Waypoint
+from dronefleet_shared.models import (
+    MissionAssignment,
+    Position,
+    Waypoint,
+    WaypointType,
+)
 
 from .builder import VRPProblem
 
@@ -7,75 +12,80 @@ logger = structlog.get_logger(__name__)
 
 
 class SolutionExtractor:
-    """Extract mission assignments from OR-Tools solution."""
+    """Extract mission assignments from an OR-Tools routing solution."""
 
     def extract(
         self, assignment, routing, manager, problem: VRPProblem
     ) -> list[MissionAssignment]:
-        """Extract route for each vehicle."""
+        """Walk each vehicle route and build MissionAssignment objects."""
 
-        assignments = []
+        # Pre-compute lookup sets for O(1) membership tests
+        pickup_set = set(problem.pickup_nodes)
+        delivery_set = set(problem.delivery_nodes)
+
+        assignments: list[MissionAssignment] = []
 
         for vehicle_id in range(problem.num_vehicles):
             index = routing.Start(vehicle_id)
-            route_nodes = []
+            route_nodes: list[int] = []
 
-            # Collect all nodes in route
             while not routing.IsEnd(index):
-                node_index = manager.IndexToNode(index)
-                route_nodes.append(node_index)
+                route_nodes.append(manager.IndexToNode(index))
                 index = assignment.Value(routing.NextVar(index))
 
-            # Add final depot
+            # Append the terminal depot node
             route_nodes.append(manager.IndexToNode(index))
 
-            # Skip if drone didn't do anything (only depot -> depot)
+            # Skip idle drones (depot -> depot with no intermediate stops)
             if len(route_nodes) <= 2:
                 continue
 
-            # Build waypoints and identify orders
-            waypoints = []
-            order_ids_in_mission = set()
+            waypoints: list[Waypoint] = []
+            order_ids_in_mission: set[str] = set()
 
             for i, node_idx in enumerate(route_nodes):
-                position_lat, position_lon = problem.node_locations[node_idx]
-                position = Position(lat=position_lat, lon=position_lon)
+                lat, lon = problem.node_locations[node_idx]
+                position = Position(lat=lat, lon=lon)
 
                 if node_idx == problem.depot_node:
-                    waypoint_type = "DEPOT_START" if i == 0 else "DEPOT_RETURN"
+                    wpt_type = (
+                        WaypointType.WAYPOINT_TYPE_DEPOT_START
+                        if i == 0
+                        else WaypointType.WAYPOINT_TYPE_DEPOT_RETURN
+                    )
                     waypoints.append(
                         Waypoint(
-                            type=waypoint_type,
+                            type=wpt_type,
                             position=position,
-                            related_order_id=None,
-                            related_warehouse_id=None,
+                            related_order_id="",
+                            related_warehouse_id="",
                         )
                     )
 
-                elif node_idx in problem.warehouse_nodes:
-                    warehouse_id = problem.warehouse_node_to_warehouse_id[node_idx]
+                elif node_idx in pickup_set:
+                    warehouse_id = problem.pickup_node_to_warehouse_id[node_idx]
                     waypoints.append(
                         Waypoint(
-                            type="WAREHOUSE_PICKUP",
+                            type=WaypointType.WAYPOINT_TYPE_WAREHOUSE_PICKUP,
                             position=position,
-                            related_order_id=None,
+                            related_order_id="",
                             related_warehouse_id=warehouse_id,
                         )
                     )
 
-                elif node_idx in problem.delivery_nodes:
+                elif node_idx in delivery_set:
                     order_id = problem.delivery_node_to_order_id[node_idx]
                     order_ids_in_mission.add(order_id)
                     waypoints.append(
                         Waypoint(
-                            type="HOSPITAL_DELIVERY",
+                            type=WaypointType.WAYPOINT_TYPE_HOSPITAL_DELIVERY,
                             position=position,
                             related_order_id=order_id,
-                            related_warehouse_id=None,
+                            related_warehouse_id="",
                         )
                     )
 
-            # Calculate estimated metrics
+            # Aggregate route metrics
             total_distance_m = sum(
                 problem.distance_matrix[route_nodes[i]][route_nodes[i + 1]]
                 for i in range(len(route_nodes) - 1)
@@ -84,19 +94,17 @@ class SolutionExtractor:
                 problem.time_matrix[route_nodes[i]][route_nodes[i + 1]]
                 for i in range(len(route_nodes) - 1)
             )
-
-            # Battery consumption estimate (simplified)
-            battery_consumed = (total_distance_m / 1000.0) * 2.5  # % per km
+            battery_consumed_pct = (total_distance_m / 1000.0) * 2.5
 
             assignments.append(
                 MissionAssignment(
                     drone_id=problem.drone_ids[vehicle_id],
                     order_ids=list(order_ids_in_mission),
                     route=waypoints,
-                    estimated_battery_consumption=battery_consumed,
+                    estimated_battery_consumption=battery_consumed_pct,
                     estimated_duration_minutes=total_time_s / 60.0,
                 )
             )
 
-        logger.info(f"Extracted {len(assignments)} mission assignments")
+        logger.info("Extracted %d mission assignments", len(assignments))
         return assignments

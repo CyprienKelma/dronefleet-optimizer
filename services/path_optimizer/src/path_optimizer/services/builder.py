@@ -17,25 +17,33 @@ def get_max_delivery_time_minutes(priority: OrderPriority) -> int:
 
 
 class VRPProblem(NamedTuple):
-    """Complete VRP problem definition."""
+    """Complete VRP problem definition for drone delivery routing.
+
+    Node layout:
+        - Node 0: Depot (start/end for all vehicles)
+        - Nodes 1..N: Pickup nodes (one per order, located at nearest warehouse)
+        - Nodes N+1..2N: Delivery nodes (one per order, at delivery location)
+
+    Each order has its own unique pickup node to avoid shared-node conflicts
+    in OR-Tools pickup-and-delivery constraints.
+    """
 
     distance_matrix: list[list[int]]  # meters
     time_matrix: list[list[int]]  # seconds
 
     # Nodes structure
     depot_node: int  # Index 0
-    warehouse_nodes: list[int]  # Indices 1..N
-    delivery_nodes: list[int]  # Indices N+1..M
+    pickup_nodes: list[int]  # Unique per order, at nearest warehouse location
+    delivery_nodes: list[int]  # Unique per order, at order delivery location
     node_locations: list[tuple[float, float]]
 
-    # Pickups & Deliveries with warehouse choices
-    # Each order can be picked up from MULTIPLE compatible warehouses
-    pickups_deliveries: list[tuple[list[int], int]]  # ([pickup_options], delivery_node)
+    # 1-to-1 pickup-delivery pairs
+    pickups_deliveries: list[tuple[int, int]]  # (pickup_node, delivery_node)
 
     # Constraints
     num_vehicles: int
-    vehicle_capacities: list[int]  # Always [1,1,1,...] but kept for clarity
-    initial_battery_pct: list[float]  # Starting battery per drone
+    vehicle_capacities: list[int]
+    initial_battery_pct: list[float]  # Starting battery percentage per drone
     time_windows: list[tuple[int, int]]  # (earliest, latest) in seconds
 
     # Metadata for solution extraction
@@ -43,7 +51,7 @@ class VRPProblem(NamedTuple):
     order_ids: list[str]
     warehouse_ids: list[str]
     delivery_node_to_order_id: dict[int, str]
-    warehouse_node_to_warehouse_id: dict[int, str]
+    pickup_node_to_warehouse_id: dict[int, str]
 
 
 class VRPProblemBuilder:
@@ -80,60 +88,80 @@ class VRPProblemBuilder:
         return int(distance_m / DRONE_SPEED_MS)
 
     def build(self) -> VRPProblem:
-        """Build complete VRP problem with multi-warehouse support."""
+        """Build VRP problem with unique pickup nodes per order.
+
+        Instead of sharing warehouse nodes across orders (which causes
+        OR-Tools pickup-delivery conflicts), each order gets its own
+        pickup node located at the nearest compatible warehouse.
+        """
 
         if not self.warehouses:
             raise ValueError("No warehouses available in snapshot")
 
-        nodes = []
+        nodes: list[tuple[float, float]] = []
 
-        # Node 0: Depot (unique)
+        # Node 0: Depot (start and end for all vehicles)
         depot_node = 0
         nodes.append((self.depot.position.lat, self.depot.position.lon))
 
-        # Nodes 1..N: Warehouses
-        warehouse_nodes = []
-        warehouse_node_to_id = {}
-        for wh in self.warehouses:
-            wh_idx = len(nodes)
-            warehouse_nodes.append(wh_idx)
-            warehouse_node_to_id[wh_idx] = wh.id
-            nodes.append((wh.position.lat, wh.position.lon))
+        pickup_nodes: list[int] = []
+        delivery_nodes: list[int] = []
+        pickup_node_to_warehouse_id: dict[int, str] = {}
+        delivery_node_to_order_id: dict[int, str] = {}
+        pickups_deliveries: list[tuple[int, int]] = []
+        order_ids: list[str] = []
 
-        # Nodes N+1..M: Delivery locations (hospitals)
-        delivery_nodes = []
-        delivery_node_to_order_id = {}
-        pickups_deliveries = []
-        # Default: no constraints for depot/warehouses (use large value)
-        time_windows = [(0, 180 * 60)] * (len(warehouse_nodes) + 1)
+        # Depot gets a permissive time window
+        time_windows: list[tuple[int, int]] = [(0, 180 * 60)]
 
         for order in self.orders:
-            delivery_idx = len(nodes)
-            delivery_nodes.append(delivery_idx)
-            delivery_node_to_order_id[delivery_idx] = order.id
-            nodes.append((order.delivery_location.lat, order.delivery_location.lon))
-
-            # Time window for this delivery
-            deadline_seconds = get_max_delivery_time_minutes(order.priority) * 60
-            time_windows.append((0, deadline_seconds))
-
-            # Find compatible warehouses for this order
-            compatible_warehouse_nodes = [
-                wh_idx
-                for wh_idx, wh in zip(warehouse_nodes, self.warehouses, strict=False)
+            # Identify warehouses that stock the required product type
+            compatible_warehouses = [
+                wh
+                for wh in self.warehouses
                 if order.product_type in wh.authorized_product_types
             ]
 
-            if not compatible_warehouse_nodes:
+            if not compatible_warehouses:
                 logger.warning(
-                    f"No compatible warehouse for order {order.id} product {order.product_type}"
+                    "No compatible warehouse for order %s (product: %s), skipping",
+                    order.id,
+                    order.product_type,
                 )
                 continue
 
-            # Add pickup-delivery pair with multiple pickup options
-            pickups_deliveries.append((compatible_warehouse_nodes, delivery_idx))
+            # Select the warehouse closest to the delivery location to
+            # minimize transit distance for each pickup-delivery leg.
+            nearest_wh = min(
+                compatible_warehouses,
+                key=lambda wh: self._haversine_distance(
+                    (wh.position.lat, wh.position.lon),
+                    (order.delivery_location.lat, order.delivery_location.lon),
+                ),
+            )
 
-        # Build distance matrix
+            # Unique pickup node at the selected warehouse position
+            pickup_idx = len(nodes)
+            pickup_nodes.append(pickup_idx)
+            pickup_node_to_warehouse_id[pickup_idx] = nearest_wh.id
+            nodes.append((nearest_wh.position.lat, nearest_wh.position.lon))
+            time_windows.append((0, 180 * 60))  # Flexible pickup window
+
+            # Unique delivery node at the order destination
+            delivery_idx = len(nodes)
+            delivery_nodes.append(delivery_idx)
+            delivery_node_to_order_id[delivery_idx] = order.id
+            nodes.append(
+                (order.delivery_location.lat, order.delivery_location.lon)
+            )
+            deadline_seconds = get_max_delivery_time_minutes(order.priority) * 60
+            time_windows.append((0, deadline_seconds))
+
+            # Register the 1-to-1 pickup-delivery pair
+            pickups_deliveries.append((pickup_idx, delivery_idx))
+            order_ids.append(order.id)
+
+        # Build pairwise distance and travel-time matrices
         num_nodes = len(nodes)
         distance_matrix = [[0] * num_nodes for _ in range(num_nodes)]
         time_matrix = [[0] * num_nodes for _ in range(num_nodes)]
@@ -146,15 +174,18 @@ class VRPProblemBuilder:
                     time_matrix[i][j] = self._travel_time_seconds(dist)
 
         logger.info(
-            f"VRP Problem built: {len(self.drones)} drones, "
-            f"{len(self.orders)} orders, {len(self.warehouses)} warehouses"
+            "VRP Problem built: %d drones, %d orders, %d warehouses, %d nodes",
+            len(self.drones),
+            len(order_ids),
+            len(self.warehouses),
+            num_nodes,
         )
 
         return VRPProblem(
             distance_matrix=distance_matrix,
             time_matrix=time_matrix,
             depot_node=depot_node,
-            warehouse_nodes=warehouse_nodes,
+            pickup_nodes=pickup_nodes,
             delivery_nodes=delivery_nodes,
             node_locations=nodes,
             pickups_deliveries=pickups_deliveries,
@@ -163,8 +194,8 @@ class VRPProblemBuilder:
             initial_battery_pct=[d.battery_percentage for d in self.drones],
             time_windows=time_windows,
             drone_ids=[d.id for d in self.drones],
-            order_ids=[o.id for o in self.orders],
+            order_ids=order_ids,
             warehouse_ids=[wh.id for wh in self.warehouses],
             delivery_node_to_order_id=delivery_node_to_order_id,
-            warehouse_node_to_warehouse_id=warehouse_node_to_id,
+            pickup_node_to_warehouse_id=pickup_node_to_warehouse_id,
         )
