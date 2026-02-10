@@ -35,32 +35,51 @@ public class OptimizationSnapshotService implements GetOptimizationSnapshotUseCa
     public OptimizationSnapshot getSnapshot(String sessionId) {
         log.info("Creating optimization snapshot with sessionId: {}", sessionId);
 
-        List<Drone> idleDrones =
-                droneRepository.findAvailableForOptimization(
-                        appProperties.getMinBatteryForOptimization());
+        try {
+            log.debug("Fetching available drones...");
+            List<Drone> idleDrones =
+                    droneRepository.findAvailableForOptimization(
+                            appProperties.getMinBatteryForOptimization());
+            log.debug("Found {} idle drones", idleDrones.size());
 
-        List<Order> pendingOrders = orderRepository.findPending();
+            log.debug("Fetching pending orders...");
+            List<Order> pendingOrders = orderRepository.findPending();
+            log.debug("Found {} pending orders", pendingOrders.size());
 
-        Depot depot =
-                depotRepository
-                        .findMainDepot()
-                        .orElseThrow(
-                                () -> new BusinessRejectionException("No main depot configured"));
+            log.debug("Fetching main depot...");
+            Depot depot =
+                    depotRepository
+                            .findMainDepot()
+                            .orElseThrow(
+                                    () ->
+                                            new BusinessRejectionException(
+                                                    "No main depot configured"));
+            log.debug("Found main depot: {}", depot.getName());
 
-        List<Warehouse> warehouses = warehouseRepository.findAll();
+            log.debug("Fetching warehouses...");
+            List<Warehouse> warehouses = warehouseRepository.findAll();
+            log.debug("Found {} warehouses", warehouses.size());
 
-        Instant now = Instant.now();
-        return OptimizationSnapshot.newBuilder()
-                .setSessionId(sessionId)
-                .setTimestamp(
-                        com.google.protobuf.Timestamp.newBuilder()
-                                .setSeconds(now.getEpochSecond())
-                                .setNanos(now.getNano())
-                                .build())
-                .addAllDrones(idleDrones)
-                .setDepot(depot)
-                .addAllWarehouses(warehouses)
-                .addAllOrders(pendingOrders)
-                .build();
+            Instant now = Instant.now();
+            return OptimizationSnapshot.newBuilder()
+                    .setSessionId(sessionId)
+                    .setTimestamp(
+                            com.google.protobuf.Timestamp.newBuilder()
+                                    .setSeconds(now.getEpochSecond())
+                                    .setNanos(now.getNano())
+                                    .build())
+                    .addAllDrones(idleDrones)
+                    .setDepot(depot)
+                    .addAllWarehouses(warehouses)
+                    .addAllOrders(pendingOrders)
+                    .build();
+        } catch (Exception e) {
+            log.error(
+                    "Error creating optimization snapshot for session {}: {}",
+                    sessionId,
+                    e.getMessage(),
+                    e);
+            throw e;
+        }
     }
 }

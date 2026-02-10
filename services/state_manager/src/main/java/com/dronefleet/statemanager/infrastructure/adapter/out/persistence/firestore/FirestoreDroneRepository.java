@@ -64,20 +64,29 @@ public class FirestoreDroneRepository implements DroneRepository {
 
     @Override
     public List<Drone> findAvailableForOptimization(int minBatteryPercent) {
+        String collection = appProperties.getDronesCollection();
+        log.debug(
+                "Querying collection: '{}' for idle drones with battery >= {}%",
+                collection, minBatteryPercent);
         try {
             ApiFuture<QuerySnapshot> future =
                     firestore
-                            .collection(appProperties.getDronesCollection())
+                            .collection(collection)
                             .whereEqualTo("status", DroneStatus.DRONE_STATUS_IDLE.name())
                             .whereGreaterThanOrEqualTo(
                                     "batteryPercentage", (double) minBatteryPercent)
                             .get();
-            return future.get().getDocuments().stream()
+            return future.get(10, java.util.concurrent.TimeUnit.SECONDS).getDocuments().stream()
                     .map(mapper::mapToDrone)
                     .collect(Collectors.toList());
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("Error retrieving available drones from Firestore", e);
-            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            log.error(
+                    "Error retrieving available drones from Firestore (collection: '{}')",
+                    collection,
+                    e);
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
             return List.of();
         }
     }
@@ -85,16 +94,21 @@ public class FirestoreDroneRepository implements DroneRepository {
     @Override
     public void saveDrone(Drone drone) {
         try {
-            log.debug("Saving drone {} to Firestore...", drone.getId());
+            log.debug(
+                    "Saving drone {} to Firestore (collection: '{}')...",
+                    drone.getId(),
+                    appProperties.getDronesCollection());
             firestore
                     .collection(appProperties.getDronesCollection())
                     .document(drone.getId())
-                    .set(mapper.mapFromDrone(drone))
-                    .get();
-            log.debug("Drone {} saved successfully.", drone.getId());
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("Error saving drone to Firestore: {}", drone.getId(), e);
-            Thread.currentThread().interrupt();
+                    .set(mapper.mapFromDrone(drone));
+            log.debug("Drone update requested for {}.", drone.getId());
+        } catch (Exception e) {
+            log.error(
+                    "Error initiating save drone to Firestore (collection: '{}'): {}",
+                    appProperties.getDronesCollection(),
+                    drone.getId(),
+                    e);
         }
     }
 }

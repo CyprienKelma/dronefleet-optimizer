@@ -29,14 +29,21 @@ public class FirestoreWarehouseRepository implements WarehouseRepository {
 
     @Override
     public List<Warehouse> findAll() {
+        String collection = appProperties.getWarehousesCollection();
+        log.debug("Querying collection: '{}' for all warehouses", collection);
         try {
-            ApiFuture<QuerySnapshot> future =
-                    firestore.collection(appProperties.getWarehousesCollection()).get();
-            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+            ApiFuture<QuerySnapshot> future = firestore.collection(collection).get();
+            List<QueryDocumentSnapshot> documents =
+                    future.get(10, java.util.concurrent.TimeUnit.SECONDS).getDocuments();
             return documents.stream().map(mapper::mapToWarehouse).collect(Collectors.toList());
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("Error retrieving all warehouses from Firestore", e);
-            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            log.error(
+                    "Error retrieving all warehouses from Firestore (collection: '{}')",
+                    collection,
+                    e);
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
             return List.of();
         }
     }

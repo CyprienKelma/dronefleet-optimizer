@@ -135,9 +135,7 @@ public class FirestoreMapper {
                         .setStatus(orderPolicy.parseStatus(doc.getString("status")))
                         .setPriority(
                                 doc.getString("priority") != null
-                                        ? OrderPriority.valueOf(
-                                                "ORDER_PRIORITY_"
-                                                        + doc.getString("priority").toUpperCase())
+                                        ? parseOrderPriority(doc.getString("priority"))
                                         : OrderPriority.ORDER_PRIORITY_STANDARD)
                         .setProductType(
                                 doc.getString("productType") != null
@@ -426,5 +424,20 @@ public class FirestoreMapper {
         }
 
         return map;
+    }
+
+    private OrderPriority parseOrderPriority(String priority) {
+        if (priority == null || priority.isEmpty()) {
+            return OrderPriority.ORDER_PRIORITY_STANDARD;
+        }
+        String p = priority.toUpperCase();
+        if (p.startsWith("ORDER_PRIORITY_")) {
+            return OrderPriority.valueOf(p);
+        }
+        try {
+            return OrderPriority.valueOf("ORDER_PRIORITY_" + p);
+        } catch (IllegalArgumentException e) {
+            return OrderPriority.ORDER_PRIORITY_STANDARD;
+        }
     }
 }

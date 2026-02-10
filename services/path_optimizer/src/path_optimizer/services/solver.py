@@ -12,7 +12,7 @@ class VRPSolver:
     def __init__(self, problem: VRPProblem):
         self.problem = problem
 
-    def solve(self, time_limit_seconds: int = 8):
+    def solve(self, time_limit_seconds: int = 30):
         """Solve VRP problem with OR-Tools Routing."""
 
         # Create routing index manager
@@ -162,6 +162,7 @@ class VRPSolver:
         # SOLVE
         assignment = routing.SolveWithParameters(search_parameters)
 
+        print(assignment)
         if assignment:
             logger.info(
                 f"Solution found! Objective value: {assignment.ObjectiveValue()}"

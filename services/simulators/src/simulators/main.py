@@ -20,8 +20,8 @@ from dronefleet_shared.utils.logging_config import setup_logging
 # Configuration
 TELEMETRY_API_URL = "http://localhost:8000/api/v1/telemetry"
 ORDERS_API_URL = "http://localhost:8000/api/v1/orders"
-DRONE_COUNT = 40
-UPDATE_INTERVAL_SEC = 1.0
+DRONE_COUNT = 5
+UPDATE_INTERVAL_SEC = 3.0
 ORDER_PROBABILITY = 0.05  # 5% chance to generate an order per loop iteration
 
 # Center: Paris (Lat: 48.8566, Lon: 2.3522)

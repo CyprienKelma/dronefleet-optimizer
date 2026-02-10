@@ -62,18 +62,25 @@ public class FirestoreOrderRepository implements OrderRepository {
 
     @Override
     public List<Order> findPending() {
+        String collection = appProperties.getOrdersCollection();
+        log.debug("Querying collection: '{}' for pending orders", collection);
         try {
             ApiFuture<QuerySnapshot> future =
                     firestore
-                            .collection(appProperties.getOrdersCollection())
-                            .whereEqualTo("status", "PENDING")
+                            .collection(collection)
+                            .whereEqualTo("status", "ORDER_STATUS_PENDING")
                             .get();
-            return future.get().getDocuments().stream()
+            return future.get(10, java.util.concurrent.TimeUnit.SECONDS).getDocuments().stream()
                     .map(mapper::mapToOrder)
                     .collect(Collectors.toList());
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("Error retrieving pending orders from Firestore", e);
-            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            log.error(
+                    "Error retrieving pending orders from Firestore (collection: '{}')",
+                    collection,
+                    e);
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
             return List.of();
         }
     }

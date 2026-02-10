@@ -25,33 +25,49 @@ public class FirestoreDepotRepository implements DepotRepository {
 
     @Override
     public Optional<Depot> findMainDepot() {
+        String collection = appProperties.getDepotsCollection();
+        log.debug("Querying collection: '{}' for main depot", collection);
         try {
             // For now, we assume there's only one main depot or we take the first one
+            // TODO: Handle multiple depots
             QuerySnapshot querySnapshot =
-                    firestore.collection(appProperties.getDepotsCollection()).limit(1).get().get();
+                    firestore
+                            .collection(collection)
+                            .limit(1)
+                            .get()
+                            .get(10, java.util.concurrent.TimeUnit.SECONDS);
 
             if (!querySnapshot.isEmpty()) {
                 DocumentSnapshot document = querySnapshot.getDocuments().get(0);
                 return Optional.of(mapper.mapToDepot(document));
             }
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("Error retrieving main depot from Firestore", e);
-            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            log.error(
+                    "Error retrieving main depot from Firestore (collection: '{}')", collection, e);
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
         }
         return Optional.empty();
     }
 
     @Override
     public Depot save(Depot depot) {
+        String collection = appProperties.getDepotsCollection();
+        log.debug("Saving depot to collection: '{}'", collection);
         try {
             firestore
-                    .collection(appProperties.getDepotsCollection())
+                    .collection(collection)
                     .document(depot.getId())
                     .set(mapper.mapFromDepot(depot))
                     .get();
             return depot;
         } catch (InterruptedException | ExecutionException e) {
-            log.error("Error saving depot to Firestore: {}", depot.getId(), e);
+            log.error(
+                    "Error saving depot to Firestore (collection: '{}'): {}",
+                    collection,
+                    depot.getId(),
+                    e);
             Thread.currentThread().interrupt();
             return null;
         }

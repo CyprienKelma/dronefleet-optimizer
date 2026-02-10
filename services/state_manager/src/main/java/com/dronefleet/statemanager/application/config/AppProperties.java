@@ -13,15 +13,15 @@ public class AppProperties {
 
     private int maxBatchSize;
 
-    private String dronesCollection;
+    private String dronesCollection = "drones";
 
-    private String ordersCollection;
+    private String ordersCollection = "orders";
 
-    private String missionsCollection;
+    private String missionsCollection = "missions";
 
-    private String warehousesCollection;
+    private String warehousesCollection = "warehouses";
 
-    private String depotsCollection;
+    private String depotsCollection = "depots";
 
     private int minBatteryForOptimization = 20;
 }
