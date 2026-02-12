@@ -106,6 +106,9 @@ resource "google_firestore_database" "drone_fleet" {
   location_id = var.firestore_location
   type        = "FIRESTORE_NATIVE"
 
+  delete_protection_state = "DELETE_PROTECTION_DISABLED"
+  deletion_policy         = "DELETE"
+
   concurrency_mode            = "OPTIMISTIC"
   app_engine_integration_mode = "DISABLED"
 }
