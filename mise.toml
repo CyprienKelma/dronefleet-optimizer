@@ -33,6 +33,7 @@ PROJECT_ID = "drone-fleet-optimizer-local"
 PYTHONPATH = "src"
 # Automatic virtualenv activation
 _.python.venv = { path = ".venv", create = true }
+# Load environment variables from .env files
 _.file = [{ path = ".env" }, "configs/{{env.ENVIRONMENT}}.env"]
 # Local emulators
 PUBSUB_EMULATOR_HOST = "localhost:8085"

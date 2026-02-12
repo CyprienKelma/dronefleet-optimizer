@@ -75,6 +75,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: jdx/mise-action@v3
+        with:
+          experimental: true
+          cache: true
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -92,7 +97,13 @@ jobs:
 
       - name: Terraform Plan
         working-directory: infra/terraform/environments/dev
-        run: terraform plan -out=tfplan
+        run: |
+          terraform plan \
+            -var="project_id=${{ env.PROJECT_ID }}" \
+            -var="environment=dev" \
+            -var="firestore_location=${{ env.FIRESTORE_LOCATION }}" \
+            -var="budget_amount=${{ env.BUDGET_AMOUNT }}" \
+            -out=tfplan
 
       - name: Terraform Apply
         working-directory: infra/terraform/environments/dev
