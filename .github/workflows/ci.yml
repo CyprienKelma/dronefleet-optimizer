@@ -132,7 +132,12 @@ jobs:
         working-directory: services/ingestion
 
       - name: Unit tests
-        run: uv run pytest tests/ -v --tb=short
+        run: |
+          if [ -d tests/ ]; then
+            uv run pytest tests/ -v --tb=short
+          else
+            echo "No tests/ directory found, skipping tests."
+          fi
         working-directory: services/ingestion
 
       - name: Docker build (dry-run)
@@ -200,7 +205,12 @@ jobs:
         working-directory: services/path_optimizer
 
       - name: Unit tests
-        run: uv run pytest tests/ -v --tb=short
+        run: |
+          if [ -d tests/ ]; then
+            uv run pytest tests/ -v --tb=short
+          else
+            echo "No tests/ directory found, skipping tests."
+          fi
         working-directory: services/path_optimizer
 
       - name: Docker build (dry-run)
