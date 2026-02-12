@@ -23,7 +23,6 @@ export interface Drone {
   battery_capacity_mah: number;
   consumption_per_km: number;
   max_flight_time_minutes: number;
-  short_name: string;
 }
 
 export interface DroneTelemetry {
@@ -50,7 +49,6 @@ function createBaseDrone(): Drone {
     battery_capacity_mah: 0,
     consumption_per_km: 0,
     max_flight_time_minutes: 0,
-    short_name: "",
   };
 }
 
@@ -105,11 +103,6 @@ export const Drone: MessageFns<Drone> = {
         : isSet(object.max_flight_time_minutes)
         ? globalThis.Number(object.max_flight_time_minutes)
         : 0,
-      short_name: isSet(object.shortName)
-        ? globalThis.String(object.shortName)
-        : isSet(object.short_name)
-        ? globalThis.String(object.short_name)
-        : "",
     };
   },
 
@@ -151,9 +144,6 @@ export const Drone: MessageFns<Drone> = {
     if (message.max_flight_time_minutes !== 0) {
       obj.maxFlightTimeMinutes = Math.round(message.max_flight_time_minutes);
     }
-    if (message.short_name !== "") {
-      obj.shortName = message.short_name;
-    }
     return obj;
   },
 
@@ -176,7 +166,6 @@ export const Drone: MessageFns<Drone> = {
     message.battery_capacity_mah = object.battery_capacity_mah ?? 0;
     message.consumption_per_km = object.consumption_per_km ?? 0;
     message.max_flight_time_minutes = object.max_flight_time_minutes ?? 0;
-    message.short_name = object.short_name ?? "";
     return message;
   },
 };

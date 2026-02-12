@@ -92,7 +92,6 @@ class Drone(betterproto.Message):
     battery_capacity_mah: int = betterproto.int32_field(10)
     consumption_per_km: float = betterproto.double_field(11)
     max_flight_time_minutes: int = betterproto.int32_field(12)
-    short_name: str = betterproto.string_field(13)
 
 
 @dataclass

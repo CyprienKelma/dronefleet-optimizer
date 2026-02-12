@@ -22,7 +22,6 @@ private static final long serialVersionUID = 0L;
     currentMissionId_ = "";
     solvingSessionId_ = "";
     homeDepotId_ = "";
-    shortName_ = "";
   }
 
   @java.lang.Override
@@ -327,45 +326,6 @@ private static final long serialVersionUID = 0L;
     return maxFlightTimeMinutes_;
   }
 
-  public static final int SHORT_NAME_FIELD_NUMBER = 13;
-  @SuppressWarnings("serial")
-  private volatile java.lang.Object shortName_ = "";
-  /**
-   * <code>string short_name = 13 [json_name = "shortName"];</code>
-   * @return The shortName.
-   */
-  @java.lang.Override
-  public java.lang.String getShortName() {
-    java.lang.Object ref = shortName_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = 
-          (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      shortName_ = s;
-      return s;
-    }
-  }
-  /**
-   * <code>string short_name = 13 [json_name = "shortName"];</code>
-   * @return The bytes for shortName.
-   */
-  @java.lang.Override
-  public com.google.protobuf.ByteString
-      getShortNameBytes() {
-    java.lang.Object ref = shortName_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = 
-          com.google.protobuf.ByteString.copyFromUtf8(
-              (java.lang.String) ref);
-      shortName_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
-  }
-
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -415,9 +375,6 @@ private static final long serialVersionUID = 0L;
     }
     if (maxFlightTimeMinutes_ != 0) {
       output.writeInt32(12, maxFlightTimeMinutes_);
-    }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(shortName_)) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 13, shortName_);
     }
     getUnknownFields().writeTo(output);
   }
@@ -472,9 +429,6 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeInt32Size(12, maxFlightTimeMinutes_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(shortName_)) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(13, shortName_);
-    }
     size += getUnknownFields().getSerializedSize();
     memoizedSize = size;
     return size;
@@ -522,8 +476,6 @@ private static final long serialVersionUID = 0L;
             other.getConsumptionPerKm())) return false;
     if (getMaxFlightTimeMinutes()
         != other.getMaxFlightTimeMinutes()) return false;
-    if (!getShortName()
-        .equals(other.getShortName())) return false;
     if (!getUnknownFields().equals(other.getUnknownFields())) return false;
     return true;
   }
@@ -566,8 +518,6 @@ private static final long serialVersionUID = 0L;
         java.lang.Double.doubleToLongBits(getConsumptionPerKm()));
     hash = (37 * hash) + MAX_FLIGHT_TIME_MINUTES_FIELD_NUMBER;
     hash = (53 * hash) + getMaxFlightTimeMinutes();
-    hash = (37 * hash) + SHORT_NAME_FIELD_NUMBER;
-    hash = (53 * hash) + getShortName().hashCode();
     hash = (29 * hash) + getUnknownFields().hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -726,7 +676,6 @@ private static final long serialVersionUID = 0L;
       batteryCapacityMah_ = 0;
       consumptionPerKm_ = 0D;
       maxFlightTimeMinutes_ = 0;
-      shortName_ = "";
       return this;
     }
 
@@ -802,9 +751,6 @@ private static final long serialVersionUID = 0L;
       }
       if (((from_bitField0_ & 0x00000800) != 0)) {
         result.maxFlightTimeMinutes_ = maxFlightTimeMinutes_;
-      }
-      if (((from_bitField0_ & 0x00001000) != 0)) {
-        result.shortName_ = shortName_;
       }
       result.bitField0_ |= to_bitField0_;
     }
@@ -897,11 +843,6 @@ private static final long serialVersionUID = 0L;
       if (other.getMaxFlightTimeMinutes() != 0) {
         setMaxFlightTimeMinutes(other.getMaxFlightTimeMinutes());
       }
-      if (!other.getShortName().isEmpty()) {
-        shortName_ = other.shortName_;
-        bitField0_ |= 0x00001000;
-        onChanged();
-      }
       this.mergeUnknownFields(other.getUnknownFields());
       onChanged();
       return this;
@@ -992,11 +933,6 @@ private static final long serialVersionUID = 0L;
               bitField0_ |= 0x00000800;
               break;
             } // case 96
-            case 106: {
-              shortName_ = input.readStringRequireUtf8();
-              bitField0_ |= 0x00001000;
-              break;
-            } // case 106
             default: {
               if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                 done = true; // was an endgroup tag
@@ -1753,78 +1689,6 @@ private static final long serialVersionUID = 0L;
     public Builder clearMaxFlightTimeMinutes() {
       bitField0_ = (bitField0_ & ~0x00000800);
       maxFlightTimeMinutes_ = 0;
-      onChanged();
-      return this;
-    }
-
-    private java.lang.Object shortName_ = "";
-    /**
-     * <code>string short_name = 13 [json_name = "shortName"];</code>
-     * @return The shortName.
-     */
-    public java.lang.String getShortName() {
-      java.lang.Object ref = shortName_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs =
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        shortName_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
-    }
-    /**
-     * <code>string short_name = 13 [json_name = "shortName"];</code>
-     * @return The bytes for shortName.
-     */
-    public com.google.protobuf.ByteString
-        getShortNameBytes() {
-      java.lang.Object ref = shortName_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        shortName_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <code>string short_name = 13 [json_name = "shortName"];</code>
-     * @param value The shortName to set.
-     * @return This builder for chaining.
-     */
-    public Builder setShortName(
-        java.lang.String value) {
-      if (value == null) { throw new NullPointerException(); }
-      shortName_ = value;
-      bitField0_ |= 0x00001000;
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string short_name = 13 [json_name = "shortName"];</code>
-     * @return This builder for chaining.
-     */
-    public Builder clearShortName() {
-      shortName_ = getDefaultInstance().getShortName();
-      bitField0_ = (bitField0_ & ~0x00001000);
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string short_name = 13 [json_name = "shortName"];</code>
-     * @param value The bytes for shortName to set.
-     * @return This builder for chaining.
-     */
-    public Builder setShortNameBytes(
-        com.google.protobuf.ByteString value) {
-      if (value == null) { throw new NullPointerException(); }
-      checkByteStringIsUtf8(value);
-      shortName_ = value;
-      bitField0_ |= 0x00001000;
       onChanged();
       return this;
     }

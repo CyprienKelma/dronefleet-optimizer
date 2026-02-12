@@ -126,16 +126,4 @@ public interface DroneOrBuilder extends
    * @return The maxFlightTimeMinutes.
    */
   int getMaxFlightTimeMinutes();
-
-  /**
-   * <code>string short_name = 13 [json_name = "shortName"];</code>
-   * @return The shortName.
-   */
-  java.lang.String getShortName();
-  /**
-   * <code>string short_name = 13 [json_name = "shortName"];</code>
-   * @return The bytes for shortName.
-   */
-  com.google.protobuf.ByteString
-      getShortNameBytes();
 }
