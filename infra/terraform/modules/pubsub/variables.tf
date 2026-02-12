@@ -39,8 +39,9 @@ variable "retry_maximum_backoff" {
 }
 
 variable "dead_letter_topic" {
-  description = "Dead letter topic for failed messages"
+  description = "Dead letter topic for failed messages (null to disable DLQ)"
   type        = string
+  default     = null
 }
 
 variable "max_delivery_attempts" {

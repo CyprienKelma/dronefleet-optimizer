@@ -457,134 +457,119 @@ drone-fleet-optimizer/
 │       └── vite.config.ts
 ├── settings.gradle
 ├── shared
-│   ├── java
-│   │   ├── bin
-│   │   │   ├── default
-│   │   │   ├── generated-sources
-│   │   │   │   └── annotations
-│   │   │   └── main
-│   │   │       └── com
-│   │   │           └── dronefleet
-│   │   │               └── shared
-│   │   │                   └── models
-│   │   │                       ├── Drone.class
-│   │   │                       ├── Drone$DroneBuilder.class
-│   │   │                       ├── DroneStatus.class
-│   │   │                       ├── DroneTelemetry.class
-│   │   │                       ├── Mission.class
-│   │   │                       ├── Mission$MissionBuilder.class
-│   │   │                       ├── OptimizationSnapshot.class
-│   │   │                       ├── OptimizationSnapshot$OptimizationSnapshotBuilder.class
-│   │   │                       ├── Order.class
-│   │   │                       ├── Order$OrderBuilder.class
-│   │   │                       ├── OrderStatus.class
-│   │   │                       ├── Position.class
-│   │   │                       ├── Warehouse.class
-│   │   │                       └── Warehouse$WarehouseBuilder.class
-│   │   ├── build
-│   │   │   ├── classes
-│   │   │   │   └── java
-│   │   │   │       ├── main
-│   │   │   │       │   └── com
-│   │   │   │       │       └── dronefleet
-│   │   │   │       │           └── shared
-│   │   │   │       │               └── models
-│   │   │   │       │                   ├── Drone.class
-│   │   │   │       │                   ├── Drone$DroneBuilder.class
-│   │   │   │       │                   ├── DroneStatus.class
-│   │   │   │       │                   ├── DroneTelemetry.class
-│   │   │   │       │                   ├── Mission.class
-│   │   │   │       │                   ├── Mission$MissionBuilder.class
-│   │   │   │       │                   ├── OptimizationSnapshot.class
-│   │   │   │       │                   ├── OptimizationSnapshot$OptimizationSnapshotBuilder.class
-│   │   │   │       │                   ├── Order.class
-│   │   │   │       │                   ├── Order$OrderBuilder.class
-│   │   │   │       │                   ├── OrderStatus.class
-│   │   │   │       │                   ├── Position.class
-│   │   │   │       │                   ├── Warehouse.class
-│   │   │   │       │                   └── Warehouse$WarehouseBuilder.class
-│   │   │   │       └── test
-│   │   │   ├── generated
-│   │   │   │   └── sources
-│   │   │   │       ├── annotationProcessor
-│   │   │   │       │   └── java
-│   │   │   │       │       └── main
-│   │   │   │       └── headers
-│   │   │   │           └── java
-│   │   │   │               └── main
-│   │   │   ├── lombok
-│   │   │   │   └── effective-config
-│   │   │   │       └── lombok-main.config
-│   │   │   ├── resources
-│   │   │   │   ├── main
-│   │   │   │   └── test
-│   │   │   └── tmp
-│   │   │       └── compileJava
-│   │   │           └── previous-compilation-data.bin
-│   │   ├── build.gradle
-│   │   └── src
-│   │       └── main
-│   │           └── java
-│   │               └── com
-│   │                   └── dronefleet
-│   │                       └── shared
-│   │                           └── models
-│   │                               ├── Drone.java
-│   │                               ├── DroneStatus.java
-│   │                               ├── DroneTelemetry.java
-│   │                               ├── Mission.java
-│   │                               ├── OptimizationSnapshot.java
-│   │                               ├── Order.java
-│   │                               ├── OrderStatus.java
-│   │                               ├── Position.java
-│   │                               └── Warehouse.java
-│   ├── python
-│   │   ├── pyproject.toml
-│   │   └── src
-│   │       └── dronefleet_shared
-│   │           ├── __init__.py
-│   │           ├── __pycache__
-│   │           │   ├── __init__.cpython-311.pyc
-│   │           │   └── __init__.cpython-313.pyc
-│   │           ├── messaging
-│   │           │   └── publisher
-│   │           ├── models
-│   │           │   ├── __init__.py
-│   │           │   ├── __pycache__
-│   │           │   │   ├── __init__.cpython-311.pyc
-│   │           │   │   ├── order.cpython-311.pyc
-│   │           │   │   ├── product.cpython-311.pyc
-│   │           │   │   ├── protocol.cpython-311.pyc
-│   │           │   │   └── telemetry.cpython-311.pyc
-│   │           │   ├── drone.py
-│   │           │   ├── mission.py
-│   │           │   ├── order.py
-│   │           │   ├── product.py
-│   │           │   ├── protocol.py
-│   │           │   ├── telemetry.py
-│   │           │   └── warehouses.py
-│   │           └── utils
-│   │               ├── __init__.py
-│   │               ├── __pycache__
-│   │               │   ├── __init__.cpython-311.pyc
-│   │               │   ├── __init__.cpython-313.pyc
-│   │               │   ├── global_config.cpython-311.pyc
-│   │               │   ├── global_config.cpython-313.pyc
-│   │               │   └── logging_config.cpython-311.pyc
-│   │               ├── global_config.py
-│   │               └── logging_config.py
-│   └── ts
-│       ├── bun.lock
-│       ├── package.json
-│       ├── README.md
-│       ├── src
-│       │   ├── index.ts
-│       │   └── schemas
-│       │       ├── drones.ts
-│       │       ├── index.ts
-│       │       ├── protocol.ts
-│       │       └── telemetry.ts
-│       └── tsconfig.json
+│   ├── build.gradle
+│   └── src
+│       └── main
+│           └── java
+│               └── com
+│                   └── dronefleet
+│                       └── shared
+│                           └── models
+│                               ├── ActionType.java
+│                               ├── CommonProto.java
+│                               ├── Depot.java
+│                               ├── DepotOrBuilder.java
+│                               ├── DepotProto.java
+│                               ├── Drone.java
+│                               ├── DroneOrBuilder.java
+│                               ├── DroneProto.java
+│                               ├── DroneStatus.java
+│                               ├── DroneTelemetry.java
+│                               ├── DroneTelemetryOrBuilder.java
+│                               ├── Mission.java
+│                               ├── MissionAssignment.java
+│                               ├── MissionAssignmentOrBuilder.java
+│                               ├── MissionOrBuilder.java
+│                               ├── MissionProto.java
+│                               ├── OptimizationSnapshot.java
+│                               ├── OptimizationSnapshotOrBuilder.java
+│                               ├── Order.java
+│                               ├── OrderOrBuilder.java
+│                               ├── OrderPriority.java
+│                               ├── OrderProto.java
+│                               ├── OrderStatus.java
+│                               ├── Position.java
+│                               ├── PositionOrBuilder.java
+│                               ├── ProductType.java
+│                               ├── SnapshotProto.java
+│                               ├── Warehouse.java
+│                               ├── WarehouseOrBuilder.java
+│                               ├── WarehouseProto.java
+│                               ├── Waypoint.java
+│                               ├── WaypointOrBuilder.java
+│                               └── WaypointType.java
+├── proto
+│   ├── buf.gen.yaml
+│   ├── buf.yaml
+│   ├── dronefleet
+│   │   └── v1
+│   │       ├── common.proto
+│   │       ├── depot.proto
+│   │       ├── drone.proto
+│   │       ├── mission.proto
+│   │       ├── order.proto
+│   │       ├── snapshot.proto
+│   │       └── warehouse.proto
+│   ├── mise.toml
+│   └── scripts
+│       └── fix_python_init.py
+├── python
+│   ├── pyproject.toml
+│   └── src
+│       └── dronefleet_shared
+│           ├── __init__.py
+│           ├── __pycache__
+│           │   ├── __init__.cpython-311.pyc
+│           │   ├── __init__.cpython-313.pyc
+│           │   ├── schemas.cpython-311.pyc
+│           │   └── schemas.cpython-313.pyc
+│           ├── models
+│           │   ├── __init__.py
+│           │   ├── __pycache__
+│           │   │   ├── __init__.cpython-311.pyc
+│           │   │   ├── order.cpython-311.pyc
+│           │   │   ├── product.cpython-311.pyc
+│           │   │   ├── protocol.cpython-311.pyc
+│           │   │   └── telemetry.cpython-311.pyc
+│           │   └── dronefleet
+│           │       ├── __init__.py
+│           │       ├── __pycache__
+│           │       │   ├── __init__.cpython-311.pyc
+│           │       │   └── v1.cpython-311.pyc
+│           │       └── v1.py
+│           ├── schemas.py
+│           └── utils
+│               ├── __init__.py
+│               ├── __pycache__
+│               │   ├── __init__.cpython-311.pyc
+│               │   ├── __init__.cpython-313.pyc
+│               │   ├── global_config.cpython-311.pyc
+│               │   ├── global_config.cpython-313.pyc
+│               │   └── logging_config.cpython-311.pyc
+│               ├── global_config.py
+│               └── logging_config.py
+├── ts
+│   ├── bun.lock
+│   ├── package.json
+│   ├── README.md
+│   ├── src
+│   │   ├── index.ts
+│   │   └── schemas
+│   │       ├── dronefleet
+│   │       │   └── v1
+│   │       │       ├── common.ts
+│   │       │       ├── depot.ts
+│   │       │       ├── drone.ts
+│   │       │       ├── mission.ts
+│   │       │       ├── order.ts
+│   │       │       ├── snapshot.ts
+│   │       │       └── warehouse.ts
+│   │       ├── google
+│   │       │   └── protobuf
+│   │       │       └── timestamp.ts
+│   │       └── index.ts
+│   └── tsconfig.json
+│
 ├── tests
 │   ├── e2e
 │   ├── integration

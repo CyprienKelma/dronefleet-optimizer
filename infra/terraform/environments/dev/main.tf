@@ -14,7 +14,7 @@ provider "google" {
   region  = var.region
 }
 
-# Locals for common tags
+# variables
 locals {
   common_labels = {
     environment = var.environment
@@ -22,23 +22,48 @@ locals {
     managed_by  = "terraform"
   }
 
-  # Static topic and subscription names for IAM binding
-  # Use static names instead of dynamic IDs to avoid "known after apply" errors
-  ingestion_publisher_topics  = ["telemetry", "orders"]
-  state_manager_subscriptions = ["telemetry-sub", "orders-sub", "commands-sub"]
+  # sub names for IAM
+  # static names instead of dynamic id avoid "known after apply" bugs
+  ingestion_publisher_topics  = ["telemetry", "orders", "decisions"]
+  state_manager_subscriptions = ["telemetry-sub", "orders-sub", "commands-sub", "decisions-sub"]
+
+  # artifact registry image base path
+  image_base = "${var.region}-docker.pkg.dev/${var.project_id}/drone-fleet"
 }
 
-# Dead Letter Queue (DLQ) topic
+# all services :
+
+resource "google_project_service" "cloud_scheduler" {
+  project = var.project_id
+  service = "cloudscheduler.googleapis.com"
+
+  disable_on_destroy = true
+}
+
+resource "google_project_service" "cloud_run" {
+  project = var.project_id
+  service = "run.googleapis.com"
+
+  disable_on_destroy = true
+}
+
+resource "google_project_service" "cloud_billing_budget" {
+  project = var.project_id
+  service = "billingbudgets.googleapis.com"
+
+  disable_on_destroy = false
+}
+
+# pubsub topics :
+
 module "dead_letter_topic" {
   source = "../../modules/pubsub"
 
-  project_id        = var.project_id
-  topic_name        = "dead-letter-queue"
-  labels            = local.common_labels
-  dead_letter_topic = module.dead_letter_topic.topic_id
+  project_id = var.project_id
+  topic_name = "dead-letter-queue"
+  labels     = local.common_labels
 }
 
-# Telemetry Topic
 module "telemetry_topic" {
   source = "../../modules/pubsub"
 
@@ -48,7 +73,6 @@ module "telemetry_topic" {
   dead_letter_topic = module.dead_letter_topic.topic_id
 }
 
-# Orders Topic
 module "orders_topic" {
   source = "../../modules/pubsub"
 
@@ -58,7 +82,6 @@ module "orders_topic" {
   dead_letter_topic = module.dead_letter_topic.topic_id
 }
 
-# Commands Topic
 module "commands_topic" {
   source = "../../modules/pubsub"
 
@@ -68,31 +91,25 @@ module "commands_topic" {
   dead_letter_topic = module.dead_letter_topic.topic_id
 }
 
-# module "iam" {
-#   source = "../../modules/iam"
+module "decisions_topic" {
+  source = "../../modules/pubsub"
 
-#   project_id                  = var.project_id
-#   telemetry_topic_name        = module.pubsub_telemetry.topic_name
-#   telemetry_subscription_name = module.pubsub_telemetry.subscription_name
-#   orders_topic_name           = module.pubsub_orders.topic_name
-#   orders_subscription_name    = module.pubsub_orders.subscription_name
-#   commands_topic_name         = module.pubsub_commands.topic_name
-#   commands_subscription_name  = module.pubsub_commands.subscription_name
-# }
+  project_id        = var.project_id
+  topic_name        = "decisions"
+  labels            = local.common_labels
+  dead_letter_topic = module.dead_letter_topic.topic_id
+}
 
-# Firestore Database
 resource "google_firestore_database" "drone_fleet" {
   project     = var.project_id
   name        = "(default)"
   location_id = var.firestore_location
   type        = "FIRESTORE_NATIVE"
 
-  # For dev, we can use a smaller instance
   concurrency_mode            = "OPTIMISTIC"
   app_engine_integration_mode = "DISABLED"
 }
 
-# Artifact Registry (for Docker images)
 resource "google_artifact_registry_repository" "drone_fleet" {
   location      = var.region
   repository_id = "drone-fleet"
@@ -101,7 +118,8 @@ resource "google_artifact_registry_repository" "drone_fleet" {
   labels = local.common_labels
 }
 
-# Service Accounts
+# all SA :
+
 resource "google_service_account" "ingestion_api" {
   account_id   = "ingestion"
   display_name = "Ingestion API Service Account"
@@ -120,60 +138,160 @@ resource "google_service_account" "optimizer" {
   project      = var.project_id
 }
 
-# IAM Permissions
-# Ingestion API can publish to Pub/Sub topics
+# IAM for pubsub
+
+# to pub orders/telemetry topics
 resource "google_pubsub_topic_iam_member" "ingestion_publisher" {
   for_each = toset(local.ingestion_publisher_topics)
 
   project = var.project_id
-  topic   = each.value # Static topic name (telemetry, orders)
+  topic   = each.value
   role    = "roles/pubsub.publisher"
   member  = "serviceAccount:${google_service_account.ingestion_api.email}"
 
-  # Ensure topics exist before granting IAM permissions
   depends_on = [
     module.telemetry_topic,
     module.orders_topic
   ]
 }
 
-# State Manager can subscribe to Pub/Sub subscriptions
+# to sub to telemetry-sub, orders-sub, commands-sub, decisions-sub
 resource "google_pubsub_subscription_iam_member" "state_manager_subscriber" {
   for_each = toset(local.state_manager_subscriptions)
 
   project      = var.project_id
-  subscription = each.value # Static subscription name (telemetry-sub, orders-sub, commands-sub)
+  subscription = each.value
   role         = "roles/pubsub.subscriber"
   member       = "serviceAccount:${google_service_account.state_manager.email}"
 
-  # Ensure subscriptions exist before granting IAM permissions
   depends_on = [
     module.telemetry_topic,
     module.orders_topic,
-    module.commands_topic
+    module.commands_topic,
+    module.decisions_topic
   ]
 }
 
-# State Manager can write to Firestore
+# to pub to decisions topic
+resource "google_pubsub_topic_iam_member" "optimizer_publisher" {
+  project = var.project_id
+  topic   = "decisions"
+  role    = "roles/pubsub.publisher"
+  member  = "serviceAccount:${google_service_account.optimizer.email}"
+
+  depends_on = [module.decisions_topic]
+}
+
+# pubsub SA need to be set as pub on DLQ to pub failed ones
+resource "google_pubsub_topic_iam_member" "pubsub_dlq_publisher" {
+  project = var.project_id
+  topic   = "dead-letter-queue"
+  role    = "roles/pubsub.publisher"
+  member  = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+
+  depends_on = [module.dead_letter_topic]
+}
+
+# pubsub SA need to be set as sub to sub failed ones
+resource "google_pubsub_subscription_iam_member" "pubsub_dlq_subscriber" {
+  for_each = toset(["telemetry-sub", "orders-sub", "commands-sub", "decisions-sub"])
+
+  project      = var.project_id
+  subscription = each.value
+  role         = "roles/pubsub.subscriber"
+  member       = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+
+  depends_on = [
+    module.telemetry_topic,
+    module.orders_topic,
+    module.commands_topic,
+    module.decisions_topic
+  ]
+}
+
+# IAM for firestore :
+
 resource "google_project_iam_member" "state_manager_firestore" {
   project = var.project_id
   role    = "roles/datastore.user"
   member  = "serviceAccount:${google_service_account.state_manager.email}"
 }
 
-# Optimizer can read Firestore and publish commands
 resource "google_project_iam_member" "optimizer_firestore" {
   project = var.project_id
   role    = "roles/datastore.user"
   member  = "serviceAccount:${google_service_account.optimizer.email}"
 }
 
-resource "google_pubsub_topic_iam_member" "optimizer_publisher" {
-  project = var.project_id
-  topic   = "commands" # Static topic name instead of dynamic ID
-  role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:${google_service_account.optimizer.email}"
+# cloud scheduler to trgigers path-optimizer job
+resource "google_cloud_scheduler_job" "trigger_optimizer" {
+  name     = "trigger-path-optimizer"
+  project  = var.project_id
+  region   = var.region
+  schedule = "* * * * *" # every minute
 
-  # Ensure topic exists before granting IAM permissions
-  depends_on = [module.commands_topic]
+  description = "Triggers the path-optimizer Cloud Run Job every minute"
+  time_zone   = "Europe/Paris"
+
+  http_target {
+    http_method = "POST"
+    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/path-optimizer:run"
+
+    oauth_token {
+      service_account_email = google_service_account.scheduler.email
+      scope                 = "https://www.googleapis.com/auth/cloud-platform"
+    }
+  }
+
+  depends_on = [google_project_service.cloud_scheduler]
+}
+
+# SA for cloud scheduler
+resource "google_service_account" "scheduler" {
+  account_id   = "scheduler"
+  display_name = "Cloud Scheduler Service Account"
+  project      = var.project_id
+}
+
+# permission to invoke cloud run jobs
+resource "google_project_iam_member" "scheduler_run_invoker" {
+  project = var.project_id
+  role    = "roles/run.invoker"
+  member  = "serviceAccount:${google_service_account.scheduler.email}"
+}
+
+# data sources
+data "google_project" "current" {
+  project_id = var.project_id
+}
+
+# alert on budget
+resource "google_billing_budget" "dev_budget" {
+  count = var.billing_account != null ? 1 : 0
+
+  billing_account = var.billing_account
+  display_name    = "DroneFleet Optimizer - DEV - ${var.budget_amount} EUR"
+
+  budget_filter {
+    projects = ["projects/${data.google_project.current.number}"]
+  }
+
+  amount {
+    specified_amount {
+      currency_code = "EUR"
+      units         = tostring(var.budget_amount)
+    }
+  }
+
+  threshold_rules {
+    threshold_percent = 0.5
+  }
+  threshold_rules {
+    threshold_percent = 0.8
+  }
+  threshold_rules {
+    threshold_percent = 1.0
+  }
+
+  depends_on = [google_project_service.cloud_billing_budget]
 }

@@ -27,7 +27,7 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     environment:
-      name: production
+      name: prod
       url: https://drone-fleet-optimizer-prod.example.com
 
     permissions:

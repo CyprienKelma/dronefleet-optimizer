@@ -2,26 +2,109 @@ name: CD - Deploy to Dev
 
 on:
   push:
-    branches:
-      - develop
-    paths:
-      - "src/**"
-      - ".github/workflows/cd-dev.yml"
+    branches: [main]
+
+concurrency:
+  group: cd-dev
+  cancel-in-progress: false # block cancel during deploy
 
 env:
   PROJECT_ID: drone-fleet-optimizer-dev
   REGION: europe-west1
   REGISTRY: europe-west1-docker.pkg.dev
+  IMAGE_BASE: europe-west1-docker.pkg.dev/drone-fleet-optimizer-dev/drone-fleet
 
 jobs:
-  deploy-ingestion:
-    if: contains(github.event.head_commit.modified, 'src/ingestion')
-    runs-on: ubuntu-latest
 
+  # detect changes from services
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      ingestion: ${{ steps.filter.outputs.ingestion }}
+      state-manager: ${{ steps.filter.outputs.state-manager }}
+      optimizer: ${{ steps.filter.outputs.optimizer }}
+      visualizer: ${{ steps.filter.outputs.visualizer }}
+      terraform: ${{ steps.filter.outputs.terraform }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            ingestion:
+              - 'services/ingestion/**'
+              - 'shared/python/**'
+              - 'libs/python/**'
+              - 'configs/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
+            state-manager:
+              - 'services/state_manager/**'
+              - 'shared/java/**'
+              - 'libs/java/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+            optimizer:
+              - 'services/path_optimizer/**'
+              - 'shared/python/**'
+              - 'libs/python/**'
+              - 'configs/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
+            visualizer:
+              - 'services/visualizer/**'
+              - 'shared/ts/**'
+              - 'libs/ts/**'
+              - 'biome.json'
+              - 'package.json'
+              - 'bun.lock'
+            terraform:
+              - 'infra/terraform/**'
+
+  # terraform apply if infra changed
+  terraform:
+    needs: changes
+    if: needs.changes.outputs.terraform == 'true'
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
+    steps:
+      - uses: actions/checkout@v4
 
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER_DEV }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT_DEV }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+
+      - name: Terraform Init
+        working-directory: infra/terraform/environments/dev
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: infra/terraform/environments/dev
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: infra/terraform/environments/dev
+        run: terraform apply -auto-approve tfplan
+
+  # deploy ingestion API (Cloud Run Service)
+  deploy-ingestion:
+    needs: changes
+    if: needs.changes.outputs.ingestion == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -35,29 +118,33 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+        run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
 
-      - name: Build and Push Docker image
+      - name: Build and push Docker image
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/drone-fleet-optimizer/ingestion"
-          TAG="dev-${{ github.sha }}"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          IMAGE="${{ env.IMAGE_BASE }}/ingestion"
 
-          docker build -t $IMAGE:$TAG -t $IMAGE:latest-dev \
-            -f src/ingestion/Dockerfile \
+          docker build \
+            -f services/ingestion/Dockerfile \
             --build-arg ENVIRONMENT=dev \
+            -t "$IMAGE:$SHORT_SHA" \
+            -t "$IMAGE:latest" \
             .
 
-          docker push $IMAGE:$TAG
-          docker push $IMAGE:latest-dev
+          docker push "$IMAGE:$SHORT_SHA"
+          docker push "$IMAGE:latest"
 
       - name: Deploy to Cloud Run
         run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+
           gcloud run deploy ingestion \
-            --image ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/drone-fleet-optimizer/ingestion:dev-${{ github.sha }} \
+            --image "${{ env.IMAGE_BASE }}/ingestion:$SHORT_SHA" \
             --region ${{ env.REGION }} \
             --platform managed \
-            --service-account ingestion@${{ env.PROJECT_ID }}.iam.gserviceaccount.com \
-            --set-env-vars ENVIRONMENT=dev,PROJECT_ID=${{ env.PROJECT_ID }} \
+            --service-account "ingestion@${{ env.PROJECT_ID }}.iam.gserviceaccount.com" \
+            --set-env-vars "ENVIRONMENT=dev,PROJECT_ID=${{ env.PROJECT_ID }}" \
             --min-instances 0 \
             --max-instances 2 \
             --memory 512Mi \
@@ -65,34 +152,23 @@ jobs:
             --allow-unauthenticated \
             --quiet
 
-      - name: Output Service URL
+      - name: Output service URL
         run: |
-          SERVICE_URL=$(gcloud run services describe ingestion \
+          URL=$(gcloud run services describe ingestion \
             --region ${{ env.REGION }} \
             --format 'value(status.url)')
-          echo "Ingestion API deployed to: $SERVICE_URL"
+          echo "### Ingestion API" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deployed to: $URL" >> "$GITHUB_STEP_SUMMARY"
 
   deploy-state-manager:
-    if: contains(github.event.head_commit.modified, 'src/state-manager')
+    needs: changes
+    if: needs.changes.outputs.state-manager == 'true'
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       id-token: write
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: "21"
-          distribution: "temurin"
-
-      - name: Build with Gradle
-        run: |
-          cd src/state-manager
-          ./gradlew build -x test
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -104,32 +180,160 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+        run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
 
-      - name: Build and Push Docker image
+      - name: Build and push Docker image
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/drone-fleet-optimizer/state-manager"
-          TAG="dev-${{ github.sha }}"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          IMAGE="${{ env.IMAGE_BASE }}/state-manager"
 
-          docker build -t $IMAGE:$TAG -t $IMAGE:latest-dev \
-            -f src/state-manager/Dockerfile \
-            --build-arg ENVIRONMENT=dev \
-            src/state-manager
+          docker build \
+            -f services/state_manager/Dockerfile \
+            -t "$IMAGE:$SHORT_SHA" \
+            -t "$IMAGE:latest" \
+            .
 
-          docker push $IMAGE:$TAG
-          docker push $IMAGE:latest-dev
+          docker push "$IMAGE:$SHORT_SHA"
+          docker push "$IMAGE:latest"
 
+      # always on service => min-instances 1 (0 for cold start)
       - name: Deploy to Cloud Run
         run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+
           gcloud run deploy state-manager \
-            --image ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/drone-fleet-optimizer/state-manager:dev-${{ github.sha }} \
+            --image "${{ env.IMAGE_BASE }}/state-manager:$SHORT_SHA" \
             --region ${{ env.REGION }} \
             --platform managed \
-            --service-account state-manager@${{ env.PROJECT_ID }}.iam.gserviceaccount.com \
-            --set-env-vars ENVIRONMENT=dev,PROJECT_ID=${{ env.PROJECT_ID }},SPRING_PROFILES_ACTIVE=dev \
-            --min-instances 0 \
+            --service-account "state-manager@${{ env.PROJECT_ID }}.iam.gserviceaccount.com" \
+            --set-env-vars "ENVIRONMENT=dev,PROJECT_ID=${{ env.PROJECT_ID }},SPRING_PROFILES_ACTIVE=dev" \
+            --min-instances 1 \
             --max-instances 3 \
             --memory 1Gi \
             --cpu 2 \
             --no-allow-unauthenticated \
             --quiet
+
+      - name: Output service URL
+        run: |
+          URL=$(gcloud run services describe state-manager \
+            --region ${{ env.REGION }} \
+            --format 'value(status.url)')
+          echo "### State Manager" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deployed to: $URL" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-optimizer:
+    needs: changes
+    if: needs.changes.outputs.optimizer == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER_DEV }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT_DEV }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
+
+      - name: Build and push Docker image
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          IMAGE="${{ env.IMAGE_BASE }}/path-optimizer"
+
+          docker build \
+            -f services/path_optimizer/Dockerfile \
+            --build-arg ENVIRONMENT=dev \
+            -t "$IMAGE:$SHORT_SHA" \
+            -t "$IMAGE:latest" \
+            .
+
+          docker push "$IMAGE:$SHORT_SHA"
+          docker push "$IMAGE:latest"
+
+      - name: Deploy Cloud Run Job
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+
+          # Create or update the Cloud Run Job
+          gcloud run jobs deploy path-optimizer \
+            --image "${{ env.IMAGE_BASE }}/path-optimizer:$SHORT_SHA" \
+            --region ${{ env.REGION }} \
+            --service-account "optimizer@${{ env.PROJECT_ID }}.iam.gserviceaccount.com" \
+            --set-env-vars "ENVIRONMENT=dev,PROJECT_ID=${{ env.PROJECT_ID }}" \
+            --memory 2Gi \
+            --cpu 2 \
+            --task-timeout 300s \
+            --max-retries 1 \
+            --quiet
+
+          echo "### Path Optimizer" >> "$GITHUB_STEP_SUMMARY"
+          echo "Cloud Run Job \`path-optimizer\` updated (image: \`$SHORT_SHA\`)" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-visualizer:
+    needs: changes
+    if: needs.changes.outputs.visualizer == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER_DEV }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT_DEV }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
+
+      - name: Build and push Docker image
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          IMAGE="${{ env.IMAGE_BASE }}/visualizer"
+
+          docker build \
+            -f services/visualizer/Dockerfile \
+            -t "$IMAGE:$SHORT_SHA" \
+            -t "$IMAGE:latest" \
+            .
+
+          docker push "$IMAGE:$SHORT_SHA"
+          docker push "$IMAGE:latest"
+
+      - name: Deploy to Cloud Run
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+
+          gcloud run deploy visualizer \
+            --image "${{ env.IMAGE_BASE }}/visualizer:$SHORT_SHA" \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --set-env-vars "PROJECT_ID=${{ env.PROJECT_ID }},NODE_ENV=production" \
+            --min-instances 0 \
+            --max-instances 2 \
+            --memory 512Mi \
+            --cpu 1 \
+            --allow-unauthenticated \
+            --quiet
+
+      - name: Output service URL
+        run: |
+          URL=$(gcloud run services describe visualizer \
+            --region ${{ env.REGION }} \
+            --format 'value(status.url)')
+          echo "### Visualizer" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deployed to: $URL" >> "$GITHUB_STEP_SUMMARY"

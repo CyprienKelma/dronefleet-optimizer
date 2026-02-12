@@ -1,0 +1,263 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # based on changed files, determine which services have (or not) to be deployed/linted
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      ingestion: ${{ steps.filter.outputs.ingestion }}
+      state-manager: ${{ steps.filter.outputs.state-manager }}
+      optimizer: ${{ steps.filter.outputs.optimizer }}
+      visualizer: ${{ steps.filter.outputs.visualizer }}
+      proto: ${{ steps.filter.outputs.proto }}
+      terraform: ${{ steps.filter.outputs.terraform }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            ingestion:
+              - 'services/ingestion/**'
+              - 'shared/python/**'
+              - 'libs/python/**'
+              - 'configs/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
+            state-manager:
+              - 'services/state_manager/**'
+              - 'shared/java/**'
+              - 'libs/java/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+            optimizer:
+              - 'services/path_optimizer/**'
+              - 'shared/python/**'
+              - 'libs/python/**'
+              - 'configs/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
+            visualizer:
+              - 'services/visualizer/**'
+              - 'shared/ts/**'
+              - 'libs/ts/**'
+              - 'biome.json'
+              - 'package.json'
+              - 'bun.lock'
+            proto:
+              - 'shared/proto/**'
+            terraform:
+              - 'infra/terraform/**'
+
+
+  proto-check:
+    needs: changes
+    if: needs.changes.outputs.proto == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: bufbuild/buf-setup-action@v1
+
+      - name: Lint proto definitions
+        uses: bufbuild/buf-lint-action@v1
+        with:
+          input: shared/proto
+
+      - name: Check if base branch has proto files
+        id: base-protos
+        run: |
+          git fetch origin main --depth=1 2>/dev/null || true
+          if git ls-tree -r origin/main --name-only 2>/dev/null | grep -q '\.proto$'; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check for breaking changes
+        if: steps.base-protos.outputs.exists == 'true'
+        uses: bufbuild/buf-breaking-action@v1
+        with:
+          input: shared/proto
+          against: "https://github.com/${{ github.repository }}.git#branch=main,subdir=shared/proto"
+
+      - name: Verify generated code is up to date
+        working-directory: shared/proto
+        run: |
+          buf generate
+          python3 scripts/fix_python_init.py
+          if ! git diff --exit-code -- \
+            ../java/src/main/java/com/dronefleet/shared/models/ \
+            ../python/src/dronefleet_shared/models/ \
+            ../ts/src/schemas/; then
+            echo "ERROR: Generated models are out of date."
+            echo "Run 'mise run //shared/proto:generate' and commit the result."
+            exit 1
+          fi
+
+  ci-ingestion:
+    needs: changes
+    if: needs.changes.outputs.ingestion == 'true' || needs.changes.outputs.proto == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint (ruff)
+        run: uv run ruff check .
+        working-directory: services/ingestion
+
+      - name: Type check (mypy)
+        run: uv run mypy .
+        working-directory: services/ingestion
+
+      - name: Unit tests
+        run: uv run pytest tests/ -v --tb=short
+        working-directory: services/ingestion
+
+      - name: Docker build (dry-run)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/ingestion/Dockerfile
+          push: false
+          build-args: ENVIRONMENT=dev
+
+  ci-state-manager:
+    needs: changes
+    if: needs.changes.outputs.state-manager == 'true' || needs.changes.outputs.proto == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Checkstyle
+        run: ./gradlew :services:state_manager:checkstyleMain
+
+      - name: Spotless check
+        run: ./gradlew :services:state_manager:spotlessCheck
+
+      - name: Test
+        run: ./gradlew :services:state_manager:test
+
+      - name: Docker build (dry-run)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/state_manager/Dockerfile
+          push: false
+
+  ci-optimizer:
+    needs: changes
+    if: needs.changes.outputs.optimizer == 'true' || needs.changes.outputs.proto == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint (ruff)
+        run: uv run ruff check .
+        working-directory: services/path_optimizer
+
+      - name: Type check (mypy)
+        run: uv run mypy .
+        working-directory: services/path_optimizer
+
+      - name: Unit tests
+        run: uv run pytest tests/ -v --tb=short
+        working-directory: services/path_optimizer
+
+      - name: Docker build (dry-run)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/path_optimizer/Dockerfile
+          push: false
+          build-args: ENVIRONMENT=dev
+
+  # Bun/SolidJS/Vite
+  ci-visualizer:
+    needs: changes
+    if: needs.changes.outputs.visualizer == 'true' || needs.changes.outputs.proto == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint (biome)
+        run: bun x @biomejs/biome check .
+        working-directory: services/visualizer
+
+      - name: Type check (tsc)
+        run: bun run tsc --noEmit
+        working-directory: services/visualizer
+
+      - name: Docker build (dry-run)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/visualizer/Dockerfile
+          push: false
+
+  ci-terraform:
+    needs: changes
+    if: needs.changes.outputs.terraform == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+
+      - name: Terraform fmt check
+        run: terraform fmt -check -recursive
+        working-directory: infra/terraform
+
+      - name: Terraform validate
+        working-directory: infra/terraform/environments/dev
+        run: |
+          terraform init -backend=false
+          terraform validate

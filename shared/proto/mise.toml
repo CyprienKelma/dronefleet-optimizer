@@ -10,7 +10,10 @@ run = "buf format -w"
 
 [tasks.generate]
 description = "Generate model code from proto definitions into shared/*/models/"
-run = "buf generate"
+run = """
+buf generate
+python3 scripts/fix_python_init.py
+"""
 
 [tasks.breaking]
 description = "Check for breaking schema changes against main branch"

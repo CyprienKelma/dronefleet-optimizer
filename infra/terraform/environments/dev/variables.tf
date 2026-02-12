@@ -43,3 +43,15 @@ variable "log_level" {
     error_message = "Log level must be DEBUG, INFO, WARNING, or ERROR."
   }
 }
+
+variable "billing_account" {
+  description = "Billing account ID for budget alerts (optional, format: XXXXXX-XXXXXX-XXXXXX)"
+  type        = string
+  default     = null
+}
+
+variable "budget_amount" {
+  description = "Monthly budget amount in EUR"
+  type        = number
+  default     = 10
+}

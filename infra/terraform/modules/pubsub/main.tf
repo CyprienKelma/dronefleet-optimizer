@@ -8,7 +8,7 @@ resource "google_pubsub_topic" "topic" {
   message_retention_duration = var.message_retention_duration
 }
 
-# Create a subscription with Dead Letter Queue
+# Create a subscription with optional Dead Letter Queue
 resource "google_pubsub_subscription" "subscription" {
   name    = "${var.topic_name}-sub"
   topic   = google_pubsub_topic.topic.name
@@ -23,9 +23,12 @@ resource "google_pubsub_subscription" "subscription" {
     maximum_backoff = var.retry_maximum_backoff
   }
 
-  dead_letter_policy {
-    dead_letter_topic     = var.dead_letter_topic
-    max_delivery_attempts = var.max_delivery_attempts
+  dynamic "dead_letter_policy" {
+    for_each = var.dead_letter_topic != null ? [1] : []
+    content {
+      dead_letter_topic     = var.dead_letter_topic
+      max_delivery_attempts = var.max_delivery_attempts
+    }
   }
 
   enable_message_ordering = var.enable_message_ordering

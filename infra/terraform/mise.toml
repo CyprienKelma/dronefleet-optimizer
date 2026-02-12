@@ -1,0 +1,90 @@
+# Cloud Run management tasks for dev environment
+# Usage: mise //infra/terraform:dev:up / :dev:down / :dev:status
+
+[env]
+PROJECT_ID = "drone-fleet-optimizer-dev"
+REGION = "europe-west1"
+
+[tasks."dev:up"]
+description = "Start all Cloud Run services (restore normal scaling)"
+run = """
+echo "Restoring Cloud Run services..."
+
+gcloud run services update ingestion \
+  --region $REGION --project $PROJECT_ID \
+  --min-instances 0 --max-instances 2 --quiet
+
+gcloud run services update state-manager \
+  --region $REGION --project $PROJECT_ID \
+  --min-instances 1 --max-instances 3 --quiet
+
+gcloud run services update visualizer \
+  --region $REGION --project $PROJECT_ID \
+  --min-instances 0 --max-instances 2 --quiet
+
+echo "Resuming Cloud Scheduler job..."
+gcloud scheduler jobs resume trigger-path-optimizer \
+  --location $REGION --project $PROJECT_ID --quiet 2>/dev/null || true
+
+echo "All services are UP."
+"""
+
+[tasks."dev:down"]
+description = "Stop all Cloud Run services (scale to zero, costs $0)"
+run = """
+echo "Scaling down Cloud Run services to zero..."
+
+gcloud run services update ingestion \
+  --region $REGION --project $PROJECT_ID \
+  --max-instances 0 --quiet 2>/dev/null || true
+
+gcloud run services update state-manager \
+  --region $REGION --project $PROJECT_ID \
+  --min-instances 0 --max-instances 0 --quiet 2>/dev/null || true
+
+gcloud run services update visualizer \
+  --region $REGION --project $PROJECT_ID \
+  --max-instances 0 --quiet 2>/dev/null || true
+
+echo "Pausing Cloud Scheduler job..."
+gcloud scheduler jobs pause trigger-path-optimizer \
+  --location $REGION --project $PROJECT_ID --quiet 2>/dev/null || true
+
+echo "All services are DOWN. Cost = $0."
+"""
+
+[tasks."dev:status"]
+description = "Show status of all Cloud Run services and jobs"
+run = """
+echo "=== Cloud Run Services ==="
+gcloud run services list --region $REGION --project $PROJECT_ID \
+  --format="table(name,status.url,status.conditions[0].status,spec.template.spec.containerConcurrency,spec.template.metadata.annotations.'autoscaling.knative.dev/minScale',spec.template.metadata.annotations.'autoscaling.knative.dev/maxScale')" \
+  2>/dev/null || echo "No services found"
+
+echo ""
+echo "=== Cloud Run Jobs ==="
+gcloud run jobs list --region $REGION --project $PROJECT_ID \
+  --format="table(name,status.conditions[0].status,status.latestCreatedExecution.name)" \
+  2>/dev/null || echo "No jobs found"
+
+echo ""
+echo "=== Cloud Scheduler ==="
+gcloud scheduler jobs list --location $REGION --project $PROJECT_ID \
+  --format="table(name,state,schedule,lastAttemptTime)" \
+  2>/dev/null || echo "No scheduler jobs found"
+"""
+
+[tasks."plan"]
+description = "Run terraform plan for dev environment"
+dir = "{{config_root}}/environments/dev"
+run = "terraform plan"
+
+[tasks."apply"]
+description = "Run terraform apply for dev environment"
+dir = "{{config_root}}/environments/dev"
+run = "terraform apply"
+
+[tasks."init"]
+description = "Run terraform init for dev environment"
+dir = "{{config_root}}/environments/dev"
+run = "terraform init"

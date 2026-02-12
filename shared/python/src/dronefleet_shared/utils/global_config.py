@@ -112,16 +112,52 @@ class Settings(BaseSettings):
         return self.environment == "prod"
 
     model_config = SettingsConfigDict(
-        env_file=f"config/{environment}.env",  # Autoloaded based on ENVIRONMENT
         env_file_encoding="utf-8",
         case_sensitive=False,  # to have PROJECT_ID = project_id
         extra="ignore",  # to skip undefined vars
     )
 
 
+def _resolve_env_file() -> str | None:
+    """Resolve the .env file path based on the ENVIRONMENT variable.
+
+    Tries two strategies:
+    1. Relative path `configs/{env}.env` — works inside Docker containers
+       where WORKDIR=/app and configs/ is copied alongside the code.
+    2. Walk up from this file's location to find the repo root's configs/
+       directory — works when running locally via mise or pytest.
+
+    Returns None if not found, which is fine since OS environment variables
+    (from docker-compose, Cloud Run --set-env-vars, or mise) always take
+    precedence over .env files in pydantic-settings.
+    """
+    import os
+    from pathlib import Path
+
+    env = os.getenv("ENVIRONMENT", "local")
+    filename = f"{env}.env"
+
+    # Strategy 1: relative to cwd (Docker: /app/configs/dev.env)
+    relative = Path("configs") / filename
+    if relative.is_file():
+        return str(relative)
+
+    # Strategy 2: walk up from this file to find configs/ directory
+    current = Path(__file__).resolve().parent
+    for _ in range(10):  # safety bound
+        candidate = current / "configs" / filename
+        if candidate.is_file():
+            return str(candidate)
+        if current == current.parent:
+            break  # reached filesystem root
+        current = current.parent
+
+    return None
+
+
 # Instantiation with dynamic env file loading
 try:
-    settings = Settings()  # get correct env from model_config
+    settings = Settings(_env_file=_resolve_env_file())
 except ValidationError as e:
     raise SystemExit(f"Config error: {e}") from e
 

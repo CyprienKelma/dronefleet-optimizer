@@ -1,7 +1,7 @@
 spring:
   cloud:
     gcp:
-      project-id: ${PROJECT_ID:drone-fleet-dev}
+      project-id: ${PROJECT_ID:drone-fleet-optimizer-dev}
 
       pubsub:
         subscriber:
