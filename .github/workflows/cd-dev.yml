@@ -66,9 +66,9 @@ jobs:
               - 'infra/terraform/**'
 
   # terraform apply if infra changed
-  # if: needs.changes.outputs.terraform == 'true'
   terraform:
     needs: changes
+    # if: needs.changes.outputs.terraform == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

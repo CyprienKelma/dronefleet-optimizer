@@ -168,8 +168,16 @@ jobs:
       - name: Checkstyle
         run: ./gradlew :services:state_manager:checkstyleMain
 
-      - name: Spotless check
-        run: ./gradlew :services:state_manager:spotlessCheck
+      - name: Spotless check (auto-fix on failure)
+        run: |
+          if ! ./gradlew :services:state_manager:spotlessCheck; then
+          echo "::warning::Spotless found formatting issues. Attempting auto-fix with spotlessApply..."
+          ./gradlew :services:state_manager:spotlessApply
+          echo "Files were reformatted. Showing diff:"
+          git diff
+          echo "::error::Spotless formatting was not applied before commit. Please run './gradlew :services:state_manager:spotlessApply' locally and commit the changes."
+          exit 1
+            fi
 
       - name: Test
         run: ./gradlew :services:state_manager:test

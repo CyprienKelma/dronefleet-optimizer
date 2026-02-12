@@ -4,8 +4,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@Disabled(
-        "Requires GCP emulators (Pub/Sub + Firestore)")
+@Disabled("Requires GCP emulators (Pub/Sub + Firestore)")
 @SpringBootTest(
         classes = StateManagerApplication.class,
         properties = {
