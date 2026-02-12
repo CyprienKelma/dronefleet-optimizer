@@ -39,6 +39,8 @@ COPY configs /app/configs
 # Set PYTHONPATH to include /app where packages are located
 ENV PYTHONPATH=/app
 
-EXPOSE 8000
+# cloud run overrides via PORT env var on dev/prod envrionments
+ENV PORT=8000
+EXPOSE ${PORT}
 
-CMD ["uvicorn", "ingestion.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD uvicorn ingestion.main:app --host 0.0.0.0 --port ${PORT}
