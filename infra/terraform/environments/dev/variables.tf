@@ -53,5 +53,5 @@ variable "billing_account" {
 variable "budget_amount" {
   description = "Monthly budget amount in EUR"
   type        = number
-  default     = 10
+  default     = 5
 }

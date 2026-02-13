@@ -78,25 +78,45 @@ def seed_large():
 
 # Warehouses positioned around the depot in a ring (~1-2 km away)
 _WAREHOUSE_POOL = [
-    {"id": "WH-NORTH",     "name": "North Logistics Center",    "lat": 48.870, "lon": 2.352},
-    {"id": "WH-SOUTH",     "name": "South Distribution Hub",    "lat": 48.843, "lon": 2.352},
-    {"id": "WH-EAST",      "name": "East Medical Depot",        "lat": 48.857, "lon": 2.370},
-    {"id": "WH-WEST",      "name": "West Supply Center",        "lat": 48.857, "lon": 2.334},
-    {"id": "WH-NORTHEAST", "name": "Northeast Pharma Hub",      "lat": 48.868, "lon": 2.368},
-    {"id": "WH-SOUTHWEST", "name": "Southwest Emergency Depot", "lat": 48.845, "lon": 2.336},
+    {"id": "WH-NORTH", "name": "North Logistics Center", "lat": 48.870, "lon": 2.352},
+    {"id": "WH-SOUTH", "name": "South Distribution Hub", "lat": 48.843, "lon": 2.352},
+    {"id": "WH-EAST", "name": "East Medical Depot", "lat": 48.857, "lon": 2.370},
+    {"id": "WH-WEST", "name": "West Supply Center", "lat": 48.857, "lon": 2.334},
+    {"id": "WH-NORTHEAST", "name": "Northeast Pharma Hub", "lat": 48.868, "lon": 2.368},
+    {
+        "id": "WH-SOUTHWEST",
+        "name": "Southwest Emergency Depot",
+        "lat": 48.845,
+        "lon": 2.336,
+    },
 ]
 
-_PRIORITIES = ["STANDARD", "STANDARD", "STANDARD", "HIGH", "HIGH", "CRITICAL"]
-_PRODUCT_TYPES = ["BLOOD", "MEDICINE", "VACCINE", "ORGAN", "MEDICAL_DEVICE"]
+_PRIORITIES = [
+    "ORDER_PRIORITY_STANDARD",
+    "ORDER_PRIORITY_STANDARD",
+    "ORDER_PRIORITY_STANDARD",
+    "ORDER_PRIORITY_HIGH",
+    "ORDER_PRIORITY_HIGH",
+    "ORDER_PRIORITY_CRITICAL",
+]
+_PRODUCT_TYPES = [
+    "PRODUCT_TYPE_BLOOD",
+    "PRODUCT_TYPE_MEDICINE",
+    "PRODUCT_TYPE_VACCINE",
+    "PRODUCT_TYPE_ORGAN",
+    "PRODUCT_TYPE_MEDICAL_DEVICE",
+]
 
 
 def _seed_depot(db):
-    db.collection("depots").document("DEPOT-PARIS-01").set({
-        "name": "Paris Main Hub",
-        "position": {"lat": DEPOT_LAT, "lon": DEPOT_LON},
-        "capacity": 50,
-        "chargingSlots": 10,
-    })
+    db.collection("depots").document("DEPOT-PARIS-01").set(
+        {
+            "name": "Paris Main Hub",
+            "position": {"lat": DEPOT_LAT, "lon": DEPOT_LON},
+            "capacity": 50,
+            "chargingSlots": 10,
+        }
+    )
     print("- Depot seeded")
 
 
@@ -104,12 +124,21 @@ def _seed_warehouses(db, count: int):
     batch = db.batch()
     for wh in _WAREHOUSE_POOL[:count]:
         ref = db.collection("warehouses").document(wh["id"])
-        batch.set(ref, {
-            "name": wh["name"],
-            "position": {"lat": wh["lat"], "lon": wh["lon"]},
-            "authorizedProductTypes": ["BLOOD", "MEDICINE", "VACCINE", "ORGAN", "MEDICAL_DEVICE"],
-            "isColdStorageCapable": True,
-        })
+        batch.set(
+            ref,
+            {
+                "name": wh["name"],
+                "position": {"lat": wh["lat"], "lon": wh["lon"]},
+                "authorizedProductTypes": [
+                    "PRODUCT_TYPE_BLOOD",
+                    "PRODUCT_TYPE_MEDICINE",
+                    "PRODUCT_TYPE_VACCINE",
+                    "PRODUCT_TYPE_ORGAN",
+                    "PRODUCT_TYPE_MEDICAL_DEVICE",
+                ],
+                "isColdStorageCapable": True,
+            },
+        )
     batch.commit()
     print(f"- {count} warehouses seeded")
 
@@ -121,20 +150,23 @@ def _seed_drones(db, count: int):
         # Battery between 60% and 100%, slight position jitter around depot
         battery = round(random.uniform(60.0, 100.0), 1)
         ref = db.collection("drones").document(drone_id)
-        batch.set(ref, {
-            "batteryPercentage": battery,
-            "speedKmh": 0.0,
-            "status": "DRONE_STATUS_IDLE",
-            "homeDepotId": "DEPOT-PARIS-01",
-            "position": {
-                "lat": DEPOT_LAT + random.uniform(-0.001, 0.001),
-                "lon": DEPOT_LON + random.uniform(-0.001, 0.001),
+        batch.set(
+            ref,
+            {
+                "batteryPercentage": battery,
+                "speedKmh": 0.0,
+                "status": "DRONE_STATUS_IDLE",
+                "homeDepotId": "DEPOT-PARIS-01",
+                "position": {
+                    "lat": DEPOT_LAT + random.uniform(-0.001, 0.001),
+                    "lon": DEPOT_LON + random.uniform(-0.001, 0.001),
+                },
+                "consumptionPerKm": 0.1,
+                "maxFlightTimeMinutes": 30,
+                "currentMissionId": "",
+                "solvingSessionId": "",
             },
-            "consumptionPerKm": 0.1,
-            "maxFlightTimeMinutes": 30,
-            "currentMissionId": "",
-            "solvingSessionId": "",
-        })
+        )
 
         # Firestore batches are limited to 500 operations
         if i % 400 == 0:
@@ -146,7 +178,7 @@ def _seed_drones(db, count: int):
 
 
 def _seed_orders(db, count: int):
-    warehouses = _WAREHOUSE_POOL[:max(2, count // 10)]
+    warehouses = _WAREHOUSE_POOL[: max(2, count // 10)]
     batch = db.batch()
 
     for i in range(count):
@@ -158,17 +190,23 @@ def _seed_orders(db, count: int):
         target_lon = DEPOT_LON + random.uniform(-0.04, 0.04)
 
         ref = db.collection("orders").document(order_id)
-        batch.set(ref, {
-            "id": order_id,
-            "status": "ORDER_STATUS_PENDING",
-            "priority": random.choice(_PRIORITIES),
-            "productType": random.choice(_PRODUCT_TYPES),
-            "pickupLocation": {"lat": wh["lat"], "lon": wh["lon"]},
-            "deliveryLocation": {"lat": round(target_lat, 6), "lon": round(target_lon, 6)},
-            "createdAt": firestore.SERVER_TIMESTAMP,
-            "assignedDroneId": "",
-            "assignedMissionId": "",
-        })
+        batch.set(
+            ref,
+            {
+                "id": order_id,
+                "status": "ORDER_STATUS_PENDING",
+                "priority": random.choice(_PRIORITIES),
+                "productType": random.choice(_PRODUCT_TYPES),
+                "pickupLocation": {"lat": wh["lat"], "lon": wh["lon"]},
+                "deliveryLocation": {
+                    "lat": round(target_lat, 6),
+                    "lon": round(target_lon, 6),
+                },
+                "createdAt": firestore.SERVER_TIMESTAMP,
+                "assignedDroneId": "",
+                "assignedMissionId": "",
+            },
+        )
 
         if (i + 1) % 400 == 0:
             batch.commit()

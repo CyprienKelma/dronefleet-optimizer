@@ -54,7 +54,10 @@ class SimulatedDrone:
     def update(self):
         """Update drone state for the next time step."""
         # Update position
-        if self.status in [DroneStatus.DRONE_STATUS_MOVING, DroneStatus.DRONE_STATUS_DELIVERING]:
+        if self.status in [
+            DroneStatus.DRONE_STATUS_MOVING,
+            DroneStatus.DRONE_STATUS_DELIVERING,
+        ]:
             self.lat += self.lat_velocity
             self.lon += self.lon_velocity
             self.speed = random.uniform(30.0, 60.0)  # km/h
@@ -94,6 +97,14 @@ class SimulatedDrone:
 
 
 class SimulatedOrderGenerator:
+    # Pre-filter UNSPECIFIED enum values (proto zero-value sentinels)
+    _VALID_PRIORITIES = [
+        p for p in OrderPriority if p != OrderPriority.ORDER_PRIORITY_UNSPECIFIED
+    ]
+    _VALID_PRODUCT_TYPES = [
+        p for p in ProductType if p != ProductType.PRODUCT_TYPE_UNSPECIFIED
+    ]
+
     @staticmethod
     def generate_random_order() -> Order:
         # Generate coordinates within compact zone (~3-4 km) for feasible VRP
@@ -105,8 +116,8 @@ class SimulatedOrderGenerator:
         delivery_lat = pickup_lat + random.uniform(-delivery_offset, delivery_offset)
         delivery_lon = pickup_lon + random.uniform(-delivery_offset, delivery_offset)
 
-        priority = random.choice(list(OrderPriority))
-        product_type = random.choice(list(ProductType))
+        priority = random.choice(SimulatedOrderGenerator._VALID_PRIORITIES)
+        product_type = random.choice(SimulatedOrderGenerator._VALID_PRODUCT_TYPES)
 
         # contents_map = {
         #     ProductType.PRODUCT_TYPE_BLOOD: ["O- Negative Blood Bags", "A+ Plasma", "Platelets"],
