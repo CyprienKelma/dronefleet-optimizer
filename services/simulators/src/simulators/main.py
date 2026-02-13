@@ -22,7 +22,7 @@ TELEMETRY_API_URL = "http://localhost:8000/api/v1/telemetry"
 ORDERS_API_URL = "http://localhost:8000/api/v1/orders"
 DRONE_COUNT = 5
 UPDATE_INTERVAL_SEC = 3.0
-ORDER_PROBABILITY = 0.05  # 5% chance to generate an order per loop iteration
+ORDER_PROBABILITY = 0.2  # 5% chance to generate an order per loop iteration
 
 # Center: Paris (Lat: 48.8566, Lon: 2.3522)
 # Keep generated points within ~3-4 km for feasible VRP (battery, time windows).

@@ -44,6 +44,14 @@ Le code doit être agnostique de l'infrastructure via des interfaces.
 * **Stratégie future (Optionnelle) :** `ON_PREMISE` (Kafka + Postgres sur K8s).
 * **Règle :** L'API d'ingestion ne doit pas importer `google.cloud.pubsub` directement dans le service, mais passer par une interface `EventDispatcher`.
 
+### C. Synchronisation des Modèles (Protobuf & Buf)
+Le projet utilise **Protobuf** comme source de vérité unique pour les modèles de données partagés.
+* **Outil :** [Buf](https://buf.build/) est utilisé pour le linting, la détection de breaking changes et la génération de code.
+* **Génération :** La commande `mise run //shared/proto:generate` (définie dans `shared/proto/mise.toml`) synchronise les fichiers `.proto` vers les dossiers `shared/*/models/`.
+* **Automation :**
+    * **Local :** Un hook `pre-commit` (via `.pre-commit-config.yaml`) vérifie automatiquement la synchronisation des modèles avant chaque commit.
+    * **CI/CD :** Le workflow `ci.yml` valide les schémas (`buf lint`, `buf breaking`) et la synchronisation. Le déploiement via `cd-dev.yml` s'assure de la cohérence globale avant intégration.
+
 ## 4. Flux de Données (Data Flow)
 
 1.  **Ingestion :**
