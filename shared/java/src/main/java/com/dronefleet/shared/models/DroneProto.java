@@ -36,7 +36,7 @@ public final class DroneProto {
     java.lang.String[] descriptorData = {
       "\n\031dronefleet/v1/drone.proto\022\rdronefleet." +
       "v1\032\032dronefleet/v1/common.proto\032\037google/p" +
-      "rotobuf/timestamp.proto\"\240\004\n\005Drone\022\016\n\002id\030" +
+      "rotobuf/timestamp.proto\"\262\004\n\005Drone\022\016\n\002id\030" +
       "\001 \001(\tR\002id\0223\n\010position\030\002 \001(\0132\027.dronefleet" +
       ".v1.PositionR\010position\022-\n\022battery_percen" +
       "tage\030\003 \001(\001R\021batteryPercentage\022\033\n\tspeed_k" +
@@ -50,18 +50,19 @@ public final class DroneProto {
       "mah\030\n \001(\005R\022batteryCapacityMah\022,\n\022consump" +
       "tion_per_km\030\013 \001(\001R\020consumptionPerKm\0225\n\027m" +
       "ax_flight_time_minutes\030\014 \001(\005R\024maxFlightT" +
-      "imeMinutes\"\310\002\n\016DroneTelemetry\022\031\n\010drone_i" +
-      "d\030\001 \001(\tR\007droneId\0228\n\ttimestamp\030\002 \001(\0132\032.go" +
-      "ogle.protobuf.TimestampR\ttimestamp\0223\n\010po" +
-      "sition\030\003 \001(\0132\027.dronefleet.v1.PositionR\010p" +
-      "osition\022-\n\022battery_percentage\030\004 \001(\001R\021bat" +
-      "teryPercentage\022\033\n\tspeed_kmh\030\005 \001(\001R\010speed" +
-      "Kmh\0222\n\006status\030\006 \001(\0162\032.dronefleet.v1.Dron" +
-      "eStatusR\006status\022,\n\022current_mission_id\030\007 " +
-      "\001(\tR\020currentMissionIdB\177\n\034com.dronefleet." +
-      "shared.modelsB\nDroneProtoP\001\242\002\003DXX\252\002\rDron" +
-      "efleet.V1\312\002\rDronefleet\\V1\342\002\031Dronefleet\\V" +
-      "1\\GPBMetadata\352\002\016Dronefleet::V1b\006proto3"
+      "imeMinutesJ\004\010\r\020\016R\nshort_name\"\310\002\n\016DroneTe" +
+      "lemetry\022\031\n\010drone_id\030\001 \001(\tR\007droneId\0228\n\tti" +
+      "mestamp\030\002 \001(\0132\032.google.protobuf.Timestam" +
+      "pR\ttimestamp\0223\n\010position\030\003 \001(\0132\027.dronefl" +
+      "eet.v1.PositionR\010position\022-\n\022battery_per" +
+      "centage\030\004 \001(\001R\021batteryPercentage\022\033\n\tspee" +
+      "d_kmh\030\005 \001(\001R\010speedKmh\0222\n\006status\030\006 \001(\0162\032." +
+      "dronefleet.v1.DroneStatusR\006status\022,\n\022cur" +
+      "rent_mission_id\030\007 \001(\tR\020currentMissionIdB" +
+      "\177\n\034com.dronefleet.shared.modelsB\nDronePr" +
+      "otoP\001\242\002\003DXX\252\002\rDronefleet.V1\312\002\rDronefleet" +
+      "\\V1\342\002\031Dronefleet\\V1\\GPBMetadata\352\002\016Dronef" +
+      "leet::V1b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
