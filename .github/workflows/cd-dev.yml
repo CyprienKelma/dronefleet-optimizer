@@ -272,6 +272,18 @@ jobs:
           docker push "$IMAGE:$SHORT_SHA"
           docker push "$IMAGE:latest"
 
+      - name: Get State Manager URL
+        id: state-manager
+        run: |
+          URL=$(gcloud run services describe state-manager \
+            --region ${{ env.REGION }} \
+            --format 'value(status.url)' 2>/dev/null || echo "")
+          if [ -z "$URL" ]; then
+            echo "::warning::State Manager not deployed yet, using placeholder URL"
+            URL="https://state-manager-placeholder.run.app"
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
       - name: Deploy Cloud Run Job
         run: |
           SHORT_SHA="${GITHUB_SHA::7}"
@@ -281,7 +293,7 @@ jobs:
             --image "${{ env.IMAGE_BASE }}/path-optimizer:$SHORT_SHA" \
             --region ${{ env.REGION }} \
             --service-account "optimizer@${{ env.PROJECT_ID }}.iam.gserviceaccount.com" \
-            --set-env-vars "ENVIRONMENT=dev,PROJECT_ID=${{ env.PROJECT_ID }}" \
+            --set-env-vars "ENVIRONMENT=dev,PROJECT_ID=${{ env.PROJECT_ID }},STATE_MANAGER_URL=${{ steps.state-manager.outputs.url }}" \
             --memory 2Gi \
             --cpu 2 \
             --task-timeout 300s \
@@ -290,6 +302,7 @@ jobs:
 
           echo "### Path Optimizer" >> "$GITHUB_STEP_SUMMARY"
           echo "Cloud Run Job \`path-optimizer\` updated (image: \`$SHORT_SHA\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "State Manager URL: \`${{ steps.state-manager.outputs.url }}\`" >> "$GITHUB_STEP_SUMMARY"
 
   deploy-visualizer:
     needs: changes

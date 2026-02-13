@@ -52,7 +52,7 @@ def run_optimization():
 
         assignment_result, routing, manager = solution_data
 
-        # 4. Extract assignments
+        # extract assignments
         extractor = SolutionExtractor()
         assignments = extractor.extract(assignment_result, routing, manager, problem)
 
@@ -64,7 +64,7 @@ def run_optimization():
 
         logger.info("Extracted mission assignments", count=len(assignments))
 
-        # 5. Publish decisions
+        # publish decisions
         publisher = DecisionPublisher()
         for assignment in assignments:
             publisher.publish_decision(assignment)
