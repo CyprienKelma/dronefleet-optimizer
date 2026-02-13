@@ -15,6 +15,9 @@ env:
   REGISTRY: europe-west1-docker.pkg.dev
   IMAGE_BASE: europe-west1-docker.pkg.dev/drone-fleet-optimizer-dev/drone-fleet
   ENVIRONMENT: dev
+  # Terraform-specific variables
+  FIRESTORE_LOCATION: eur3
+  BUDGET_AMOUNT: 5
 
 jobs:
 
@@ -68,7 +71,7 @@ jobs:
   # terraform apply if infra changed
   terraform:
     needs: changes
-    # if: needs.changes.outputs.terraform == 'true'
+    if: needs.changes.outputs.terraform == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -348,7 +351,7 @@ jobs:
             --image "${{ env.IMAGE_BASE }}/visualizer:$SHORT_SHA" \
             --region ${{ env.REGION }} \
             --platform managed \
-            --set-env-vars "PROJECT_ID=${{ env.PROJECT_ID }},NODE_ENV=production" \
+            --set-env-vars "PROJECT_ID=${{ env.PROJECT_ID }},NODE_ENV=production,PUBSUB_SUBSCRIPTION=telemetry-sub" \
             --min-instances 0 \
             --max-instances 2 \
             --memory 512Mi \
