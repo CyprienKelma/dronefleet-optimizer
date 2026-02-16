@@ -3,7 +3,8 @@
 [![English](https://img.shields.io/badge/Language-English-blue?style=for-the-badge)](README.md)
 [![Français](https://img.shields.io/badge/Langue-Français-gray?style=for-the-badge)](README.fr.md)
 
-## At a Glance
+## What's this repo ?
+
 This project is a complete real-time cloud management system for emergency medical delivery drone fleets.
 
 It's based on an event-driven architecture deployed on GCP. With a complete CI/CD deployment, as well as a data Simulator and an ELT pipeline to process and analyse data using BigQuery.
