@@ -1,3 +1,4 @@
+import os
 import random
 import signal
 import time
@@ -17,12 +18,20 @@ from dronefleet_shared.models import (
 )
 from dronefleet_shared.utils.logging_config import setup_logging
 
-# Configuration
-TELEMETRY_API_URL = "http://localhost:8000/api/v1/telemetry"
-ORDERS_API_URL = "http://localhost:8000/api/v1/orders"
+# configs
+API_BASE_URL = os.environ.get("INGESTION_API_URL", "http://localhost:8000")
+TELEMETRY_API_URL = f"{API_BASE_URL}/api/v1/telemetry"
+ORDERS_API_URL = f"{API_BASE_URL}/api/v1/orders"
 DRONE_COUNT = 5
 UPDATE_INTERVAL_SEC = 3.0
-ORDER_PROBABILITY = 0.2  # 5% chance to generate an order per loop iteration
+ORDER_PROBABILITY = 0.2  # 20% chance to generate an order per loop iteration
+
+# exit after n seconds (enable for cloud run jobs)
+SIMULATION_DURATION_SECONDS: int | None = (
+    int(os.environ["SIMULATION_DURATION_SECONDS"])
+    if os.environ.get("SIMULATION_DURATION_SECONDS")
+    else None
+)
 
 # Center: Paris (Lat: 48.8566, Lon: 2.3522)
 # Keep generated points within ~3-4 km for feasible VRP (battery, time windows).
@@ -141,7 +150,12 @@ class SimulatedOrderGenerator:
 
 
 def main():
-    logger.info("Starting Drone Fleet Simulator", drone_count=DRONE_COUNT)
+    logger.info(
+        "Starting Drone Fleet Simulator",
+        drone_count=DRONE_COUNT,
+        api_base_url=API_BASE_URL,
+        duration_seconds=SIMULATION_DURATION_SECONDS,
+    )
 
     # Initialize fleet
     drones: list[SimulatedDrone] = [
@@ -149,6 +163,7 @@ def main():
     ]
 
     running = True
+    sim_start = time.monotonic()
 
     def signal_handler(sig, frame):
         nonlocal running
@@ -158,16 +173,25 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
 
     while running:
+        # Check duration limit (Cloud Run Job mode)
+        if SIMULATION_DURATION_SECONDS is not None:
+            elapsed_total = time.monotonic() - sim_start
+            if elapsed_total >= SIMULATION_DURATION_SECONDS:
+                logger.info(
+                    "Simulation duration reached, exiting",
+                    elapsed_seconds=round(elapsed_total, 1),
+                )
+                break
         start_time = time.time()
 
-        # 1. Update and send telemetry for each drone
+        # Update and send telemetry for each drone
         for drone in drones:
             drone.update()
             telemetry = drone.get_telemetry()
 
             try:
                 payload = telemetry.to_dict()
-                # Betterproto to_dict doesn't serialize datetime to string by default
+                # betterproto to_dict doesn't serialize datetime to string by default
                 if isinstance(payload.get("timestamp"), datetime):
                     payload["timestamp"] = payload["timestamp"].isoformat()
 
@@ -184,7 +208,7 @@ def main():
             except requests.exceptions.RequestException as e:
                 logger.error(f"Telemetry API connection error: {e}")
 
-        # 2. Randomly generate and send a new order
+        # Randomly generate and send a new order
         if random.random() < ORDER_PROBABILITY:
             order = SimulatedOrderGenerator.generate_random_order()
             logger.info(

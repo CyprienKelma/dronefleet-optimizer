@@ -1,11 +1,19 @@
 import os
 import random
+import sys
 import uuid
 
 from google.cloud import firestore
 
-# Configuration for the emulator
-os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
+# Configuration — emulator host is only set for local dev,
+# on GCP Cloud Run Jobs the default credentials handle auth.
+if os.environ.get("FIRESTORE_EMULATOR_HOST"):
+    pass  # already set in environment
+elif os.environ.get("ENVIRONMENT") == "local":
+    os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
+
+PROJECT_ID = os.environ.get("PROJECT_ID", "drone-fleet-optimizer-local")
+DATASET_SIZE = os.environ.get("DATASET_SIZE", "large").lower()
 
 # Compact zone around Paris center (48.8566, 2.3522).
 # All points within ~5 km so depot->warehouse->delivery stays feasible
@@ -16,7 +24,7 @@ DEPOT_LON = 2.3522
 
 def clear_firestore():
     """Delete all documents from known collections."""
-    db = firestore.Client(project="drone-fleet-optimizer-local")
+    db = firestore.Client(project=PROJECT_ID)
     print("Clearing Firestore data...")
     collections = ["depots", "warehouses", "drones", "orders", "missions"]
     for coll_name in collections:
@@ -33,7 +41,7 @@ def clear_firestore():
 def seed_small():
     """Seed a small dataset: 5 drones, 9 orders, 2 warehouses.
     Useful for quick smoke tests and debugging."""
-    db = firestore.Client(project="drone-fleet-optimizer-local")
+    db = firestore.Client(project=PROJECT_ID)
     print("Seeding SMALL dataset (5 drones, 9 orders)...")
 
     _seed_depot(db)
@@ -47,7 +55,7 @@ def seed_small():
 def seed_medium():
     """Seed a medium dataset: 15 drones, 50 orders, 4 warehouses.
     Useful for testing solver performance and route quality."""
-    db = firestore.Client(project="drone-fleet-optimizer-local")
+    db = firestore.Client(project=PROJECT_ID)
     print("Seeding MEDIUM dataset (15 drones, 50 orders)...")
 
     _seed_depot(db)
@@ -61,7 +69,7 @@ def seed_medium():
 def seed_large():
     """Seed a large dataset: 30 drones, 150 orders, 6 warehouses.
     Useful for stress-testing the solver at scale."""
-    db = firestore.Client(project="drone-fleet-optimizer-local")
+    db = firestore.Client(project=PROJECT_ID)
     print("Seeding LARGE dataset (30 drones, 150 orders)...")
 
     _seed_depot(db)
@@ -217,5 +225,13 @@ def _seed_orders(db, count: int):
 
 
 if __name__ == "__main__":
+    # Allow CLI override: python seed_firestore.py small|medium|large
+    size = sys.argv[1] if len(sys.argv) > 1 else DATASET_SIZE
+
     clear_firestore()
-    seed_large()  # Change to seed_small(), seed_medium(), or seed_large()
+    if size == "small":
+        seed_small()
+    elif size == "medium":
+        seed_medium()
+    else:
+        seed_large()

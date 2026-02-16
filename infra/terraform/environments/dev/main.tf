@@ -268,6 +268,133 @@ data "google_project" "current" {
   project_id = var.project_id
 }
 
+# SA for simulator — needs to call Ingestion API (Cloud Run Service) via HTTP
+resource "google_service_account" "simulator" {
+  account_id   = "simulator"
+  display_name = "Simulator Service Account"
+  project      = var.project_id
+}
+
+# SA for seed-firestore — needs direct Firestore write access
+resource "google_service_account" "seed_firestore" {
+  account_id   = "seed-firestore"
+  display_name = "Seed Firestore Service Account"
+  project      = var.project_id
+}
+
+# simulator SA needs run.invoker to call the ingestion service
+resource "google_cloud_run_v2_service_iam_member" "simulator_invokes_ingestion" {
+  project  = var.project_id
+  location = var.region
+  name     = "ingestion"
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.simulator.email}"
+}
+
+# seed SA needs firestore access
+resource "google_project_iam_member" "seed_firestore_datastore" {
+  project = var.project_id
+  role    = "roles/datastore.user"
+  member  = "serviceAccount:${google_service_account.seed_firestore.email}"
+}
+
+# cloud Run Job: simulator
+resource "google_cloud_run_v2_job" "simulator" {
+  name     = "simulator"
+  location = var.region
+  project  = var.project_id
+  labels   = local.common_labels
+
+  template {
+    template {
+      service_account = google_service_account.simulator.email
+      timeout         = "600s"
+      max_retries     = 0
+
+      containers {
+        image = "${local.image_base}/simulator:latest"
+
+        env {
+          name  = "ENVIRONMENT"
+          value = var.environment
+        }
+        env {
+          name  = "SIMULATION_DURATION_SECONDS"
+          value = "300"
+        }
+        env {
+          name  = "INGESTION_API_URL"
+          value = "https://ingestion-placeholder.run.app"
+        }
+
+        resources {
+          limits = {
+            cpu    = "1"
+            memory = "512Mi"
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [google_project_service.cloud_run]
+
+  lifecycle {
+    ignore_changes = [
+      template[0].template[0].containers[0].image,
+      template[0].template[0].containers[0].env,
+    ]
+  }
+}
+
+# cloud Run Job: seed-firestore (base data)
+resource "google_cloud_run_v2_job" "seed_firestore" {
+  name     = "seed-firestore"
+  location = var.region
+  project  = var.project_id
+  labels   = local.common_labels
+
+  template {
+    template {
+      service_account = google_service_account.seed_firestore.email
+      timeout         = "120s"
+      max_retries     = 0
+
+      containers {
+        image = "${local.image_base}/seed-firestore:latest"
+
+        env {
+          name  = "PROJECT_ID"
+          value = var.project_id
+        }
+        env {
+          name  = "DATASET_SIZE"
+          value = "large"
+        }
+
+        resources {
+          limits = {
+            cpu    = "1"
+            memory = "512Mi"
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    google_project_service.cloud_run,
+    google_firestore_database.drone_fleet
+  ]
+
+  lifecycle {
+    ignore_changes = [
+      template[0].template[0].containers[0].image,
+      template[0].template[0].containers[0].env,
+    ]
+  }
+}
+
 # alert on budget
 resource "google_billing_budget" "dev_budget" {
   count = var.billing_account != null ? 1 : 0

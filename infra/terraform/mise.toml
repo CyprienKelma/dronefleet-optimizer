@@ -88,3 +88,21 @@ run = "terraform apply"
 description = "Run terraform init for dev environment"
 dir = "{{config_root}}/environments/dev"
 run = "terraform init"
+
+[tasks."dev:seed"]
+description = "Run seed-firestore Cloud Run Job (one-shot, populates Firestore)"
+run = """
+echo "Executing seed-firestore Cloud Run Job..."
+gcloud run jobs execute seed-firestore \
+  --region $REGION --project $PROJECT_ID --wait
+echo "Seeding complete."
+"""
+
+[tasks."dev:simulate"]
+description = "Run simulator Cloud Run Job (one-shot, sends telemetry + orders)"
+run = """
+echo "Executing simulator Cloud Run Job..."
+gcloud run jobs execute simulator \
+  --region $REGION --project $PROJECT_ID --wait
+echo "Simulation complete."
+"""

@@ -31,6 +31,8 @@ jobs:
       state-manager: ${{ steps.filter.outputs.state-manager }}
       optimizer: ${{ steps.filter.outputs.optimizer }}
       visualizer: ${{ steps.filter.outputs.visualizer }}
+      simulator: ${{ steps.filter.outputs.simulator }}
+      seed-firestore: ${{ steps.filter.outputs.seed-firestore }}
       terraform: ${{ steps.filter.outputs.terraform }}
     steps:
       - uses: actions/checkout@v4
@@ -67,6 +69,18 @@ jobs:
               - 'bun.lock'
             terraform:
               - 'infra/terraform/**'
+            simulator:
+              - 'services/simulators/**'
+              - 'shared/python/**'
+              - 'libs/python/**'
+              - 'configs/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
+            seed-firestore:
+              - 'infra/local/scripts/seed_firestore.py'
+              - 'infra/scripts/Dockerfile.seed'
+              - 'pyproject.toml'
+              - 'uv.lock'
 
   # terraform apply if infra changed
   terraform:
@@ -366,3 +380,125 @@ jobs:
             --format 'value(status.url)')
           echo "### Visualizer" >> "$GITHUB_STEP_SUMMARY"
           echo "Deployed to: $URL" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-simulator:
+    needs: changes
+    if: needs.changes.outputs.simulator == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER_DEV }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT_DEV }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
+
+      - name: Build and push Docker image
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          IMAGE="${{ env.IMAGE_BASE }}/simulator"
+
+          docker build \
+            -f services/simulators/Dockerfile \
+            --build-arg ENVIRONMENT=dev \
+            -t "$IMAGE:$SHORT_SHA" \
+            -t "$IMAGE:latest" \
+            .
+
+          docker push "$IMAGE:$SHORT_SHA"
+          docker push "$IMAGE:latest"
+
+      - name: Get Ingestion URL
+        id: ingestion
+        run: |
+          URL=$(gcloud run services describe ingestion \
+            --region ${{ env.REGION }} \
+            --format 'value(status.url)' 2>/dev/null || echo "")
+          if [ -z "$URL" ]; then
+            echo "::warning::Ingestion not deployed yet, using placeholder URL"
+            URL="https://ingestion-placeholder.run.app"
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy Cloud Run Job
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+
+          gcloud run jobs deploy simulator \
+            --image "${{ env.IMAGE_BASE }}/simulator:$SHORT_SHA" \
+            --region ${{ env.REGION }} \
+            --service-account "simulator@${{ env.PROJECT_ID }}.iam.gserviceaccount.com" \
+            --set-env-vars "ENVIRONMENT=dev,SIMULATION_DURATION_SECONDS=300,INGESTION_API_URL=${{ steps.ingestion.outputs.url }}" \
+            --memory 512Mi \
+            --cpu 1 \
+            --task-timeout 600s \
+            --max-retries 0 \
+            --quiet
+
+          echo "### Simulator" >> "$GITHUB_STEP_SUMMARY"
+          echo "Cloud Run Job \`simulator\` updated (image: \`$SHORT_SHA\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Ingestion URL: \`${{ steps.ingestion.outputs.url }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-seed-firestore:
+    needs: changes
+    if: needs.changes.outputs.seed-firestore == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER_DEV }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT_DEV }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
+
+      - name: Build and push Docker image
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          IMAGE="${{ env.IMAGE_BASE }}/seed-firestore"
+
+          docker build \
+            -f infra/scripts/Dockerfile.seed \
+            -t "$IMAGE:$SHORT_SHA" \
+            -t "$IMAGE:latest" \
+            .
+
+          docker push "$IMAGE:$SHORT_SHA"
+          docker push "$IMAGE:latest"
+
+      - name: Deploy Cloud Run Job
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+
+          gcloud run jobs deploy seed-firestore \
+            --image "${{ env.IMAGE_BASE }}/seed-firestore:$SHORT_SHA" \
+            --region ${{ env.REGION }} \
+            --service-account "seed-firestore@${{ env.PROJECT_ID }}.iam.gserviceaccount.com" \
+            --set-env-vars "PROJECT_ID=${{ env.PROJECT_ID }},DATASET_SIZE=large" \
+            --memory 512Mi \
+            --cpu 1 \
+            --task-timeout 120s \
+            --max-retries 0 \
+            --quiet
+
+          echo "### Seed Firestore" >> "$GITHUB_STEP_SUMMARY"
+          echo "Cloud Run Job \`seed-firestore\` updated (image: \`$SHORT_SHA\`)" >> "$GITHUB_STEP_SUMMARY"
