@@ -1,13 +1,16 @@
 # DroneFleet Optimizer
 
-## TL TR ?
+[![English](https://img.shields.io/badge/Language-English-blue?style=for-the-badge)](README.md)
+[![Français](https://img.shields.io/badge/Langue-Français-gray?style=for-the-badge)](README.fr.md)
+
+## At a Glance
 This project is a complete real-time cloud management system for emergency medical delivery drone fleets.
 
 It's based on an event-driven architecture deployed on GCP. With a complete CI/CD deployment, as well as a data Simulator and an ELT pipeline to process and analyse data using BigQuery.
 
 This is a personal project I completed during my final year of computer engineering studies to put into practice all the concepts I learned that I enjoyed the most.
 
-My ultimate goal was to design and implement a complete data infrastructure: from data generation (simulating a real input source system) through the ingestion process, use for an operational research solver, real-time flow management, and sending to a medallion architecture for cleaning, transformation, and delivery of data for analysis.
+My ultimate goal was to design and implement an end-to-end data infrastructure: from data generation (simulating a live source system) through the ingestion, operational research solving, and real-time flow management, to a medallion architecture for data cleaning, transformation, and analytics.
 
 It also allowed me to deepen my understanding of concepts such as concurrency management, containers, event-driven architecture, monorepo project organization, continuous integration/deployment, and cloud deployment.
 
@@ -57,6 +60,8 @@ The system addresses critical medical logistics challenges by:
 - **Reliability**: At-least-once delivery guarantee with no lost orders
 - **Cost Optimization**: Firestore batch writes to stay within free tier during development
 
+[↑ Back to Top](#table-of-contents)
+
 ## Architecture
 
 The system implements a **polyglot microservices architecture** with hexagonal pattern for infrastructure independence:
@@ -101,6 +106,8 @@ All components share a single source of truth for data models via **Protocol Buf
 - Generated code for Java, Python, TypeScript
 - Validation via Buf (linting, breaking change detection)
 - Automated synchronization enforced by pre-commit hooks and CI/CD
+
+[↑ Back to Top](#table-of-contents)
 
 ## Getting Started
 
@@ -176,6 +183,7 @@ mise run dev
 Check Firestore emulator UI: http://localhost:4000
 Check Ingestion API docs: http://localhost:8000/docs
 
+[↑ Back to Top](#table-of-contents)
 
 ## Data Flow
 
@@ -240,10 +248,10 @@ Check Ingestion API docs: http://localhost:8000/docs
 
 ### Optimization Cycle Flow
 
-The global logical cycle of the optimization part of the system is represental by :
+The global logical cycle of the optimization part of the system is represented by :
 <img src="docs/images/optimization-cycle.png" alt="Optimization Logical Cycle" width="1100" height="500" />
 
-With more details, the complexe flow is :
+With more details, the complete flow :
 ```
 ┌──────────────────┐
 │ Cloud Scheduler  │ (Triggers every 10 seconds)
@@ -483,7 +491,7 @@ The optimizer solves a **Multi-Trip Vehicle Routing Problem with Time Windows (V
 
 **Solution Strategy:**
 - **Phase 1**: Constructive heuristic (Parallel Cheapest Insertion) - O(n² × V)
-- **Phase 2**: Metaheuristic improvement (Guided Local Search) - 30 seconds time limit
+- **Phase 2**: Metaheuristic improvement (Guided Local Search) - 10 seconds time limit
 - **Result**: Near-optimal solutions (typically 1-5% from proven optimal)
 
 **Key Constraints:**
@@ -491,6 +499,8 @@ The optimizer solves a **Multi-Trip Vehicle Routing Problem with Time Windows (V
 - Battery: 2.5% consumption per km, minimum 20% reserve upon return
 - Time windows: CRITICAL (15 min), HIGH (30 min), STANDARD (60 min)
 - Capacity: 1 package at a time (multiple pickup-delivery cycles per mission)
+
+[↑ Back to Top](#table-of-contents)
 
 ## Path Optimizer System
 
@@ -583,7 +593,7 @@ An iterative improvement metaheuristic that performs local search moves (relocat
 | MILP | Exponential worst case | Proven optimal | Feasible for n < 50-100 |
 | Nearest neighbor heuristic | O(n²) | 15-25% from optimal | Very fast, poor quality |
 | PARALLEL_CHEAPEST_INSERTION | O(n² × V) | 10-20% from optimal | Fast, reasonable quality |
-| **GLS metaheuristic (our choice)** | **O(n²) per iteration, time-bounded** | **1-5% from optimal** | **Best balance of speed and quality** |
+| **GLS metaheuristic (our choice)** | **O(n²) per iteration, time-bounded** | **1-5% from optimal** | **Best balance of speed and quality in our case** |
 | Genetic algorithms | O(P × n² × G) | Variable | Slower convergence for VRP |
 
 ### Solution Extraction
@@ -630,6 +640,8 @@ DEPOT_START → WAREHOUSE_PICKUP → HOSPITAL_DELIVERY
 ### Practical Performance
 
 With the current seed data (5 drones, 18 orders, 2 warehouses = 37 nodes), the solver finds a high-quality solution well within the 30-second time limit. The system is designed to scale to the MVP target of 50-100 drones with hundreds of orders by adjusting the time limit and potentially sharding the problem geographically.
+
+[↑ Back to Top](#table-of-contents)
 
 ## System Components
 
@@ -728,6 +740,8 @@ With the current seed data (5 drones, 18 orders, 2 warehouses = 37 nodes), the s
 **Technology**: TypeScript, SolidJS, Vite, Leaflet (map library), Bun runtime
 
 **Status**: Work in progress
+
+[↑ Back to Top](#table-of-contents)
 
 ## Repository Structure
 
@@ -855,6 +869,8 @@ This separation allows the system to run in three modes without any code changes
 
 The environment configuration files in `configs/` are loaded by mise and injected as environment variables. In CI/CD (e.g., `cd-dev.yml`), these same variables are set via the deployment workflow to configure services for the target GCP environment.
 
+[↑ Back to Top](#table-of-contents)
+
 ## Configuration
 
 ### Environment Variables
@@ -955,6 +971,8 @@ Located in `tests/integration/` - test complete flows with emulators.
 
 Located in `tests/e2e/` - test full system with simulated drone fleet.
 
+[↑ Back to Top](#table-of-contents)
+
 ## Deployment
 
 ### CI/CD Pipeline
@@ -1026,11 +1044,13 @@ gcloud run deploy ingestion \
 - Dead Letter Queue monitoring
 - High error rate alerts (configured in GCP)
 
+[↑ Back to Top](#table-of-contents)
+
 ## Design Decisions
 
 ### Why Polyglot Architecture?
 
-I chose **Python for the Ingestion API and Optimizer** because each service had very different technical requirements. FastAPI is genuinely the best choice for high-throughput, asynchronous I/O-bound workloads like validating and routing incoming telemetry. The Ingestion API needs to handle thousands of position updates per second without blocking, and FastAPI + uvicorn delivers that effortlessly. For the Path Optimizer, Google OR-Tools is the de facto standard for routing problems — it's battle-tested, well-documented, and Python bindings are first-class. Rather than fight these ecosystems or try to force everything into one language, I embraced the right tool for each job.
+I chose **Python for the Ingestion API and Optimizer** because each service had very different technical requirements. FastAPI is genuinely the best choice for high-throughput, asynchronous I/O-bound workloads like validating and routing incoming telemetry. The Ingestion API needs to handle thousands of position updates per second without blocking, and FastAPI + uvicorn delivers that effortlessly. For the Path Optimizer, Google OR-Tools is the de facto standard for routing problems — it's battle-tested, well-documented, and Python bindings are first-class. Rather than fight these ecosystems or try to force everything into one language, I leverage the right tool for each job.
 
 **Java powers the State Manager** because it's where complex, correct business logic lives. The state manager is the heart of the system — it has to enforce invariants around drone status, order transitions, and mission creation atomically. Java's strong typing and compile-time guarantees catch entire categories of bugs before runtime. Spring Boot's transaction management and the Firestore SDK's maturity made it the natural choice for a service that needs to be rock-solid. The hexagonal architecture pattern is also much easier to implement cleanly in Java's ecosystem than elsewhere.
 
@@ -1065,6 +1085,8 @@ The system uses a hybrid messaging strategy, and the choice of which to use depe
 **The optimization snapshot, however, is synchronous HTTP GET.** The Optimizer needs a consistent point-in-time snapshot of the world — all drones and orders as they exist at this moment. Pub/Sub wouldn't make sense here because there's no "event" per se; it's a query for current state. HTTP GET is simpler, more direct, and it's easy to add timeouts and retry logic. If the State Manager is slow, the Optimizer can fail fast and try again in 10 seconds.
 
 This hybrid approach is intentional: fire-and-forget event streams for state changes, synchronous queries for consistent snapshots. It's the best of both worlds.
+
+[↑ Back to Top](#table-of-contents)
 
 ## Work in Progress
 
@@ -1128,9 +1150,13 @@ Pub/Sub Topics → BigQuery Subscriptions → BigQuery Tables
 
 **Implementation**: Asyncio-based event loop with concurrent drone agents
 
+[↑ Back to Top](#table-of-contents)
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+[↑ Back to Top](#table-of-contents)
 
 ---
 
