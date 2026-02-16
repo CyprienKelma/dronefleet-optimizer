@@ -1,9 +1,97 @@
 # Cloud Run management tasks for dev environment
-# Usage: mise //infra/terraform:dev:up / :dev:down / :dev:status
+#
+# Quick start:
+#   mise //infra/terraform:dev:bootstrap   — create infra + push images (one command)
+#   mise //infra/terraform:dev:destroy     — tear down everything ($0)
+#
+# NOTE: Cloud Run Services (ingestion, state-manager, visualizer) and the
+# path-optimizer Job are deployed by the CD pipeline (GitHub Actions on push to main).
+# After a bootstrap, either push to main or re-run the CD workflow manually from
+# GitHub Actions to deploy them !
 
 [env]
 PROJECT_ID = "drone-fleet-optimizer-dev"
 REGION = "europe-west1"
+
+
+
+[tasks."dev:bootstrap"]
+description = "Full dev setup: terraform init → registry → push images → full apply"
+dir = "{{config_root}}/environments/dev"
+run = """
+set -e
+
+echo "Terraform init :"
+terraform init
+
+echo ""
+echo "Create Artifact Registry :"
+terraform apply -target=google_artifact_registry_repository.drone_fleet -auto-approve
+
+echo ""
+echo "Build and push Docker images :"
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+REGISTRY="${REGION}-docker.pkg.dev"
+IMAGE_BASE="${REGISTRY}/${PROJECT_ID}/drone-fleet"
+SHORT_SHA=$(git rev-parse --short HEAD)
+
+gcloud auth configure-docker "$REGISTRY" --quiet
+
+IMAGES=(
+  "ingestion:services/ingestion/Dockerfile:dev"
+  "state-manager:services/state_manager/Dockerfile:"
+  "path-optimizer:services/path_optimizer/Dockerfile:dev"
+  "visualizer:services/visualizer/Dockerfile:"
+  "simulator:services/simulators/Dockerfile:dev"
+  "seed-firestore:infra/scripts/Dockerfile.seed:"
+)
+
+cd "$REPO_ROOT"
+for entry in "${IMAGES[@]}"; do
+  IFS=':' read -r name dockerfile env_arg <<< "$entry"
+  echo ""
+  echo "--- Building $name ---"
+
+  BUILD_ARGS=""
+  if [ -n "$env_arg" ]; then
+    BUILD_ARGS="--build-arg ENVIRONMENT=$env_arg"
+  fi
+
+  docker build -f "$dockerfile" $BUILD_ARGS \
+    -t "$IMAGE_BASE/$name:$SHORT_SHA" \
+    -t "$IMAGE_BASE/$name:latest" .
+
+  docker push "$IMAGE_BASE/$name:$SHORT_SHA"
+  docker push "$IMAGE_BASE/$name:latest"
+  echo "  -> $name pushed"
+done
+
+echo ""
+echo "Terraform apply (full with all images) :"
+cd "$OLDPWD"
+terraform apply -auto-approve
+
+echo ""
+echo "Bootstrap complete!"
+echo "Images: $IMAGE_BASE (tag: $SHORT_SHA)"
+echo ""
+echo "Next steps:"
+echo "  - Push to main (or re-run CD from GitHub Actions) to deploy Cloud Run Services"
+echo "  - Then: mise //infra/terraform:dev:seed"
+echo "  - Then: mise //infra/terraform:dev:simulate"
+"""
+
+[tasks."dev:launch"]
+description = "Launch all services and jobs (scale up, start schedulers) by terraform apply"
+dir = "{{config_root}}/environments/dev"
+run = """
+terraform apply
+"""
+
+[tasks."dev:destroy"]
+description = "Destroy all services and jobs (scale down, stop schedulers) by terraform destroy"
+dir = "{{config_root}}/environments/dev"
+run = "terraform destroy"
 
 [tasks."dev:up"]
 description = "Start all Cloud Run services (restore normal scaling)"
@@ -88,6 +176,51 @@ run = "terraform apply"
 description = "Run terraform init for dev environment"
 dir = "{{config_root}}/environments/dev"
 run = "terraform init"
+
+[tasks."dev:push-images"]
+description = "Build and push all Docker images to Artifact Registry (called by dev:bootstrap, can also be run standalone)"
+dir = "{{config_root}}/../.."
+run = """
+set -e
+
+REGISTRY="${REGION}-docker.pkg.dev"
+IMAGE_BASE="${REGISTRY}/${PROJECT_ID}/drone-fleet"
+SHORT_SHA=$(git rev-parse --short HEAD)
+
+echo "Authenticating Docker with Artifact Registry..."
+gcloud auth configure-docker "$REGISTRY" --quiet
+
+IMAGES=(
+  "ingestion:services/ingestion/Dockerfile:dev"
+  "state-manager:services/state_manager/Dockerfile:"
+  "path-optimizer:services/path_optimizer/Dockerfile:dev"
+  "visualizer:services/visualizer/Dockerfile:"
+  "simulator:services/simulators/Dockerfile:dev"
+  "seed-firestore:infra/scripts/Dockerfile.seed:"
+)
+
+for entry in "${IMAGES[@]}"; do
+  IFS=':' read -r name dockerfile env_arg <<< "$entry"
+  echo ""
+  echo "=== Building $name ==="
+
+  BUILD_ARGS=""
+  if [ -n "$env_arg" ]; then
+    BUILD_ARGS="--build-arg ENVIRONMENT=$env_arg"
+  fi
+
+  docker build -f "$dockerfile" $BUILD_ARGS \
+    -t "$IMAGE_BASE/$name:$SHORT_SHA" \
+    -t "$IMAGE_BASE/$name:latest" .
+
+  echo "Pushing $name..."
+  docker push "$IMAGE_BASE/$name:$SHORT_SHA"
+  docker push "$IMAGE_BASE/$name:latest"
+done
+
+echo ""
+echo "All images pushed to $IMAGE_BASE (tag: $SHORT_SHA + latest)"
+"""
 
 [tasks."dev:seed"]
 description = "Run seed-firestore Cloud Run Job (one-shot, populates Firestore)"

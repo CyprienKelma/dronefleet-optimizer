@@ -282,16 +282,7 @@ resource "google_service_account" "seed_firestore" {
   project      = var.project_id
 }
 
-# simulator SA needs run.invoker to call the ingestion service
-resource "google_cloud_run_v2_service_iam_member" "simulator_invokes_ingestion" {
-  project  = var.project_id
-  location = var.region
-  name     = "ingestion"
-  role     = "roles/run.invoker"
-  member   = "serviceAccount:${google_service_account.simulator.email}"
-}
-
-# seed SA needs firestore access
+# Seed SA needs Firestore access
 resource "google_project_iam_member" "seed_firestore_datastore" {
   project = var.project_id
   role    = "roles/datastore.user"
