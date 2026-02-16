@@ -14,7 +14,7 @@ gcloud run services update ingestion \
   --region $REGION --project $PROJECT_ID \
   --min-instances 0 --max-instances 2 --quiet
 
-gcloud run services update state-manager \
+gcloud run services update states-manager \
   --region $REGION --project $PROJECT_ID \
   --min-instances 1 --max-instances 3 --quiet
 
