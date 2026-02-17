@@ -1,0 +1,73 @@
+site_name: DroneFleet Optimizer
+site_url: https://CyprienKelma.github.io/dronefleet-optimizer/fr/
+site_description: Système de gestion de flotte de drones en temps réel pour la livraison médicale d'urgence
+
+docs_dir: docs/fr
+site_dir: site/fr
+
+theme:
+  name: material
+  language: fr
+  palette:
+    - scheme: default
+      primary: teal
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Passer au mode sombre
+    - scheme: slate
+      primary: blue
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Passer au mode clair
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+
+nav:
+  - Accueil: index.md
+  - Vue d'ensemble: overview.md
+  - Architecture: architecture.md
+  - Pile technologique: technology-stack.md
+  - Mise en place: getting-started.md
+  - Flux de données: data-flow.md
+  - Concurrence: concurrency.md
+  - Optimiseur de trajectoire: path-optimizer.md
+  - Composants du système: system-components.md
+  - Structure du dépôt: repository-structure.md
+  - Configuration: configuration.md
+  - Développement: development.md
+  - Déploiement: deployment.md
+  - Décisions de conception: design-decisions.md
+  - Travaux en cours: work-in-progress.md
+  - Licence: license.md
+
+extra:
+  alternate:
+    - name: English
+      link: /dronefleet-optimizer/en/
+      lang: en
+    - name: Français
+      link: /dronefleet-optimizer/fr/
+      lang: fr
