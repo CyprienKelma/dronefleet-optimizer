@@ -36,7 +36,7 @@ public final class DroneProto {
     java.lang.String[] descriptorData = {
       "\n\031dronefleet/v1/drone.proto\022\rdronefleet." +
       "v1\032\032dronefleet/v1/common.proto\032\037google/p" +
-      "rotobuf/timestamp.proto\"\262\004\n\005Drone\022\016\n\002id\030" +
+      "rotobuf/timestamp.proto\"\330\004\n\005Drone\022\016\n\002id\030" +
       "\001 \001(\tR\002id\0223\n\010position\030\002 \001(\0132\027.dronefleet" +
       ".v1.PositionR\010position\022-\n\022battery_percen" +
       "tage\030\003 \001(\001R\021batteryPercentage\022\033\n\tspeed_k" +
@@ -50,19 +50,20 @@ public final class DroneProto {
       "mah\030\n \001(\005R\022batteryCapacityMah\022,\n\022consump" +
       "tion_per_km\030\013 \001(\001R\020consumptionPerKm\0225\n\027m" +
       "ax_flight_time_minutes\030\014 \001(\005R\024maxFlightT" +
-      "imeMinutesJ\004\010\r\020\016R\nshort_name\"\310\002\n\016DroneTe" +
-      "lemetry\022\031\n\010drone_id\030\001 \001(\tR\007droneId\0228\n\tti" +
-      "mestamp\030\002 \001(\0132\032.google.protobuf.Timestam" +
-      "pR\ttimestamp\0223\n\010position\030\003 \001(\0132\027.dronefl" +
-      "eet.v1.PositionR\010position\022-\n\022battery_per" +
-      "centage\030\004 \001(\001R\021batteryPercentage\022\033\n\tspee" +
-      "d_kmh\030\005 \001(\001R\010speedKmh\0222\n\006status\030\006 \001(\0162\032." +
-      "dronefleet.v1.DroneStatusR\006status\022,\n\022cur" +
-      "rent_mission_id\030\007 \001(\tR\020currentMissionIdB" +
-      "\177\n\034com.dronefleet.shared.modelsB\nDronePr" +
-      "otoP\001\242\002\003DXX\252\002\rDronefleet.V1\312\002\rDronefleet" +
-      "\\V1\342\002\031Dronefleet\\V1\\GPBMetadata\352\002\016Dronef" +
-      "leet::V1b\006proto3"
+      "imeMinutes\022$\n\016year_of_usages\030\016 \001(\005R\014year" +
+      "OfUsagesJ\004\010\r\020\016R\nshort_name\"\310\002\n\016DroneTele" +
+      "metry\022\031\n\010drone_id\030\001 \001(\tR\007droneId\0228\n\ttime" +
+      "stamp\030\002 \001(\0132\032.google.protobuf.TimestampR" +
+      "\ttimestamp\0223\n\010position\030\003 \001(\0132\027.droneflee" +
+      "t.v1.PositionR\010position\022-\n\022battery_perce" +
+      "ntage\030\004 \001(\001R\021batteryPercentage\022\033\n\tspeed_" +
+      "kmh\030\005 \001(\001R\010speedKmh\0222\n\006status\030\006 \001(\0162\032.dr" +
+      "onefleet.v1.DroneStatusR\006status\022,\n\022curre" +
+      "nt_mission_id\030\007 \001(\tR\020currentMissionIdB\177\n" +
+      "\034com.dronefleet.shared.modelsB\nDroneProt" +
+      "oP\001\242\002\003DXX\252\002\rDronefleet.V1\312\002\rDronefleet\\V" +
+      "1\342\002\031Dronefleet\\V1\\GPBMetadata\352\002\016Dronefle" +
+      "et::V1b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -75,7 +76,7 @@ public final class DroneProto {
     internal_static_dronefleet_v1_Drone_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dronefleet_v1_Drone_descriptor,
-        new java.lang.String[] { "Id", "Position", "BatteryPercentage", "SpeedKmh", "Status", "CurrentMissionId", "LastUpdate", "SolvingSessionId", "HomeDepotId", "BatteryCapacityMah", "ConsumptionPerKm", "MaxFlightTimeMinutes", });
+        new java.lang.String[] { "Id", "Position", "BatteryPercentage", "SpeedKmh", "Status", "CurrentMissionId", "LastUpdate", "SolvingSessionId", "HomeDepotId", "BatteryCapacityMah", "ConsumptionPerKm", "MaxFlightTimeMinutes", "YearOfUsages", });
     internal_static_dronefleet_v1_DroneTelemetry_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_dronefleet_v1_DroneTelemetry_fieldAccessorTable = new

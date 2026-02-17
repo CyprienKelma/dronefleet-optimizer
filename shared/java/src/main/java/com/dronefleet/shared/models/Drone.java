@@ -326,6 +326,17 @@ private static final long serialVersionUID = 0L;
     return maxFlightTimeMinutes_;
   }
 
+  public static final int YEAR_OF_USAGES_FIELD_NUMBER = 14;
+  private int yearOfUsages_ = 0;
+  /**
+   * <code>int32 year_of_usages = 14 [json_name = "yearOfUsages"];</code>
+   * @return The yearOfUsages.
+   */
+  @java.lang.Override
+  public int getYearOfUsages() {
+    return yearOfUsages_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -375,6 +386,9 @@ private static final long serialVersionUID = 0L;
     }
     if (maxFlightTimeMinutes_ != 0) {
       output.writeInt32(12, maxFlightTimeMinutes_);
+    }
+    if (yearOfUsages_ != 0) {
+      output.writeInt32(14, yearOfUsages_);
     }
     getUnknownFields().writeTo(output);
   }
@@ -429,6 +443,10 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeInt32Size(12, maxFlightTimeMinutes_);
     }
+    if (yearOfUsages_ != 0) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt32Size(14, yearOfUsages_);
+    }
     size += getUnknownFields().getSerializedSize();
     memoizedSize = size;
     return size;
@@ -476,6 +494,8 @@ private static final long serialVersionUID = 0L;
             other.getConsumptionPerKm())) return false;
     if (getMaxFlightTimeMinutes()
         != other.getMaxFlightTimeMinutes()) return false;
+    if (getYearOfUsages()
+        != other.getYearOfUsages()) return false;
     if (!getUnknownFields().equals(other.getUnknownFields())) return false;
     return true;
   }
@@ -518,6 +538,8 @@ private static final long serialVersionUID = 0L;
         java.lang.Double.doubleToLongBits(getConsumptionPerKm()));
     hash = (37 * hash) + MAX_FLIGHT_TIME_MINUTES_FIELD_NUMBER;
     hash = (53 * hash) + getMaxFlightTimeMinutes();
+    hash = (37 * hash) + YEAR_OF_USAGES_FIELD_NUMBER;
+    hash = (53 * hash) + getYearOfUsages();
     hash = (29 * hash) + getUnknownFields().hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -676,6 +698,7 @@ private static final long serialVersionUID = 0L;
       batteryCapacityMah_ = 0;
       consumptionPerKm_ = 0D;
       maxFlightTimeMinutes_ = 0;
+      yearOfUsages_ = 0;
       return this;
     }
 
@@ -751,6 +774,9 @@ private static final long serialVersionUID = 0L;
       }
       if (((from_bitField0_ & 0x00000800) != 0)) {
         result.maxFlightTimeMinutes_ = maxFlightTimeMinutes_;
+      }
+      if (((from_bitField0_ & 0x00001000) != 0)) {
+        result.yearOfUsages_ = yearOfUsages_;
       }
       result.bitField0_ |= to_bitField0_;
     }
@@ -843,6 +869,9 @@ private static final long serialVersionUID = 0L;
       if (other.getMaxFlightTimeMinutes() != 0) {
         setMaxFlightTimeMinutes(other.getMaxFlightTimeMinutes());
       }
+      if (other.getYearOfUsages() != 0) {
+        setYearOfUsages(other.getYearOfUsages());
+      }
       this.mergeUnknownFields(other.getUnknownFields());
       onChanged();
       return this;
@@ -933,6 +962,11 @@ private static final long serialVersionUID = 0L;
               bitField0_ |= 0x00000800;
               break;
             } // case 96
+            case 112: {
+              yearOfUsages_ = input.readInt32();
+              bitField0_ |= 0x00001000;
+              break;
+            } // case 112
             default: {
               if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                 done = true; // was an endgroup tag
@@ -1689,6 +1723,38 @@ private static final long serialVersionUID = 0L;
     public Builder clearMaxFlightTimeMinutes() {
       bitField0_ = (bitField0_ & ~0x00000800);
       maxFlightTimeMinutes_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private int yearOfUsages_ ;
+    /**
+     * <code>int32 year_of_usages = 14 [json_name = "yearOfUsages"];</code>
+     * @return The yearOfUsages.
+     */
+    @java.lang.Override
+    public int getYearOfUsages() {
+      return yearOfUsages_;
+    }
+    /**
+     * <code>int32 year_of_usages = 14 [json_name = "yearOfUsages"];</code>
+     * @param value The yearOfUsages to set.
+     * @return This builder for chaining.
+     */
+    public Builder setYearOfUsages(int value) {
+
+      yearOfUsages_ = value;
+      bitField0_ |= 0x00001000;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>int32 year_of_usages = 14 [json_name = "yearOfUsages"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearYearOfUsages() {
+      bitField0_ = (bitField0_ & ~0x00001000);
+      yearOfUsages_ = 0;
       onChanged();
       return this;
     }

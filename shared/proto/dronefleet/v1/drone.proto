@@ -18,6 +18,7 @@ message Drone {
   int32 battery_capacity_mah = 10;
   double consumption_per_km = 11;
   int32 max_flight_time_minutes = 12;
+  int32 year_of_usages = 14;
 
   // Reserved field numbers from previous removed fields (backward/forward compatibility)
   reserved 13;

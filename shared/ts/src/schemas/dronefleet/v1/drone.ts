@@ -23,6 +23,7 @@ export interface Drone {
   battery_capacity_mah: number;
   consumption_per_km: number;
   max_flight_time_minutes: number;
+  year_of_usages: number;
 }
 
 export interface DroneTelemetry {
@@ -49,6 +50,7 @@ function createBaseDrone(): Drone {
     battery_capacity_mah: 0,
     consumption_per_km: 0,
     max_flight_time_minutes: 0,
+    year_of_usages: 0,
   };
 }
 
@@ -103,6 +105,11 @@ export const Drone: MessageFns<Drone> = {
         : isSet(object.max_flight_time_minutes)
         ? globalThis.Number(object.max_flight_time_minutes)
         : 0,
+      year_of_usages: isSet(object.yearOfUsages)
+        ? globalThis.Number(object.yearOfUsages)
+        : isSet(object.year_of_usages)
+        ? globalThis.Number(object.year_of_usages)
+        : 0,
     };
   },
 
@@ -144,6 +151,9 @@ export const Drone: MessageFns<Drone> = {
     if (message.max_flight_time_minutes !== 0) {
       obj.maxFlightTimeMinutes = Math.round(message.max_flight_time_minutes);
     }
+    if (message.year_of_usages !== 0) {
+      obj.yearOfUsages = Math.round(message.year_of_usages);
+    }
     return obj;
   },
 
@@ -166,6 +176,7 @@ export const Drone: MessageFns<Drone> = {
     message.battery_capacity_mah = object.battery_capacity_mah ?? 0;
     message.consumption_per_km = object.consumption_per_km ?? 0;
     message.max_flight_time_minutes = object.max_flight_time_minutes ?? 0;
+    message.year_of_usages = object.year_of_usages ?? 0;
     return message;
   },
 };

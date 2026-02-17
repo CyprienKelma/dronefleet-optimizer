@@ -126,4 +126,10 @@ public interface DroneOrBuilder extends
    * @return The maxFlightTimeMinutes.
    */
   int getMaxFlightTimeMinutes();
+
+  /**
+   * <code>int32 year_of_usages = 14 [json_name = "yearOfUsages"];</code>
+   * @return The yearOfUsages.
+   */
+  int getYearOfUsages();
 }
