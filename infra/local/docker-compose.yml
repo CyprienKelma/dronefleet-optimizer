@@ -38,6 +38,13 @@ services:
     build:
       context: ../../
       dockerfile: services/ingestion/Dockerfile
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz/ready')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: on-failure
     environment:
       # env variable that determines which .env file to load
       # global_config.py will read this and load config/dev.env
