@@ -1,0 +1,1331 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Real-time drone fleet management system for emergency medical delivery">
+      
+      
+      
+        <link rel="canonical" href="https://CyprienKelma.github.io/dronefleet-optimizer/en/path-optimizer/">
+      
+      
+        <link rel="prev" href="../concurrency/">
+      
+      
+        <link rel="next" href="../system-components/">
+      
+      
+        
+          <link rel="alternate" href="/dronefleet-optimizer/en/" hreflang="en">
+        
+          <link rel="alternate" href="/dronefleet-optimizer/fr/" hreflang="fr">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Path Optimizer - DroneFleet Optimizer</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#path-optimizer-system" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="DroneFleet Optimizer" class="md-header__button md-logo" aria-label="DroneFleet Optimizer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DroneFleet Optimizer
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Path Optimizer
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="/dronefleet-optimizer/en/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="/dronefleet-optimizer/fr/" hreflang="fr" class="md-select__link">
+              Français
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="DroneFleet Optimizer" class="md-nav__button md-logo" aria-label="DroneFleet Optimizer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DroneFleet Optimizer
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology Stack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Flow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concurrency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Path Optimizer
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Path Optimizer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#execution-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#problem-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problem Classification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vrp-graph-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VRP Graph Construction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solver-dimensions-and-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solver Dimensions and Constraints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#algorithm-selection-two-phase-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Algorithm Selection: Two-Phase Approach
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Algorithm Selection: Two-Phase Approach">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-constructive-heuristic-parallel_cheapest_insertion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Constructive Heuristic (PARALLEL_CHEAPEST_INSERTION)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-metaheuristic-improvement-guided_local_search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Metaheuristic Improvement (GUIDED_LOCAL_SEARCH)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#complexity-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complexity Comparison
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solution-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solution Extraction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Practical Performance
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../system-components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Components
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../repository-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design Decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../work-in-progress/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Work in Progress
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../license/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    License
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#execution-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#problem-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problem Classification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vrp-graph-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VRP Graph Construction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solver-dimensions-and-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solver Dimensions and Constraints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#algorithm-selection-two-phase-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Algorithm Selection: Two-Phase Approach
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Algorithm Selection: Two-Phase Approach">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-constructive-heuristic-parallel_cheapest_insertion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Constructive Heuristic (PARALLEL_CHEAPEST_INSERTION)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-metaheuristic-improvement-guided_local_search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Metaheuristic Improvement (GUIDED_LOCAL_SEARCH)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#complexity-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complexity Comparison
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solution-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solution Extraction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Practical Performance
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="path-optimizer-system">Path Optimizer System</h1>
+<p>The <strong>Path Optimizer</strong> is the core intelligence of DroneFleet Optimizer — a batch optimization service that solves the Vehicle Routing Problem with Pickup and Delivery (VRPPD) for the drone fleet. It is implemented in Python 3.11 and relies on <strong>Google OR-Tools</strong> for the combinatorial optimization core.</p>
+<h2 id="execution-model">Execution Model</h2>
+<p>The service runs as a <strong>stateless one-shot process</strong>, triggered on a rolling 10-second schedule via Cloud Run Jobs in production (or as a Docker container locally). Each execution constitutes a single optimization cycle:</p>
+<ol>
+<li><strong>Fetch</strong> the current world state (snapshot) from the State Manager via HTTP GET</li>
+<li><strong>Build</strong> a mathematical model of the routing problem</li>
+<li><strong>Solve</strong> the model under physical and business constraints</li>
+<li><strong>Publish</strong> the resulting mission assignments to Pub/Sub</li>
+</ol>
+<p>The optimizer reads everything it needs from the State Manager snapshot and produces output exclusively through the Pub/Sub message bus — no direct database access.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Ingestion API --&gt; Pub/Sub --&gt; State Manager --&gt; Firestore
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                                    |
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                          HTTP GET /snapshot
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>                                    |
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>                             Path Optimizer
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>                                    |
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>                          Pub/Sub (decisions)
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>                                    |
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>                             State Manager --&gt; Firestore (missions)
+</span></code></pre></div>
+<h2 id="problem-classification">Problem Classification</h2>
+<p>The problem solved is a <strong>Vehicle Routing Problem with Pickup and Delivery (VRPPD)</strong> — a well-known NP-hard variant of the classical VRP. In our context:</p>
+<ul>
+<li><strong>Vehicles</strong> are drones, each with heterogeneous battery levels</li>
+<li><strong>Pickups</strong> happen at warehouses (goods must be collected before delivery)</li>
+<li><strong>Deliveries</strong> happen at hospitals (final destination for each order)</li>
+<li>Every drone starts and ends at the same <strong>depot</strong></li>
+</ul>
+<p>This is further augmented with:</p>
+<ul>
+<li><strong>Time windows</strong> on deliveries (priority-based deadlines: CRITICAL 15 min, HIGH 30 min, STANDARD 60 min)</li>
+<li><strong>Battery constraints</strong> (energy consumption proportional to distance, 2.5% per km, minimum 20% reserve on return)</li>
+<li><strong>Product-warehouse compatibility</strong> (a warehouse must stock the product type requested by the order)</li>
+</ul>
+<h2 id="vrp-graph-construction">VRP Graph Construction</h2>
+<p>The graph contains <code>2N + 1</code> nodes for N orders:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Index 0          : Depot (start/end for all vehicles)
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Indices 1..N     : Pickup nodes (one per order, at nearest compatible warehouse)
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Indices N+1..2N  : Delivery nodes (one per order, at the order&#39;s destination)
+</span></code></pre></div>
+<p><strong>Critical design decision — unique pickup nodes per order:</strong> Each order gets its own dedicated pickup node, even though multiple orders may be picked up from the same physical warehouse. This is mandatory because OR-Tools <code>AddPickupAndDelivery(p, d)</code> requires a strict 1-to-1 relationship between pickup and delivery nodes. Sharing a warehouse node across multiple orders would make the problem infeasible.</p>
+<p>For each order, the builder selects the <strong>nearest compatible warehouse</strong> (by Haversine distance to the delivery location). Two <code>(2N+1) × (2N+1)</code> matrices are computed:</p>
+<ul>
+<li><strong>Distance matrix</strong> (meters): pairwise Haversine distances between all node coordinates</li>
+<li><strong>Time matrix</strong> (seconds): derived from the distance matrix assuming a constant drone cruising speed of 50 km/h</li>
+</ul>
+<h2 id="solver-dimensions-and-constraints">Solver Dimensions and Constraints</h2>
+<p>The solver uses OR-Tools' <code>RoutingModel</code> API, expressing the problem through <strong>dimensions</strong> (cumulative variables tracked along each route) and <strong>constraints</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Transit Callback</th>
+<th>Upper Bound</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Distance</strong></td>
+<td>Meters between nodes</td>
+<td>100 km</td>
+<td>Minimizes total distance (arc cost evaluator). Global span cost coefficient of 100 encourages even workload distribution across drones.</td>
+</tr>
+<tr>
+<td><strong>Time</strong></td>
+<td>Seconds between nodes</td>
+<td>3 hours (10,800s)</td>
+<td>Enforces time windows on delivery nodes. Slack up to 30 min allows drones to "wait" at nodes. Start cumul is free (drones can depart at different times).</td>
+</tr>
+<tr>
+<td><strong>Battery</strong></td>
+<td><code>distance_km × 2.5 × 10</code> (scaled for integer precision)</td>
+<td>1,000 units (100%)</td>
+<td>Per-vehicle cap: <code>(initial_battery% - 20%) × 10</code>. Example: drone at 85% battery → max 650 units → 26 km total flight.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pickup-delivery constraints</strong> ensure each order's pickup and delivery are performed by the same drone, in the correct order. <strong>Disjunctions</strong> (penalty: 100,000 per node) allow the solver to gracefully drop infeasible orders rather than making the entire problem unsolvable.</p>
+<h2 id="algorithm-selection-two-phase-approach">Algorithm Selection: Two-Phase Approach</h2>
+<p>Since VRPPD is <strong>NP-hard</strong> (no polynomial-time optimal solution exists), OR-Tools uses a two-phase heuristic/metaheuristic strategy:</p>
+<h3 id="phase-1-constructive-heuristic-parallel_cheapest_insertion">Phase 1: Constructive Heuristic (PARALLEL_CHEAPEST_INSERTION)</h3>
+<p>A greedy algorithm that considers all unrouted nodes simultaneously across all vehicles. At each step, it inserts the node that causes the smallest increase in total cost into the best position of any route. Complexity: <strong>O(n² × V)</strong> where n = number of nodes, V = number of vehicles. Completes in milliseconds for typical problem sizes.</p>
+<h3 id="phase-2-metaheuristic-improvement-guided_local_search">Phase 2: Metaheuristic Improvement (GUIDED_LOCAL_SEARCH)</h3>
+<p>An iterative improvement metaheuristic that performs local search moves (relocate, swap, move segments) and escapes local optima by penalizing frequently appearing features. This is an <strong>anytime algorithm</strong>: the longer it runs, the better the solution. Time limit: <strong>30 seconds</strong> (configurable). Each iteration: <strong>O(n²)</strong>.</p>
+<h3 id="complexity-comparison">Complexity Comparison</h3>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Time Complexity</th>
+<th>Optimality</th>
+<th>Practical Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Exact (branch-and-bound)</td>
+<td>O(n! / symmetries)</td>
+<td>Proven optimal</td>
+<td>Feasible for n &lt; 20-30</td>
+</tr>
+<tr>
+<td>MILP</td>
+<td>Exponential worst case</td>
+<td>Proven optimal</td>
+<td>Feasible for n &lt; 50-100</td>
+</tr>
+<tr>
+<td>Nearest neighbor heuristic</td>
+<td>O(n²)</td>
+<td>15-25% from optimal</td>
+<td>Very fast, poor quality</td>
+</tr>
+<tr>
+<td>PARALLEL_CHEAPEST_INSERTION</td>
+<td>O(n² × V)</td>
+<td>10-20% from optimal</td>
+<td>Fast, reasonable quality</td>
+</tr>
+<tr>
+<td><strong>GLS metaheuristic (our choice)</strong></td>
+<td><strong>O(n²) per iteration, time-bounded</strong></td>
+<td><strong>1-5% from optimal</strong></td>
+<td><strong>Best balance of speed and quality in our case</strong></td>
+</tr>
+<tr>
+<td>Genetic algorithms</td>
+<td>O(P × n² × G)</td>
+<td>Variable</td>
+<td>Slower convergence for VRP</td>
+</tr>
+</tbody>
+</table>
+<h2 id="solution-extraction">Solution Extraction</h2>
+<p>After solving, the <code>SolutionExtractor</code> walks each vehicle's route to build <code>MissionAssignment</code> messages:</p>
+<ol>
+<li>Start at depot, follow the route until return to depot</li>
+<li>Classify each node: <code>DEPOT_START</code>, <code>WAREHOUSE_PICKUP</code>, <code>HOSPITAL_DELIVERY</code>, <code>DEPOT_RETURN</code></li>
+<li>Compute aggregate metrics (total distance, time, battery consumption)</li>
+<li>Skip idle drones (routes with only depot-start and depot-return)</li>
+</ol>
+<p>A typical single-order route: <code>DEPOT_START → WAREHOUSE_PICKUP → HOSPITAL_DELIVERY → DEPOT_RETURN</code></p>
+<p>A multi-order route alternates pickups and deliveries:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>DEPOT_START → WAREHOUSE_PICKUP → HOSPITAL_DELIVERY
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>            → WAREHOUSE_PICKUP → HOSPITAL_DELIVERY
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>            → DEPOT_RETURN
+</span></code></pre></div></p>
+<h2 id="data-model">Data Model</h2>
+<p><strong>Input (OptimizationSnapshot):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>session_id</code></td>
+<td>string</td>
+<td>Unique identifier for this optimization cycle</td>
+</tr>
+<tr>
+<td><code>timestamp</code></td>
+<td>Timestamp</td>
+<td>When the snapshot was created</td>
+</tr>
+<tr>
+<td><code>depot</code></td>
+<td>Depot</td>
+<td>Main depot (start/end point for all drones)</td>
+</tr>
+<tr>
+<td><code>drones</code></td>
+<td>List[Drone]</td>
+<td>Available IDLE drones with position, battery, consumption rate</td>
+</tr>
+<tr>
+<td><code>orders</code></td>
+<td>List[Order]</td>
+<td>PENDING delivery orders with location, priority, product type</td>
+</tr>
+<tr>
+<td><code>warehouses</code></td>
+<td>List[Warehouse]</td>
+<td>Pickup locations with authorized product types</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output (MissionAssignment):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>drone_id</code></td>
+<td>string</td>
+<td>The assigned drone</td>
+</tr>
+<tr>
+<td><code>order_ids</code></td>
+<td>List[string]</td>
+<td>Orders fulfilled in this mission</td>
+</tr>
+<tr>
+<td><code>route</code></td>
+<td>List[Waypoint]</td>
+<td>Ordered sequence of waypoints with type, position, references</td>
+</tr>
+<tr>
+<td><code>estimated_battery_consumption</code></td>
+<td>double</td>
+<td>Total estimated battery usage (%)</td>
+</tr>
+<tr>
+<td><code>estimated_duration_minutes</code></td>
+<td>double</td>
+<td>Total estimated flight duration</td>
+</tr>
+</tbody>
+</table>
+<h2 id="practical-performance">Practical Performance</h2>
+<p>With the current seed data (5 drones, 18 orders, 2 warehouses = 37 nodes), the solver finds a high-quality solution well within the 30-second time limit. The system is designed to scale to the MVP target of 50-100 drones with hundreds of orders by adjusting the time limit and potentially sharding the problem geographically.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
