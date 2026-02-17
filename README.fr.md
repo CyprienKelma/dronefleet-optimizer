@@ -11,7 +11,7 @@ Il est basé sur une architecture pilotée par les événements (event-driven) d
 
 Il s'agit d'un projet personnel réalisé lors de ma dernière année d'études d'ingénieur en informatique, visant à mettre en pratique les concepts technologiques qui me passionnent le plus.
 
-> **🚀 Voir la documentation complète :** [https://CyprienKelma.github.io/dronefleet-optimizer/fr/](https://CyprienKelma.github.io/dronefleet-optimizer/fr/)
+### **Voir la doc complète :** [DroneFleet Optimizer Documentation](https://CyprienKelma.github.io/dronefleet-optimizer/)
 
 <img src="docs/images/drone_map_gif_demo.gif" alt="Description" width="900" height="600" />
 
