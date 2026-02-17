@@ -141,6 +141,12 @@ resource "google_service_account" "optimizer" {
   project      = var.project_id
 }
 
+resource "google_service_account" "visualizer" {
+  account_id   = "visualizer"
+  display_name = "Visualizer Service Account"
+  project      = var.project_id
+}
+
 # IAM for pubsub
 
 # to pub orders/telemetry topics
@@ -183,6 +189,16 @@ resource "google_pubsub_topic_iam_member" "optimizer_publisher" {
   member  = "serviceAccount:${google_service_account.optimizer.email}"
 
   depends_on = [module.decisions_topic]
+}
+
+# visualizer needs to subscribe to telemetry-sub
+resource "google_pubsub_subscription_iam_member" "visualizer_subscriber" {
+  project      = var.project_id
+  subscription = "telemetry-sub"
+  role         = "roles/pubsub.subscriber"
+  member       = "serviceAccount:${google_service_account.visualizer.email}"
+
+  depends_on = [module.telemetry_topic]
 }
 
 # pubsub SA need to be set as pub on DLQ to pub failed ones
@@ -289,7 +305,202 @@ resource "google_project_iam_member" "seed_firestore_datastore" {
   member  = "serviceAccount:${google_service_account.seed_firestore.email}"
 }
 
-# cloud Run Job: simulator
+# Cloud Run Service: ingestion API
+resource "google_cloud_run_v2_service" "ingestion" {
+  name     = "ingestion"
+  location = var.region
+  project  = var.project_id
+  labels   = local.common_labels
+
+  template {
+    service_account = google_service_account.ingestion_api.email
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 2
+    }
+
+    containers {
+      image = "${local.image_base}/ingestion:latest"
+
+      env {
+        name  = "ENVIRONMENT"
+        value = var.environment
+      }
+      env {
+        name  = "PROJECT_ID"
+        value = var.project_id
+      }
+
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "512Mi"
+        }
+      }
+    }
+  }
+
+  depends_on = [google_project_service.cloud_run]
+
+  lifecycle {
+    ignore_changes = [
+      template[0].containers[0].image,
+      template[0].containers[0].env,
+    ]
+  }
+}
+
+# Cloud Run Service: state-manager
+resource "google_cloud_run_v2_service" "state_manager" {
+  name     = "state-manager"
+  location = var.region
+  project  = var.project_id
+  labels   = local.common_labels
+
+  template {
+    service_account = google_service_account.state_manager.email
+
+    scaling {
+      min_instance_count = 1
+      max_instance_count = 3
+    }
+
+    containers {
+      image = "${local.image_base}/state-manager:latest"
+
+      env {
+        name  = "ENVIRONMENT"
+        value = var.environment
+      }
+      env {
+        name  = "PROJECT_ID"
+        value = var.project_id
+      }
+      env {
+        name  = "SPRING_PROFILES_ACTIVE"
+        value = var.environment
+      }
+
+      resources {
+        limits = {
+          cpu    = "2"
+          memory = "1Gi"
+        }
+      }
+    }
+  }
+
+  depends_on = [google_project_service.cloud_run]
+
+  lifecycle {
+    ignore_changes = [
+      template[0].containers[0].image,
+      template[0].containers[0].env,
+    ]
+  }
+}
+
+# Cloud Run Service: visualizer
+resource "google_cloud_run_v2_service" "visualizer" {
+  name     = "visualizer"
+  location = var.region
+  project  = var.project_id
+  labels   = local.common_labels
+
+  template {
+    service_account = google_service_account.visualizer.email
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 2
+    }
+
+    containers {
+      image = "${local.image_base}/visualizer:latest"
+
+      env {
+        name  = "PROJECT_ID"
+        value = var.project_id
+      }
+      env {
+        name  = "NODE_ENV"
+        value = "production"
+      }
+      env {
+        name  = "PUBSUB_SUBSCRIPTION"
+        value = "telemetry-sub"
+      }
+
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "512Mi"
+        }
+      }
+    }
+  }
+
+  depends_on = [google_project_service.cloud_run]
+
+  lifecycle {
+    ignore_changes = [
+      template[0].containers[0].image,
+      template[0].containers[0].env,
+    ]
+  }
+}
+
+# Cloud Run Job: path-optimizer
+resource "google_cloud_run_v2_job" "path_optimizer" {
+  name     = "path-optimizer"
+  location = var.region
+  project  = var.project_id
+  labels   = local.common_labels
+
+  template {
+    template {
+      service_account = google_service_account.optimizer.email
+      timeout         = "300s"
+      max_retries     = 1
+
+      containers {
+        image = "${local.image_base}/path-optimizer:latest"
+
+        env {
+          name  = "ENVIRONMENT"
+          value = var.environment
+        }
+        env {
+          name  = "PROJECT_ID"
+          value = var.project_id
+        }
+        env {
+          name  = "STATE_MANAGER_URL"
+          value = google_cloud_run_v2_service.state_manager.uri
+        }
+
+        resources {
+          limits = {
+            cpu    = "2"
+            memory = "2Gi"
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [google_project_service.cloud_run]
+
+  lifecycle {
+    ignore_changes = [
+      template[0].template[0].containers[0].image,
+      template[0].template[0].containers[0].env,
+    ]
+  }
+}
+
+# Cloud Run Job: simulator
 resource "google_cloud_run_v2_job" "simulator" {
   name     = "simulator"
   location = var.region
@@ -315,7 +526,7 @@ resource "google_cloud_run_v2_job" "simulator" {
         }
         env {
           name  = "INGESTION_API_URL"
-          value = "https://ingestion-placeholder.run.app"
+          value = google_cloud_run_v2_service.ingestion.uri
         }
 
         resources {

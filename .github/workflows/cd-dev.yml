@@ -116,11 +116,17 @@ jobs:
       - name: Terraform Plan
         working-directory: infra/terraform/environments/dev
         run: |
+          BILLING_ARGS=""
+          if [ -n "${{ secrets.BILLING_ACCOUNT_DEV }}" ]; then
+            BILLING_ARGS="-var=billing_account=${{ secrets.BILLING_ACCOUNT_DEV }}"
+          fi
+
           terraform plan \
             -var="project_id=${{ env.PROJECT_ID }}" \
             -var="environment=dev" \
             -var="firestore_location=${{ env.FIRESTORE_LOCATION }}" \
             -var="budget_amount=${{ env.BUDGET_AMOUNT }}" \
+            $BILLING_ARGS \
             -out=tfplan
 
       - name: Terraform Apply
@@ -129,8 +135,8 @@ jobs:
 
   # deploy ingestion API (Cloud Run Service)
   deploy-ingestion:
-    needs: changes
-    if: needs.changes.outputs.ingestion == 'true'
+    needs: [changes, terraform]
+    if: ${{ !failure() && !cancelled() && needs.changes.outputs.ingestion == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -191,8 +197,8 @@ jobs:
           echo "Deployed to: $URL" >> "$GITHUB_STEP_SUMMARY"
 
   deploy-state-manager:
-    needs: changes
-    if: needs.changes.outputs.state-manager == 'true'
+    needs: [changes, terraform]
+    if: ${{ !failure() && !cancelled() && needs.changes.outputs.state-manager == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -253,8 +259,8 @@ jobs:
           echo "Deployed to: $URL" >> "$GITHUB_STEP_SUMMARY"
 
   deploy-optimizer:
-    needs: changes
-    if: needs.changes.outputs.optimizer == 'true'
+    needs: [changes, terraform]
+    if: ${{ !failure() && !cancelled() && needs.changes.outputs.optimizer == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -322,8 +328,8 @@ jobs:
           echo "State Manager URL: \`${{ steps.state-manager.outputs.url }}\`" >> "$GITHUB_STEP_SUMMARY"
 
   deploy-visualizer:
-    needs: changes
-    if: needs.changes.outputs.visualizer == 'true'
+    needs: [changes, terraform]
+    if: ${{ !failure() && !cancelled() && needs.changes.outputs.visualizer == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -365,6 +371,7 @@ jobs:
             --image "${{ env.IMAGE_BASE }}/visualizer:$SHORT_SHA" \
             --region ${{ env.REGION }} \
             --platform managed \
+            --service-account "visualizer@${{ env.PROJECT_ID }}.iam.gserviceaccount.com" \
             --set-env-vars "PROJECT_ID=${{ env.PROJECT_ID }},NODE_ENV=production,PUBSUB_SUBSCRIPTION=telemetry-sub" \
             --min-instances 0 \
             --max-instances 2 \
@@ -382,8 +389,8 @@ jobs:
           echo "Deployed to: $URL" >> "$GITHUB_STEP_SUMMARY"
 
   deploy-simulator:
-    needs: changes
-    if: needs.changes.outputs.simulator == 'true'
+    needs: [changes, terraform]
+    if: ${{ !failure() && !cancelled() && needs.changes.outputs.simulator == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -450,8 +457,8 @@ jobs:
           echo "Ingestion URL: \`${{ steps.ingestion.outputs.url }}\`" >> "$GITHUB_STEP_SUMMARY"
 
   deploy-seed-firestore:
-    needs: changes
-    if: needs.changes.outputs.seed-firestore == 'true'
+    needs: [changes, terraform]
+    if: ${{ !failure() && !cancelled() && needs.changes.outputs.seed-firestore == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

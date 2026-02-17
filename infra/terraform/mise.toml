@@ -4,20 +4,18 @@
 #   mise //infra/terraform:dev:bootstrap   — create infra + push images (one command)
 #   mise //infra/terraform:dev:destroy     — tear down everything ($0)
 #
-# NOTE: Cloud Run Services (ingestion, state-manager, visualizer) and the
-# path-optimizer Job are deployed by the CD pipeline (GitHub Actions on push to main).
-# After a bootstrap, either push to main or re-run the CD workflow manually from
-# GitHub Actions to deploy them !
+# All Cloud Run Services and Jobs are created by Terraform.
+# and CD pipeline (GitHub Actions on push to main) updates the container
+# images via gcloud run deploy & gcloud run jobs deploy
 
 [env]
-PROJECT_ID = "drone-fleet-optimizer-dev"
+PROJECT_ID = "drone-fleet-optimizer-dev" # override local default
 REGION = "europe-west1"
-
-
 
 [tasks."dev:bootstrap"]
 description = "Full dev setup: terraform init → registry → push images → full apply"
 dir = "{{config_root}}/environments/dev"
+env = { PROJECT_ID = "drone-fleet-optimizer-dev", REGION = "europe-west1" }
 run = """
 set -e
 
@@ -26,7 +24,8 @@ terraform init
 
 echo ""
 echo "Create Artifact Registry :"
-terraform apply -target=google_artifact_registry_repository.drone_fleet -auto-approve
+terraform apply -var="project_id=$PROJECT_ID" -var="region=$REGION" \
+  -target=google_artifact_registry_repository.drone_fleet -auto-approve
 
 echo ""
 echo "Build and push Docker images :"
@@ -57,7 +56,7 @@ for entry in "${IMAGES[@]}"; do
     BUILD_ARGS="--build-arg ENVIRONMENT=$env_arg"
   fi
 
-  docker build -f "$dockerfile" $BUILD_ARGS \
+  docker build --platform linux/amd64 -f "$dockerfile" $BUILD_ARGS \
     -t "$IMAGE_BASE/$name:$SHORT_SHA" \
     -t "$IMAGE_BASE/$name:latest" .
 
@@ -69,32 +68,37 @@ done
 echo ""
 echo "Terraform apply (full with all images) :"
 cd "$OLDPWD"
-terraform apply -auto-approve
+terraform apply -var="project_id=$PROJECT_ID" -var="region=$REGION" -auto-approve
 
 echo ""
 echo "Bootstrap complete!"
 echo "Images: $IMAGE_BASE (tag: $SHORT_SHA)"
 echo ""
+echo "All Cloud Run Services and Jobs have been created by Terraform."
+echo ""
 echo "Next steps:"
-echo "  - Push to main (or re-run CD from GitHub Actions) to deploy Cloud Run Services"
-echo "  - Then: mise //infra/terraform:dev:seed"
-echo "  - Then: mise //infra/terraform:dev:simulate"
+echo "  - mise //infra/terraform:dev:seed       — populate Firestore with base data"
+echo "  - mise //infra/terraform:dev:simulate   — run the simulator"
+echo "  - Push to main to trigger CD pipeline (updates images only)"
 """
 
 [tasks."dev:launch"]
 description = "Launch all services and jobs (scale up, start schedulers) by terraform apply"
 dir = "{{config_root}}/environments/dev"
+env = { PROJECT_ID = "drone-fleet-optimizer-dev", REGION = "europe-west1" }
 run = """
-terraform apply
+terraform apply -var="project_id=$PROJECT_ID" -var="region=$REGION"
 """
 
 [tasks."dev:destroy"]
 description = "Destroy all services and jobs (scale down, stop schedulers) by terraform destroy"
 dir = "{{config_root}}/environments/dev"
-run = "terraform destroy"
+env = { PROJECT_ID = "drone-fleet-optimizer-dev", REGION = "europe-west1" }
+run = "terraform destroy -var=\"project_id=$PROJECT_ID\" -var=\"region=$REGION\""
 
 [tasks."dev:up"]
 description = "Start all Cloud Run services (restore normal scaling)"
+env = { PROJECT_ID = "drone-fleet-optimizer-dev", REGION = "europe-west1" }
 run = """
 echo "Restoring Cloud Run services..."
 
@@ -102,7 +106,7 @@ gcloud run services update ingestion \
   --region $REGION --project $PROJECT_ID \
   --min-instances 0 --max-instances 2 --quiet
 
-gcloud run services update states-manager \
+gcloud run services update state-manager \
   --region $REGION --project $PROJECT_ID \
   --min-instances 1 --max-instances 3 --quiet
 
@@ -119,6 +123,7 @@ echo "All services are UP."
 
 [tasks."dev:down"]
 description = "Stop all Cloud Run services (scale to zero, costs $0)"
+env = { PROJECT_ID = "drone-fleet-optimizer-dev", REGION = "europe-west1" }
 run = """
 echo "Scaling down Cloud Run services to zero..."
 
@@ -143,6 +148,7 @@ echo "All services are DOWN. Cost = $0."
 
 [tasks."dev:status"]
 description = "Show status of all Cloud Run services and jobs"
+env = { PROJECT_ID = "drone-fleet-optimizer-dev", REGION = "europe-west1" }
 run = """
 echo "=== Cloud Run Services ==="
 gcloud run services list --region $REGION --project $PROJECT_ID \
@@ -165,12 +171,14 @@ gcloud scheduler jobs list --location $REGION --project $PROJECT_ID \
 [tasks."plan"]
 description = "Run terraform plan for dev environment"
 dir = "{{config_root}}/environments/dev"
-run = "terraform plan"
+env = { PROJECT_ID = "drone-fleet-optimizer-dev", REGION = "europe-west1" }
+run = "terraform plan -var=\"project_id=$PROJECT_ID\" -var=\"region=$REGION\""
 
 [tasks."apply"]
 description = "Run terraform apply for dev environment"
 dir = "{{config_root}}/environments/dev"
-run = "terraform apply"
+env = { PROJECT_ID = "drone-fleet-optimizer-dev", REGION = "europe-west1" }
+run = "terraform apply -var=\"project_id=$PROJECT_ID\" -var=\"region=$REGION\""
 
 [tasks."init"]
 description = "Run terraform init for dev environment"
@@ -180,6 +188,7 @@ run = "terraform init"
 [tasks."dev:push-images"]
 description = "Build and push all Docker images to Artifact Registry (called by dev:bootstrap, can also be run standalone)"
 dir = "{{config_root}}/../.."
+env = { PROJECT_ID = "drone-fleet-optimizer-dev", REGION = "europe-west1" }
 run = """
 set -e
 
@@ -209,7 +218,7 @@ for entry in "${IMAGES[@]}"; do
     BUILD_ARGS="--build-arg ENVIRONMENT=$env_arg"
   fi
 
-  docker build -f "$dockerfile" $BUILD_ARGS \
+  docker build --platform linux/amd64 -f "$dockerfile" $BUILD_ARGS \
     -t "$IMAGE_BASE/$name:$SHORT_SHA" \
     -t "$IMAGE_BASE/$name:latest" .
 
@@ -224,6 +233,7 @@ echo "All images pushed to $IMAGE_BASE (tag: $SHORT_SHA + latest)"
 
 [tasks."dev:seed"]
 description = "Run seed-firestore Cloud Run Job (one-shot, populates Firestore)"
+env = { PROJECT_ID = "drone-fleet-optimizer-dev", REGION = "europe-west1" }
 run = """
 echo "Executing seed-firestore Cloud Run Job..."
 gcloud run jobs execute seed-firestore \
@@ -233,6 +243,7 @@ echo "Seeding complete."
 
 [tasks."dev:simulate"]
 description = "Run simulator Cloud Run Job (one-shot, sends telemetry + orders)"
+env = { PROJECT_ID = "drone-fleet-optimizer-dev", REGION = "europe-west1" }
 run = """
 echo "Executing simulator Cloud Run Job..."
 gcloud run jobs execute simulator \

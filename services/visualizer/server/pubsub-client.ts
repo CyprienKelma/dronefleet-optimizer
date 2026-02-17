@@ -1,4 +1,4 @@
-import { type DroneTelemetry, safeParseTelemetry } from "@dronefleet/shared";
+import { DroneTelemetry } from "@dronefleet/shared";
 import { type Message, PubSub, type Subscription } from "@google-cloud/pubsub";
 import { logger } from "./logger";
 
@@ -135,11 +135,14 @@ export class PubSubClient {
       const rawData = JSON.parse(message.data.toString());
 
       // Validate and parse telemetry
-      const result = safeParseTelemetry(rawData);
-
-      if (!result.success) {
+      let telemetry: DroneTelemetry;
+      try {
+        telemetry = DroneTelemetry.fromJSON(rawData);
+      } catch (err) {
         this.metrics.messagesFailed++;
-        logger.error(`[PubSub] Validation failed: ${result.error.message}`);
+        logger.error(
+          `[PubSub] Validation failed: ${err instanceof Error ? err.message : String(err)}`,
+        );
 
         // Still acknowledge to avoid redelivery of invalid messages
         message.ack();
@@ -150,7 +153,7 @@ export class PubSubClient {
 
       // Notify listener
       if (this.onMessage) {
-        this.onMessage(result.data);
+        this.onMessage(telemetry);
       }
 
       // Acknowledge the message

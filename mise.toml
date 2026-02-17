@@ -30,6 +30,7 @@ MISE_PROJECT_ROOT = "{{config_root}}"
 # Default to local development
 DEPLOYMENT_STRATEGY = "on_cloud"
 PROJECT_ID = "drone-fleet-optimizer-local"
+REGION = "europe-west1"
 PYTHONPATH = "src"
 # Automatic virtualenv activation
 _.python.venv = { path = ".venv", create = true }
