@@ -8,10 +8,10 @@ It's based on an event-driven architecture deployed on GCP. With a complete CI/C
 
 <img src="images/drone_map_gif_demo.gif" alt="Description" width="900" height="600" />
 
-This is a personal project I completed during my final year of computer engineering studies to put into practice all the concepts I learned that I enjoyed the most.
+This is a personal project I completed during my final year of computer engineering studies, with the aim of putting into practice the concepts that interest me most.
 
-My ultimate goal was to design and implement an end-to-end data infrastructure: from data generation (simulating a live source system) through the ingestion, operational research solving, and real-time flow management, to a medallion architecture for data cleaning, transformation, and analytics.
+My goal was to design and implement an end-to-end data infrastructure: from data generation (simulation of a source system) to ingestion, operational research problem solving, real-time flow management with messaging queue, and a “medallion” architecture for data cleaning, transformation, and analysis.
 
-It also allowed me to deepen my understanding of concepts such as concurrency management, containers, event-driven architecture, monorepo project organization, continuous integration/deployment, and cloud deployment.
+This project allowed me to deepen my mastery of concepts such as concurrency management, containerization, event-driven architectures, monorepo organization, CI/CD, isolation of environments and cloud deployment. As well as using Python (Pydantic, FastAPI), Java (with Spring Boot), protobuf and buf library to manage single source of truth, and also designing complete CI/CD deployment with GitHub Action
 
 You can download it for free by following the [Getting Started](getting-started.md) steps, or read on [Overview](overview.md) to learn more about how it works and the technical choices made, as well as broader considerations and reflections on the creation and management of such a system.

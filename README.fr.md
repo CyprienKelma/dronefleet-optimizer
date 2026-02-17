@@ -7,11 +7,11 @@
 
 Ce projet est un système complet de gestion cloud en temps réel pour des flottes de drones de livraison médicale d'urgence.
 
-Il est basé sur une architecture pilotée par les événements (event-driven) déployée sur GCP. Il inclut un pipeline CI/CD complet, un simulateur de données et un pipeline ELT pour traiter et analyser les données via BigQuery.
+Il est basé sur une architecture event-driven déployée sur GCP avec Firestore, Cloud Run, et Pub/Sub. Il inclut aussi un pipeline CI/CD complet de déploiement d'environnement isolés (local/dev/prod), un simulateur de données et un pipeline ELT pour traiter et analyser les données via BigQuery.
 
-Il s'agit d'un projet personnel réalisé lors de ma dernière année d'études d'ingénieur en informatique, visant à mettre en pratique les concepts technologiques qui me passionnent le plus.
+Il s'agit d'un projet personnel réalisé lors de ma dernière année d'études d'ingénieur informatique, visant à mettre en pratique et approfondire les concepts qui m'ont le plus interessé, ou découvrir certains manqués.
 
-### **Voir la doc complète :** [DroneFleet Optimizer Documentation](https://CyprienKelma.github.io/dronefleet-optimizer/)
+### **Voir la doc complète :** [DroneFleet Optimizer Documentation](https://CyprienKelma.github.io/dronefleet-optimizer/fr)
 
 <img src="docs/images/drone_map_gif_demo.gif" alt="Description" width="900" height="600" />
 
@@ -48,7 +48,7 @@ Il s'agit d'un projet personnel réalisé lors de ma dernière année d'études 
    mise //services/simulators:run
    ```
 
-Pour des instructions détaillées et une analyse approfondie de l'architecture, veuillez consulter le [Site de documentation complète](https://CyprienKelma.github.io/dronefleet-optimizer/fr/).
+Pour des instructions détaillées et une analyse approfondie de l'architecture, vous pouvez regarder le [Site de documentation complète](https://CyprienKelma.github.io/dronefleet-optimizer/fr/).
 
 ## Licence
 
