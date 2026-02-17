@@ -75,7 +75,7 @@ Le VRPPD étant **NP-difficile**, OR-Tools utilise des heuristiques :
 Un algorithme glouton qui insère simultanément sur tous les véhicules au meilleur endroit pour minimiser l'augmentation du coût. Rapide (millisecondes).
 
 #### Phase 2 : Amélioration par métaheuristique (GUIDED_LOCAL_SEARCH)
-Améliore itérativement la solution (relocate, swap, move segments) tout en évitant les optima locaux. C'est un **algorithme anytime** : plus il tourne, meilleure est la solution. Limite : **30 secondes**.
+Améliore itérativement la solution (relocate, swap, move segments) tout en évitant les optima locaux. C'est un **algorithme anytime** : plus il tourne, meilleure est la solution. Limite : **10 secondes**.
 
 #### Comparaison de complexité
 

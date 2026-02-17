@@ -62,7 +62,8 @@
 ## Optimization Cycle Flow
 
 The global logical cycle of the optimization part of the system is represented by :
-<img src="images/optimization-cycle.png" alt="Optimization Logical Cycle" width="1100" height="500" />
+
+![Optimization Logical Cycle](images/optimization-cycle.png){ width="2000px" }
 
 With more details, the complete flow :
 ```

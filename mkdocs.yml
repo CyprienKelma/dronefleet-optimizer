@@ -34,6 +34,9 @@ theme:
 
 plugins:
   - search
+  - glightbox:
+      effect: zoom
+      slide_effect: slide
 
 markdown_extensions:
   - tables

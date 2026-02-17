@@ -62,7 +62,8 @@
 ### Cycle d'optimisation
 
 Le cycle logique global de la partie optimisation du système est représenté par :
-<img src="images/optimization-cycle.png" alt="Cycle Logique d'Optimisation" width="1100" height="500" />
+
+![Optimization Logical Cycle](images/optimization-cycle.png){ width="2000px" }
 
 Le flux complet détaillé :
 ```

@@ -354,7 +354,7 @@ initial solution iteratively:
   frequently appearing "features" (specific arcs) in the current
   solution, effectively guiding the search away from previously
   explored regions of the solution space.
-- It continues until the time limit is reached (default: 30 seconds).
+- It continues until the time limit is reached (default: 10 seconds).
 
 GLS does not guarantee global optimality. It is an **anytime algorithm**:
 the longer it runs, the better the solution tends to be, but there is no
