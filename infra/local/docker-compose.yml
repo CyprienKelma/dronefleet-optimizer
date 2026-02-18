@@ -1,9 +1,8 @@
 services:
-  # To run emulator only :
+  # emulator only :
   # docker compose up -d pubsub-emulator firestore-emulator pubsub-init
-  # To run all docker-compose :
+  # all docker-compose :
   # docker compose --profile full up --build
-  # TODO : Need to add profiles: full to proper component
 
   pubsub-emulator:
     image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
@@ -18,7 +17,7 @@ services:
     networks:
       - drone-network
 
-  # Ephemeral service to configure topics on emulator start
+  # config pub/sub topics on emulator start
   pubsub-init:
     image: ghcr.io/astral-sh/uv:python3.11-alpine
     working_dir: /app
