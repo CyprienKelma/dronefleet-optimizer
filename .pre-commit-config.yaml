@@ -12,7 +12,7 @@ repos:
     hooks:
       # Prevent committing large files
       - id: check-added-large-files
-        args: ['--maxkb=6000']
+        args: ['--maxkb=10000']
 
       - id: check-json
       - id: check-yaml

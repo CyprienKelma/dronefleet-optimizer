@@ -73,6 +73,8 @@ The solver uses OR-Tools' `RoutingModel` API, expressing the problem through **d
 
 Since VRPPD is **NP-hard** (no polynomial-time optimal solution exists), OR-Tools uses a two-phase heuristic/metaheuristic strategy:
 
+![Optimizer Diagram](images/path_optimizer.png)
+
 ### Phase 1: Constructive Heuristic (PARALLEL_CHEAPEST_INSERTION)
 
 A greedy algorithm that considers all unrouted nodes simultaneously across all vehicles. At each step, it inserts the node that causes the smallest increase in total cost into the best position of any route. Complexity: **O(n² × V)** where n = number of nodes, V = number of vehicles. Completes in milliseconds for typical problem sizes.

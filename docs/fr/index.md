@@ -1,7 +1,6 @@
-# DroneFleet Optimizer
+<img src="images/logo_header.png" alt="Header Logo" width="1200" height="480" />
 
 ## Qu'est-ce que ce repo ?
-
 Ce projet est un système complet de gestion cloud en temps réel pour des flottes de drones de livraison médicale d'urgence.
 
 Il est basé sur une architecture pilotée par les événements (event-driven) déployée sur GCP. Il inclut un pipeline CI/CD complet, un simulateur de données et un pipeline ELT pour traiter et analyser les données via BigQuery.
@@ -14,6 +13,6 @@ Mon objectif ultime était de concevoir et d'implémenter une infrastructure de 
 
 Ce projet m'a permis d'approfondir ma maîtrise de concepts tels que la gestion de la concurrence, la conteneurisation, les architectures événementielles, l'organisation en monorepo, le CI/CD et le déploiement cloud.
 
-![Zoomed Architecture Diagram](images/zoomed_archi.png)s
+![colored Architecture Diagram](images/colored_diagram.png)
 
 Vous pouvez tester le projet gratuitement en suivant les étapes de [Mise en Place](getting-started.md), ou poursuivre votre lecture vers [Overview](overview.md) pour découvrir son fonctionnement, les choix techniques effectués et mes réflexions sur la conception d'un tel système.

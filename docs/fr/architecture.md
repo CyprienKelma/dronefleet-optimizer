@@ -17,6 +17,7 @@ Le système implémente une **architecture de microservices polyglotte** suivant
 ```
 LOCAL → DEV → PROD
 ```
+![Env Diagram](images/env_diagram.png)
 
 - **LOCAL** : Docker Compose avec les émulateurs Pub/Sub et Firestore (coût GCP nul).
 - **DEV** : Services GCP complets avec déploiement automatique lors d'un push sur la branche `main`.

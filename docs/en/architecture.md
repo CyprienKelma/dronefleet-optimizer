@@ -18,6 +18,8 @@ The system implements a **polyglot microservices architecture** with hexagonal p
 LOCAL → DEV → PROD
 ```
 
+![Env Diagram](images/env_diagram.png)
+
 - **LOCAL**: Docker Compose with Pub/Sub and Firestore emulators (zero GCP cost)
 - **DEV**: Full GCP services with automatic deployment on push to main branch
 - **PROD**: Production environment with manual deployment via release tags

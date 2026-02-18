@@ -14,6 +14,8 @@
 
 All components share a single source of truth for data models via **Protocol Buffers**:
 
+![Proto Diagram](images/buf_logic.png)
+
 - Definitions in `shared/proto/dronefleet/v1/*.proto`
 - Generated code for Java, Python, TypeScript
 - Validation via Buf (linting, breaking change detection)

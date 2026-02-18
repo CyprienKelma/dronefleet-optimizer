@@ -69,6 +69,8 @@ Les **contraintes ramassage-livraison** assurent que la collecte et la livraison
 
 ### Choix de l'algorithme : Stratégie en deux phases
 
+![Optimizer Diagram](images/path_optimizer.png)
+
 Le VRPPD étant **NP-difficile**, OR-Tools utilise des heuristiques :
 
 #### Phase 1 : Heuristique constructive (PARALLEL_CHEAPEST_INSERTION)

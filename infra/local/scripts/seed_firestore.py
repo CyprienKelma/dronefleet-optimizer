@@ -13,7 +13,7 @@ elif os.environ.get("ENVIRONMENT") == "local":
     os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 
 PROJECT_ID = os.environ.get("PROJECT_ID", "drone-fleet-optimizer-local")
-DATASET_SIZE = os.environ.get("DATASET_SIZE", "large").lower()
+DATASET_SIZE = os.environ.get("DATASET_SIZE", "medium").lower() # small, medium, large
 
 # Compact zone around Paris center (48.8566, 2.3522).
 # All points within ~5 km so depot->warehouse->delivery stays feasible

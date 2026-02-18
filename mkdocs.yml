@@ -1,5 +1,7 @@
 site_name: DroneFleet Optimizer
 site_url: https://CyprienKelma.github.io/dronefleet-optimizer/en/
+repo_url: https://github.com/CyprienKelma/dronefleet-optimizer
+repo_name: CyprienKelma/dronefleet-optimizer
 site_description: Real-time drone fleet management system for emergency medical delivery
 
 docs_dir: docs/en
