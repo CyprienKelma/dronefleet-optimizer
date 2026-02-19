@@ -492,20 +492,22 @@ jobs:
           docker push "$IMAGE:$SHORT_SHA"
           docker push "$IMAGE:latest"
 
-      - name: Deploy Cloud Run Job
-        run: |
-          SHORT_SHA="${GITHUB_SHA::7}"
 
-          gcloud run jobs deploy seed-firestore \
-            --image "${{ env.IMAGE_BASE }}/seed-firestore:$SHORT_SHA" \
-            --region ${{ env.REGION }} \
-            --service-account "seed-firestore@${{ env.PROJECT_ID }}.iam.gserviceaccount.com" \
-            --set-env-vars "PROJECT_ID=${{ env.PROJECT_ID }},DATASET_SIZE=large" \
-            --memory 512Mi \
-            --cpu 1 \
-            --task-timeout 120s \
-            --max-retries 0 \
-            --quiet
+      # WIP for now
+      # - name: Deploy Cloud Run Job
+      #   run: |
+      #     SHORT_SHA="${GITHUB_SHA::7}"
 
-          echo "### Seed Firestore" >> "$GITHUB_STEP_SUMMARY"
-          echo "Cloud Run Job \`seed-firestore\` updated (image: \`$SHORT_SHA\`)" >> "$GITHUB_STEP_SUMMARY"
+      #     gcloud run jobs deploy seed-firestore \
+      #       --image "${{ env.IMAGE_BASE }}/seed-firestore:$SHORT_SHA" \
+      #       --region ${{ env.REGION }} \
+      #       --service-account "seed-firestore@${{ env.PROJECT_ID }}.iam.gserviceaccount.com" \
+      #       --set-env-vars "PROJECT_ID=${{ env.PROJECT_ID }},DATASET_SIZE=large" \
+      #       --memory 512Mi \
+      #       --cpu 1 \
+      #       --task-timeout 120s \
+      #       --max-retries 0 \
+      #       --quiet
+
+      #     echo "### Seed Firestore" >> "$GITHUB_STEP_SUMMARY"
+      #     echo "Cloud Run Job \`seed-firestore\` updated (image: \`$SHORT_SHA\`)" >> "$GITHUB_STEP_SUMMARY"
